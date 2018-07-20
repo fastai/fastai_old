@@ -5,6 +5,7 @@ from torch import nn, optim
 from torch.utils.data import TensorDataset, DataLoader
 from collections import Iterable
 from functools import reduce,partial
+from tqdm import tqdm, tqdm_notebook, trange, tnrange
 
 def loss_batch(model, xb, yb, loss_fn, opt=None):
     loss = loss_fn(model(xb), yb)
@@ -16,10 +17,14 @@ def loss_batch(model, xb, yb, loss_fn, opt=None):
 
     return loss.item(), len(xb)
 
+
 def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
-    for epoch in range(epochs):
+    for epoch in tnrange(epochs):
         model.train()
-        for xb,yb in train_dl: loss_batch(model, xb, yb, loss_fn, opt)
+        it = tqdm_notebook(train_dl, leave=False)
+        for xb,yb in it:
+            loss,_ = loss_batch(model, xb, yb, loss_fn, opt)
+            it.set_postfix_str(loss)
 
         model.eval()
         with torch.no_grad():
@@ -28,6 +33,7 @@ def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
         val_loss = np.sum(np.multiply(losses,nums)) / np.sum(nums)
 
         print(epoch, val_loss)
+
 
 class Lambda(nn.Module):
     def __init__(self, func):
