@@ -11,18 +11,18 @@ This is an alpha version. Most of the library is quite well tested since many st
 Recommended installation approach is to clone fastai using `git`:
 
 ```sh
-git clone https://github.com/fastai/fastai.git
+git clone https://github.com/fastai/fastai_v1.git
 ```
 Then, `cd` to the fastai folder and create the python environment:
 
 ```sh
-cd fastai
+cd fastai_v1
 conda env update
 ```
 This downloads all of the dependencies and then all you have to do is:
 
 ```sh
-conda activate fastai
+conda activate fastai_v1
 ```
 
 To update everything at any time, cd to your repo and:
