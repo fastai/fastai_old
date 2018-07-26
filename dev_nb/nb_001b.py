@@ -57,8 +57,17 @@ def listify(x=None, y=None):
     return x
 
 def compose(funcs):
-    funcs = reversed(listify(funcs))
-    return reduce(lambda f, g: lambda x: f(g(x)), funcs, lambda x: x)
+    def _inner(x, y=None):
+        if y is None:
+            for f in listify(funcs): x = f(x)
+            return x
+        else:
+            for f in listify(funcs): x,y = f(x,y)
+            return x,y
+    return _inner
+
+    #funcs = reversed(listify(funcs))
+    #return reduce(lambda f, g: lambda x: f(g(x)), funcs, lambda x: x)
 
 class IterPipe():
     def __init__(self, iterator, funcs): self.iter,self.func = iterator,compose(funcs)
