@@ -27,8 +27,9 @@ def pil2tensor(image):
     return arr.float().div_(255)
 
 class FilesDataset(Dataset):
-    def __init__(self, folder, classes):
+    def __init__(self, folder, classes=None):
         self.fns, self.y = [], []
+        if classes is None: classes = [cls.name for cls in find_classes(folder)]
         self.classes = classes
         for i, cls in enumerate(classes):
             fnames = get_image_files(folder/cls)
@@ -80,27 +81,30 @@ def xy_transforms(x_tfms=None, y_tfms=None):
     return list(map(xy_transform, x_tfms, y_tfms))
 
 def normalize(mean,std,x): return (x-mean.reshape(3,1,1))/std.reshape(3,1,1)
-def denorm(x): return x * data_std.reshape(3,1,1) + data_mean.reshape(3,1,1)
+def denormalize(x): return x * data_std.reshape(3,1,1) + data_mean.reshape(3,1,1)
 
-TfmType = IntEnum('TfmType', 'Lighting Coord Affine Pixel')
+TfmType = IntEnum('TfmType', 'Lighting Coord Affine Pixel Final')
 
 def logit(x): return (x/(1-x)).log()
 def logit_(x): return (x.div_(1-x)).log_()
 
 def apply_lighting_tfm(func): return lambda x: func(logit_(x)).sigmoid()
 
-def uniform(low, high, size=None):
+def uniform(low=0, high=1, size=None):
     return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
 
 def log_uniform(low, high, size=None):
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
-def rand_bool(p, size=None): return uniform(0,1,size)<p
+def randint(low, high, size=None):
+    return random.randint(low,high) if size is None else torch.LongTensor(size).random_(low,high+1)
+
+def rand_bool(p=1, size=None): return uniform(0,1,size)<p
 
 def resolve_args(func, **kwargs):
     for k,v in func.__annotations__.items():
-        arg = listify(kwargs.get(k, 1))
+        arg = listify(kwargs.get(k))
         if k != 'return': kwargs[k] = v(*arg)
     return kwargs
 
@@ -116,7 +120,7 @@ def make_tfm_func(func):
     return _inner
 
 def reg_transform(func):
-    setattr(sys.modules[__name__], f'{func.__name__}_tfm', make_tfm_func(func))
+    setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', make_tfm_func(func))
     return func
 
 def resolve_tfms(tfms): return [f() for f in listify(tfms)]
@@ -153,25 +157,27 @@ def grid_sample(x, coords, mode='bilinear', padding_mode='reflect'):
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
 
 def affine_grid(x, matrix, size=None):
-    if size is None: size = x.size()
-    elif isinstance(size, int): size=(img.size(0),size,size)
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
 def eye_new(x, n): return torch.eye(n, out=x.new_empty((n,n)))
 
 def do_affine(img, m=None, func=None, size=None, **kwargs):
-    if m is None: m=eye_new(img, 3)
+    if size is None: size = img.size()
+    elif isinstance(size, int): size=(img.size(0),size,size)
+    if m is None:
+        if img.shape==size: return img
+        else: m=eye_new(img, 3)
     c = affine_grid(img,  img.new_tensor(m), size=size)
     if func is not None: c = func(c)
     return grid_sample(img, c, **kwargs)
 
 def affines_mat(matrices=None):
-    if matrices is None: matrices=[]
+    if matrices is None or len(matrices)==0: return None
     matrices = [FloatTensor(m) for m in matrices if m is not None]
     return reduce(torch.matmul, matrices, torch.eye(3))
 
 def make_p_affine(func):
-    res = lambda *args, p, **kwargs: func(*args,**kwargs) if p else None
+    return lambda *args, p, **kwargs: func(*args,**kwargs) if p else None
 
 def make_tfm_affine(func):
     def _inner(**kwargs):
@@ -186,7 +192,7 @@ def compose_affine_tfms(affine_funcs=None, funcs=None, **kwargs):
     return partial(do_affine, m=affines_mat(matrices), func=compose_tfms(funcs), **kwargs)
 
 def reg_affine(func):
-    setattr(sys.modules[__name__], f'{func.__name__}_tfm', make_tfm_affine(func))
+    setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', make_tfm_affine(func))
     return func
 
 @reg_affine
@@ -208,17 +214,3 @@ def jitter(x, magnitude: uniform) -> TfmType.Coord:
 
 @reg_transform
 def flip_lr(x) -> TfmType.Pixel: return x.flip(2)
-
-def dict_groupby(iterable, key=None):
-    return {k:list(v) for k,v in itertools.groupby(sorted(iterable, key=key), key=key)}
-
-def resolve_pipeline(tfms, **kwargs):
-    tfms = listify(tfms)
-    if len(tfms)==0: return noop
-    grouped_tfms = dict_groupby(tfms, lambda o: o.__annotations__['return'])
-    lighting_tfms,coord_tfms,affine_tfms,pixel_tfms = map(grouped_tfms.get, TfmType)
-    lighting_tfm = apply_lighting_tfms(lighting_tfms)
-    affine_tfm = compose_affine_tfms(affine_tfms, funcs=coord_tfms, **kwargs)
-    pixel_tfm = compose_tfms(pixel_tfms)
-    return lambda x,**k: pixel_tfm(affine_tfm(lighting_tfm(x), **k))
-
