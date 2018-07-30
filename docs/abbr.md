@@ -33,10 +33,11 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | Convert between concepts            | 2              | name2idx(), label2idx(), seq2seq                 |
 | **Aggressive**   |                                     |                |                                                  |
 |                  | function                            | f              |                                                  |
-|                  | input                               | x              |                                                  |
+|                  | torch input                         | x              |                                                  |
 |                  | key                                 | k              |                                                  |
 |                  | value                               | v              |                                                  |
 |                  | index                               | i              |                                                  |
+|                  | lambda var                          | o              |                                                  |
 |                  | object                              | o              |                                                  |
 |                  | variable                            | v              | V(), VV()                                        |
 |                  | tensor                              | t              | T()                                              |
@@ -53,7 +54,7 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | input / output                      | io             |                                                  |
 |                  | object                              | obj            |                                                  |
 |                  | string                              | s              |                                                  |
-|                  | class                               | cls            |                                                  |
+|                  | class                               | cl             | cl, classes                                      |
 |                  | source                              | src            |                                                  |
 |                  | destination                         | dst            |                                                  |
 |                  | directory                           | dir            |                                                  |
@@ -74,25 +75,33 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | dictionary                          | dict           |                                                  |
 |                  | sequence                            | seq            |                                                  |
 |                  |                                     |                |                                                  |
-|                  | dataset                             | ds             |                                                  |
-|                  | dataloader                          | dl             |                                                  |
-|                  | dataframe                           | df             |                                                  |
-|                  | train                               | trn            | trn_ds                                           |
-|                  | validation                          | val            | val_ds                                           |
+|                  | dataset                             | ds             | train_ds                                         |
+|                  | dataloader                          | dl             | train_dl                                         |
+|                  | dataframe                           | df             | train_df                                         |
+|                  | train                               | train          | train_ds, train_dl                               |
+|                  | validation                          | valid          | valid_ds, valid_dl                               |
+|                  | test                                | test           | test_ds,  test_dl                                |
 |                  | number of classes                   | c              |                                                  |
 |                  | batch                               | b              |                                                  |
+|                  | batch's x parts                     | xb             |                                                  |
+|                  | batch's y parts                     | xy             |                                                  |
 |                  | batch size                          | bs             |                                                  |
 |                  | multiple targets                    | multi          | is_multi                                         |
 |                  | regression                          | reg            | is_reg                                           |
 |                  | iterate, iterator                   | iter           | trn_iter, val_iter                               |
 |                  |                                     |                |                                                  |
-|                  | input                               | x              |                                                  |
+|                  | torch input                         | x              |                                                  |
 |                  | target                              | y              |                                                  |
+|                  | dependent var tensor                | dep            |                                                  |
+|                  | independent var tensor              | indep          |                                                  |
 |                  | prediction                          | pred           |                                                  |
 |                  | output                              | out            |                                                  |
-|                  | column                              | col            |                                                  |
-|                  | continuous                          | cont           | conts, cont_cols                                 |
-|                  | category                            | cat            | cats, cat_cols                                   |
+|                  | column                              | col            | dep_col                                          |
+|                  | continuous var                      | cont           | conts                                            |
+|                  | category var                        | cat            | cat, cats                                        |
+|                  | continuous columns                  | cont_cols      |                                                  |
+|                  | category  columns                   | cat_cols       |                                                  |
+|                  | dependent column                    | dep_col        |                                                  |
 |                  |                                     |                |                                                  |
 |                  | index                               | idx            |                                                  |
 |                  | identity                            | id             |                                                  |
