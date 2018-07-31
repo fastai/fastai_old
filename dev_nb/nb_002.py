@@ -54,8 +54,8 @@ def show_image_batch(dl, classes, rows=None):
     x,y = next(iter(dl))[:rows*rows]
     show_images(x,y,rows, classes)
 
-def show_images(x,y,rows, classes):
-    fig, axs = plt.subplots(rows,rows,figsize=(12,15))
+def show_images(x,y,rows, classes, figsize=(12,15)):
+    fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
         show_image(x[i], ax)
         ax.set_title(classes[y[i]])
@@ -81,7 +81,7 @@ def xy_transforms(x_tfms=None, y_tfms=None):
     return list(map(xy_transform, x_tfms, y_tfms))
 
 def normalize(mean,std,x): return (x-mean.reshape(3,1,1))/std.reshape(3,1,1)
-def denormalize(x): return x * data_std.reshape(3,1,1) + data_mean.reshape(3,1,1)
+def denormalize(mean,std,x): return x * std.reshape(3,1,1) + mean.reshape(3,1,1)
 
 TfmType = IntEnum('TfmType', 'Lighting Coord Affine Pixel Final')
 
@@ -91,14 +91,14 @@ def logit_(x): return (x.div_(1-x)).log_()
 def apply_lighting_tfm(func): return lambda x: func(logit_(x)).sigmoid()
 
 def uniform(low=0, high=1, size=None):
-    return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
+    return random.uniform(low,high) if size is None else torch.FloatTensor(*size).uniform_(low,high)
 
 def log_uniform(low, high, size=None):
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
 def randint(low, high, size=None):
-    return random.randint(low,high) if size is None else torch.LongTensor(size).random_(low,high+1)
+    return random.randint(low,high) if size is None else torch.LongTensor(*size).random_(low,high+1)
 
 def rand_bool(p=1, size=None): return uniform(0,1,size)<p
 
@@ -124,9 +124,6 @@ def reg_transform(func):
     return func
 
 def resolve_tfms(tfms): return [f() for f in listify(tfms)]
-def compose_tfms(tfms): return compose(resolve_tfms(tfms))
-def apply_lighting_tfms(tfms): return apply_lighting_tfm(compose_tfms(tfms))
-
 @reg_transform
 def brightness(x, change: uniform) -> TfmType.Lighting:  return x.add_(scipy.special.logit(change))
 
@@ -187,9 +184,8 @@ def make_tfm_affine(func):
         return res
     return _inner
 
-def compose_affine_tfms(affine_funcs=None, funcs=None, **kwargs):
-    matrices = resolve_tfms(affine_funcs)
-    return partial(do_affine, m=affines_mat(matrices), func=compose_tfms(funcs), **kwargs)
+def apply_affine_tfm(matrices=None, func=None, **kwargs):
+    return partial(do_affine, m=affines_mat(matrices), func=func, **kwargs)
 
 def reg_affine(func):
     setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', make_tfm_affine(func))
