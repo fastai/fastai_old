@@ -37,8 +37,7 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | key                                 | k              |                                                  |
 |                  | value                               | v              |                                                  |
 |                  | index                               | i              |                                                  |
-|                  | lambda var                          | o              |                                                  |
-|                  | object                              | o              |                                                  |
+|                  | generic object argument             | o              | [o for o in list], lambda o: o                   |
 |                  | variable                            | v              | V(), VV()                                        |
 |                  | tensor                              | t              | T()                                              |
 |                  | array                               | a              | A()                                              |
