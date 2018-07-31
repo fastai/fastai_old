@@ -49,21 +49,21 @@ def PoolFlatten(): return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
 def is_listy(x): return isinstance(x, (list,tuple))
 
-def listify(x=None, y=None):
-    if x is None: x=[]
-    elif not is_listy(x): x=[x]
-    n = y if type(y)==int else 1 if y is None else len(y)
-    if len(x)==1: x = x * n
-    return x
+def listify(p=None, q=None):
+    if p is None: p=[]
+    elif not is_listy(p): p=[p]
+    n = q if type(q)==int else 1 if q is None else len(q)
+    if len(p)==1: p = p * n
+    return p
 
 def compose(funcs):
-    def _inner(x, y=None):
-        if y is None:
-            for f in listify(funcs): x = f(x)
-            return x
+    def _inner(p, q=None):
+        if q is None:
+            for f in listify(funcs): p = f(p)
+            return p
         else:
-            for f in listify(funcs): x,y = f(x,y)
-            return x,y
+            for f in listify(funcs): p,q = f(p,q)
+            return p,q
     return _inner
 
     #funcs = reversed(listify(funcs))
