@@ -34,8 +34,8 @@ Note that there are always exceptions, especially when we try to comply with the
 | **Aggressive**   |                                     |                |                                                  |
 |                  | function                            | f              |                                                  |
 |                  | torch input                         | x              |                                                  |
-|                  | key                                 | k              |                                                  |
-|                  | value                               | v              |                                                  |
+|                  | key, value                          | k,v            | for k,v in d.items()                             |
+|                  | other pairs of short scope          | p,q            | listify(p,q) (same as python's stdlib)           |
 |                  | index                               | i              |                                                  |
 |                  | generic object argument             | o              | [o for o in list], lambda o: o                   |
 |                  | variable                            | v              | V(), VV()                                        |
