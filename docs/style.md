@@ -47,7 +47,7 @@ Although Python will always be more verbose than many languages, by using these 
 - Take a look at the naming conventions in the part of code you're working on, and try to stick with them. E.g. in
   `fastai.transforms` you'll see 'det' for 'deterministic', 'tfm' for 'transform', and 'coord' for coordinate.
 - Assume the coder has knowledge of the domain in which you're working
-  - For instance, use `kl_divergence` not `kullback_leibler_divergence`; or (like pytorch) use `nll` not `negative_log_liklihood`. If the coder doesn't know these terms, they will need to look them up in the docs anyway and learn the concepts; if they do know the terms, the abbreviations will be well understood
+  - For instance, use `kl_divergence` not `kullback_leibler_divergence`; or (like pytorch) use `nll` not `negative_log_likelihood`. If the coder doesn't know these terms, they will need to look them up in the docs anyway and learn the concepts; if they do know the terms, the abbreviations will be well understood
   - When implementing a paper, aim to follow the paper's nomenclature, unless it's inconsistent with other widely-used conventions. E.g. `conv1` not `first_convolutional_layer`
 
 Although it's hard to design a really compelling experiment for this kind of thing, there is some [interesting research](https://www.sciencedirect.com/science/article/pii/S0167642309000343) supporting the idea that overly long symbol names negatively impact code comprehension.
