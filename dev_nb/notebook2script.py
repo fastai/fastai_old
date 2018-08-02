@@ -14,6 +14,6 @@ def notebook2script(fname):
     module = ''
     for cell in code_cells: module += ''.join(cell['source'][1:]) + '\n\n'
     number = fname.split('_')[0]
-    #with open(f'nb_{number}.py','w') as f: f.write(module[:-2])
+    with open(f'nb_{number}.py','w') as f: f.write(module[:-2])
 
 if __name__ == '__main__': fire.Fire(notebook2script)
