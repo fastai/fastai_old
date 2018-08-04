@@ -111,12 +111,6 @@ def brightness(x, change: uniform) -> TfmType.Lighting:
 def contrast(x, scale: log_uniform) -> TfmType.Lighting:
     return x.mul_(scale)
 
-def resolve_args(func, **kwargs):
-    for k,v in func.__annotations__.items():
-        arg = listify(kwargs.get(k, 1))
-        if k != 'return': kwargs[k] = v(*arg)
-    return kwargs
-
 def make_p_func(func):
     return lambda x, *args, p, **kwargs: func(x,*args,**kwargs) if p else x
 
@@ -129,7 +123,7 @@ def make_tfm_func(func):
     return _inner
 
 def reg_transform(func):
-    setattr(sys.modules[__name__], f'{func.__name__}_tfm', make_tfm_func(func))
+    setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', make_tfm_func(func))
     return func
 
 def resolve_tfms(tfms): return [f() for f in listify(tfms)]
@@ -195,6 +189,32 @@ def make_tfm_affine(func):
 def dict_groupby(iterable, key=None):
     return {k:list(v) for k,v in itertools.groupby(sorted(iterable, key=key), key=key)}
 
+def apply_tfms(tfms):
+    grouped_tfms = dict_groupby(listify(tfms), lambda o: o.__annotations__['return'])
+    affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
+        resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
+    lighting_func = apply_lighting(compose(lighting_tfms))
+    affine_func = apply_affine(affines_mat(affine_tfms))
+    return lambda x, **kwargs: lighting_func(affine_func(x.clone(), **kwargs))
+
+import inspect
+
+def get_default_args(func):
+    return {k: v.default
+            for k, v in inspect.signature(func).parameters.items()
+            if v.default is not inspect.Parameter.empty}
+
+def resolve_args(func, **kwargs):
+    def_args = get_default_args(func)
+    for k,v in func.__annotations__.items():
+        if k == 'return': continue
+        if not k in kwargs and k in def_args:
+            kwargs[k] = def_args[k]
+        else:
+            arg = listify(kwargs.get(k, 1))
+            kwargs[k] = v(*arg)
+    return kwargs
+
 def reg_affine(func):
     setattr(sys.modules[__name__], f'{func.__name__}_tfm', make_tfm_affine(func))
     return func
@@ -207,10 +227,13 @@ def rotate(degrees: uniform) -> TfmType.Affine:
             [0.        ,  0.        , 1.]]
 
 @reg_affine
-def zoom(scale: uniform) -> TfmType.Affine:
-    return [[1/scale, 0,       0.],
-            [0,       1/scale, 0.],
-            [0,       0,       1.]]
+def zoom(scale: uniform, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+    s = 1-1/scale
+    col_c = s * (2*col_pct - 1)
+    row_c = s * (2*row_pct - 1)
+    return [[1/scale, 0,       col_c],
+            [0,       1/scale, row_c],
+            [0,       0,       1.    ]]
 
 @reg_transform
 def jitter(x, magnitude: uniform) -> TfmType.Coord:
