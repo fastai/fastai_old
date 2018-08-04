@@ -67,15 +67,6 @@ def show_images(x,y,rows, classes, figsize=(9,9)):
         ax.set_title(classes[y[i]])
     plt.tight_layout()
 
-def get_batch_stats(dl):
-    x,_ = next(iter(dl))
-    # hack for multi-axis reduction until pytorch has it natively
-    x = x.transpose(0,1).contiguous().view(x.size(1),-1).cpu()
-    return x.mean(1).reshape(3,1,1), x.std(1).reshape(3,1,1)
-
-def normalize(mean,std,x): return (x-mean) / std
-def denormalize(mean,std,x): return x*std + mean
-
 def logit(x): return (x/(1-x)).log()
 def logit_(x): return (x.div_(1-x)).log_()
 
@@ -103,7 +94,7 @@ def log_uniform(low, high, size=None):
 
 def rand_bool(p, size=None): return uniform(0,1,size)<p
 
-TfmType = IntEnum('TfmType', 'Affine Coord Pixel Lighting')
+TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting')
 
 def brightness(x, change: uniform) -> TfmType.Lighting:
     return x.add_(scipy.special.logit(change))
@@ -191,7 +182,7 @@ def dict_groupby(iterable, key=None):
 
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.__annotations__['return'])
-    affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
+    start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
     affine_func = apply_affine(affines_mat(affine_tfms))
@@ -241,12 +232,13 @@ def jitter(x, magnitude: uniform) -> TfmType.Coord:
 
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.__annotations__['return'])
-    affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
+    start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
     affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms))
+    start_func = compose(start_tfms)
     pixel_func = compose(pixel_tfms)
-    return lambda x, **kwargs: pixel_func(lighting_func(affine_func(x.clone(), **kwargs)))
+    return lambda x, **kwargs: pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
 
 @reg_transform
 def flip_lr(x) -> TfmType.Pixel: return x.flip(2)
