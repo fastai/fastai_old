@@ -10,8 +10,8 @@ from torch import nn, optim
 
 from torch.utils.data import TensorDataset, DataLoader, Dataset
 from dataclasses import dataclass
-from typing import Callable
-from functools import partial
+from typing import Any, Collection, Callable
+from functools import partial, reduce
 
 def loss_batch(model, xb, yb, loss_fn, opt=None):
     loss = loss_fn(model(xb), yb)
