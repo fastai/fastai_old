@@ -77,8 +77,8 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | dataset                             | ds             | train_ds                                         |
 |                  | dataloader                          | dl             | train_dl                                         |
 |                  | dataframe                           | df             | train_df                                         |
-|                  | train                               | train          | train_ds, train_dl                               |
-|                  | validation                          | valid          | valid_ds, valid_dl                               |
+|                  | train                               | train          | train_ds, train_dl, train_x, train_y             |
+|                  | validation                          | valid          | valid_ds, valid_dl, valid_x, valid_y             |
 |                  | test                                | test           | test_ds,  test_dl                                |
 |                  | number of classes                   | c              |                                                  |
 |                  | batch                               | b              |                                                  |
