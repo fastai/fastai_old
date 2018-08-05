@@ -83,7 +83,10 @@ def listify(p=None, q=None):
     return p
 
 def compose(funcs):
-    return reduce(lambda f, g: lambda z: f(g(z)), listify(funcs), lambda o: o)
+    def _inner(x, *args, **kwargs):
+        for f in funcs: x = f(x, *args, **kwargs)
+        return x
+    return _inner
 
 def uniform(low, high, size=None):
     return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
