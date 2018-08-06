@@ -105,20 +105,45 @@ def brightness(x, change: uniform) -> TfmType.Lighting:
 def contrast(x, scale: log_uniform) -> TfmType.Lighting:
     return x.mul_(scale)
 
-def make_p_func(func):
-    return lambda x, *args, p, **kwargs: func(x,*args,**kwargs) if p else x
+import inspect
 
-def make_tfm_func(func):
-    def _inner(**kwargs): 
-        res = lambda: partial(make_p_func(func), **resolve_args(func, **kwargs))
-        res.__annotations__ = func.__annotations__
-        res.__annotations__['p'] = rand_bool
-        return res
-    return _inner
+def get_default_args(func):
+    return {k: v.default
+            for k, v in inspect.signature(func).parameters.items()
+            if v.default is not inspect.Parameter.empty}
 
-def reg_transform(func):
-    setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', make_tfm_func(func))
+def resolve_args(func, **kwargs):
+    kwargs.pop('p', None)
+    def_args = get_default_args(func)
+    for k,v in func.__annotations__.items():
+        if k == 'return': continue
+        if not k in kwargs and k in def_args:
+            kwargs[k] = def_args[k]
+        else:
+            arg = listify(kwargs.get(k, 1))
+            kwargs[k] = v(*arg)
+    return kwargs
+
+def noop(x=None, *args, **kwargs): return x
+
+class Transform():
+    def __init__(self, func, **kwargs):
+        self.func,self.kw = func,kwargs
+        self.tfm_type = self.func.__annotations__['return']
+        
+    def __repr__(self):
+        return f'{self.func.__name__}_tfm->{self.tfm_type.name}; {self.kw}'
+    
+    def __call__(self):
+        if 'p' in self.kw and not rand_bool(self.kw['p']): return noop
+        kwargs = resolve_args(self.func, **self.kw)
+        return partial(self.func, **kwargs)
+
+def reg_partial(cl, func):
+    setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', partial(cl,func))
     return func
+
+def reg_transform(func): return reg_partial(Transform, func)
 
 def resolve_tfms(tfms): return [f() for f in listify(tfms)]
 
@@ -169,49 +194,23 @@ def affines_mat(matrices=None):
     matrices = [FloatTensor(m) for m in matrices if m is not None]
     return reduce(torch.matmul, matrices, torch.eye(3))
 
-def make_p_affine(func):
-    return lambda *args, p, **kwargs: func(*args,**kwargs) if p else None
-
-def make_tfm_affine(func):
-    def _inner(**kwargs): 
-        res = lambda: make_p_affine(func)(**resolve_args(func, **kwargs))
-        res.__annotations__ = func.__annotations__
-        res.__annotations__['p'] = rand_bool
-        return res
-    return _inner
+class AffineTransform(Transform):
+    def __call__(self): return super().__call__()()
 
 def dict_groupby(iterable, key=None):
     return {k:list(v) for k,v in itertools.groupby(sorted(iterable, key=key), key=key)}
 
+def reg_affine(func): return reg_partial(AffineTransform, func)
+
 def apply_tfms(tfms):
-    grouped_tfms = dict_groupby(listify(tfms), lambda o: o.__annotations__['return'])
+    grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
     start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
-    affine_func = apply_affine(affines_mat(affine_tfms))
-    return lambda x, **kwargs: lighting_func(affine_func(x.clone(), **kwargs))
-
-import inspect
-
-def get_default_args(func):
-    return {k: v.default
-            for k, v in inspect.signature(func).parameters.items()
-            if v.default is not inspect.Parameter.empty}
-
-def resolve_args(func, **kwargs):
-    def_args = get_default_args(func)
-    for k,v in func.__annotations__.items():
-        if k == 'return': continue
-        if not k in kwargs and k in def_args:
-            kwargs[k] = def_args[k]
-        else:
-            arg = listify(kwargs.get(k, 1))
-            kwargs[k] = v(*arg)
-    return kwargs
-
-def reg_affine(func):
-    setattr(sys.modules[__name__], f'{func.__name__}_tfm', make_tfm_affine(func))
-    return func
+    affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms))
+    start_func = compose(start_tfms)
+    pixel_func = compose(pixel_tfms)
+    return lambda x, **kwargs: pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
 
 @reg_affine
 def rotate(degrees: uniform) -> TfmType.Affine:
@@ -232,16 +231,6 @@ def zoom(scale: uniform, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmTyp
 @reg_transform
 def jitter(x, magnitude: uniform) -> TfmType.Coord:
     return x.add_((torch.rand_like(x)-0.5)*magnitude*2)
-
-def apply_tfms(tfms):
-    grouped_tfms = dict_groupby(listify(tfms), lambda o: o.__annotations__['return'])
-    start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
-        resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
-    lighting_func = apply_lighting(compose(lighting_tfms))
-    affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms))
-    start_func = compose(start_tfms)
-    pixel_func = compose(pixel_tfms)
-    return lambda x, **kwargs: pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
 
 @reg_transform
 def flip_lr(x) -> TfmType.Pixel: return x.flip(2)
