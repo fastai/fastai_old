@@ -15,7 +15,7 @@ def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Pixel:
     rows,cols = size
     row = int((x.size(1)-rows)*row_pct)
     col = int((x.size(2)-cols)*col_pct)
-    return x[:, row:row+rows, col:col+cols]
+    return x[:, row:row+rows, col:col+cols].contiguous()
 
 @dataclass
 class TfmDataset(Dataset):
@@ -41,8 +41,5 @@ class DataBunch():
     def valid_ds(self): return self.valid_dl.dl.dataset
 
 @reg_transform
-def normalize(x, mean,std) -> TfmType.Pixel:
-    return (x-mean[...,None,None]) / std[...,None,None]
-
-def denormalize(x, mean,std):
-    return x*std[...,None,None] + mean[...,None,None]
+def normalize(x, mean,std) -> TfmType.Pixel: return (x-mean[...,None,None]) / std[...,None,None]
+def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
