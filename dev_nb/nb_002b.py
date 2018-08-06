@@ -5,6 +5,8 @@
 
 from nb_002 import *
 
+import typing
+
 @reg_transform
 def pad(x, padding, mode='reflect') -> TfmType.Start:
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
@@ -17,23 +19,26 @@ def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Pixel:
     col = int((x.size(2)-cols)*col_pct)
     return x[:, row:row+rows, col:col+cols].contiguous()
 
-@dataclass
 class TfmDataset(Dataset):
-    ds: Dataset
-    tfms: Collection[Callable] = None
+    def __init__(self, ds: Dataset, tfms: Collection[Callable] = None, **kwargs):
+        self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
         
     def __len__(self): return len(self.ds)
     
     def __getitem__(self,idx):
         x,y = self.ds[idx]
-        if self.tfms is not None: x = apply_tfms(self.tfms)(x)
+        if self.tfms is not None: x = apply_tfms(self.tfms)(x, **self.kwargs)
         return x,y
-    
+
 class DataBunch():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, train_tfm=None, valid_tfm=None, num_workers=4):
+    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(TfmDataset(train_ds,train_tfm), bs, shuffle=True, num_workers=num_workers)
-        self.valid_dl = DeviceDataLoader.create(TfmDataset(valid_ds, valid_tfm), bs*2, shuffle=False, num_workers=num_workers)
+        self.train_dl = DeviceDataLoader.create(train_ds, bs, shuffle=True, num_workers=num_workers)
+        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers)
+
+    @classmethod
+    def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, **kwargs):
+        return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm))
         
     @property
     def train_ds(self): return self.train_dl.dl.dataset
@@ -42,4 +47,35 @@ class DataBunch():
 
 @reg_transform
 def normalize(x, mean,std) -> TfmType.Pixel: return (x-mean[...,None,None]) / std[...,None,None]
+
 def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
+
+def conv_layer(ni, nf, ks=3, stride=1):
+    return nn.Sequential(
+        nn.Conv2d(ni, nf, kernel_size=ks, bias=False, stride=stride, padding=ks//2),
+        nn.BatchNorm2d(nf),
+        nn.LeakyReLU(negative_slope=0.1, inplace=True))
+
+class ResLayer(nn.Module):
+    def __init__(self, ni):
+        super().__init__()
+        self.conv1=conv_layer(ni, ni//2, ks=1)
+        self.conv2=conv_layer(ni//2, ni, ks=3)
+        
+    def forward(self, x): return x + self.conv2(self.conv1(x))
+
+class Darknet(nn.Module):
+    def make_group_layer(self, ch_in, num_blocks, stride=1):
+        return [conv_layer(ch_in, ch_in*2,stride=stride)
+               ] + [(ResLayer(ch_in*2)) for i in range(num_blocks)]
+
+    def __init__(self, num_blocks, num_classes, nf=32):
+        super().__init__()
+        layers = [conv_layer(3, nf, ks=3, stride=1)]
+        for i,nb in enumerate(num_blocks):
+            layers += self.make_group_layer(nf, nb, stride=2-(i==1))
+            nf *= 2
+        layers += [nn.AdaptiveAvgPool2d(1), Flatten(), nn.Linear(nf, num_classes)]
+        self.layers = nn.Sequential(*layers)
+    
+    def forward(self, x): return self.layers(x)

@@ -56,9 +56,9 @@ def show_image(img, ax=None, figsize=(3,3), hide_axis=True):
     if hide_axis: ax.axis('off')
 
 def show_image_batch(dl, classes, rows=None, figsize=(12,15)):
+    x,y = next(iter(dl))
     if rows is None: rows = int(math.sqrt(len(x)))
-    x,y = next(iter(dl))[:rows*rows]
-    show_images(x,y,rows, classes)
+    show_images(x[:rows*rows],y[:rows*rows],rows, classes)
 
 def show_images(x,y,rows, classes, figsize=(9,9)):
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
@@ -220,7 +220,7 @@ def rotate(degrees: uniform) -> TfmType.Affine:
             [0.        ,  0.        , 1.]]
 
 @reg_affine
-def zoom(scale: uniform, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+def zoom(scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
     s = 1-1/scale
     col_c = s * (2*col_pct - 1)
     row_c = s * (2*row_pct - 1)
