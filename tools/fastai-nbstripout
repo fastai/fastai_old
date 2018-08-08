@@ -147,7 +147,7 @@ def _cells(nb):
         for cell in nb.cells:
             yield cell
 
-def strip_output(nb, keep_output, keep_count):
+def strip_output(nb, keep_output, keep_count, doc_mode):
     """
     Strip the outputs, execution count/prompt number and miscellaneous
     metadata from a notebook object, unless specified to keep either the outputs
@@ -157,11 +157,20 @@ def strip_output(nb, keep_output, keep_count):
     nb_metadata   = ['signature', 'widgets', 'toc', 'varInspector',
                      'language_info']
     cell_metadata = ['ExecuteTime', 'autoscroll' 'collapsed', 'deletable',
-                     'format', 'heading_collapsed', 'hidden', 'name',
-                     'scrolled', 'tags']
+                     'format', 'heading_collapsed', 'hidden', 'hide_input',
+                     'name', 'scrolled', 'tags', 'trusted']
 
     # remove global meta entries (mainly inserted by extensions)
     for meta in nb_metadata: nb.metadata.pop(meta, None)
+
+    # for doc mode we keep the outputs and certain metadata fields
+    if doc_mode:
+        cell_metadata.remove('hide_input')
+        cell_metadata.remove('trusted')
+        keep_output = 1 # override the command line option
+
+    print(cell_metadata)
+    exit
 
     for cell in _cells(nb):
 
@@ -331,6 +340,8 @@ def main():
 
     parser.add_argument('--textconv', '-t', action='store_true',
                         help='Prints stripped files to STDOUT')
+    parser.add_argument('--doc-mode', '-d', action='store_true',
+                        help='Special heuristics for fastai doc nbs')
 
     parser.add_argument('files', nargs='*', help='Files to strip output from')
     args = parser.parse_args()
@@ -353,7 +364,7 @@ def main():
         try:
             with io.open(filename, 'r', encoding='utf8') as f:
                 nb = read(f, as_version=NO_CONVERT)
-            nb = strip_output(nb, args.keep_output, args.keep_count)
+            nb = strip_output(nb, args.keep_output, args.keep_count, args.doc_mode)
             if args.textconv:
                 write(nb, output_stream)
                 output_stream.flush()
@@ -371,7 +382,7 @@ def main():
     if not args.files and input_stream:
         try:
             nb = strip_output(read(input_stream, as_version=NO_CONVERT),
-                              args.keep_output, args.keep_count)
+                              args.keep_output, args.keep_count, args.doc_mode)
             write(nb, output_stream)
             output_stream.flush()
         except NotJSONError:
