@@ -2,9 +2,18 @@
 # cd fastai_v1
 # git config --local include.path '../.gitconfig'
 
-[filter "fastai-nbstripout"]
+# code notebooks strip out
+[filter "fastai-nbstripout-code"]
         clean = tools/fastai-nbstripout
         smudge = cat
         required = true
-[diff "ipynb"]
+[diff "ipynb-code"]
         textconv = tools/fastai-nbstripout -t
+
+# docs notebooks strip out
+[filter "fastai-nbstripout-docs"]
+        clean = tools/fastai-nbstripout -d
+        smudge = cat
+        required = true
+[diff "ipynb-docs"]
+        textconv = tools/fastai-nbstripout -dt
