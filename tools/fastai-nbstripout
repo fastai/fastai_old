@@ -169,9 +169,6 @@ def strip_output(nb, keep_output, keep_count, doc_mode):
         cell_metadata.remove('trusted')
         keep_output = 1 # override the command line option
 
-    print(cell_metadata)
-    exit
-
     for cell in _cells(nb):
 
         keep_output_this_cell = keep_output
