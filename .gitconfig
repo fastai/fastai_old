@@ -1,0 +1,10 @@
+# you need to enable this configuration once after checking out the repo for the first time
+# cd fastai_v1
+# git config --local include.path '../.gitconfig'
+
+[filter "fastai-nbstripout"]
+        clean = tools/fastai-nbstripout
+        smudge = cat
+        required = true
+[diff "ipynb"]
+        textconv = tools/fastai-nbstripout -t
