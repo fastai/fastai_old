@@ -12,7 +12,7 @@ def pad(x, padding, mode='reflect') -> TfmType.Start:
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @reg_transform
-def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Pixel:
+def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Pixel:
     size = listify(size,2)
     rows,cols = size
     row = int((x.size(1)-rows)*row_pct)
