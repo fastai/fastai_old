@@ -1,6 +1,12 @@
-# you need to enable this configuration once after checking out the repo for the first time
+# you need to enable this configuration once after checking out the repo for the first time (assuming you checked it out into fastai_v1 dir):
+#
 # cd fastai_v1
 # git config --local include.path '../.gitconfig'
+#
+# if you need to disable this instrumentation do:
+#
+# cd fastai_v1
+# git config --local --unset include.path
 
 # code notebooks strip out
 [filter "fastai-nbstripout-code"]
