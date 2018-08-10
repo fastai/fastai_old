@@ -163,11 +163,12 @@ class Learner():
 
 def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
     out = model(xb)
+    if cb_handler is not None: out = cb_handler.on_loss_begin(out)
     loss = loss_fn(out, yb)
     mets = [f(out,yb).item() for f in metrics] if metrics is not None else []
     
     if opt is not None:
-        if cb_handler is not None: loss = cb_handler.on_backward_begin(loss, out)
+        if cb_handler is not None: loss = cb_handler.on_backward_begin(loss)
         loss.backward()
         if cb_handler is not None: cb_handler.on_backward_end()
         opt.step()
@@ -211,9 +212,13 @@ class Callback():
         #To set HP before the step is done. A look at the input can be useful (set the lr depending on the seq_len in RNNs, 
         #or for reg_functions called in on_backward_begin)
         #Returns xb, yb (which can allow us to modify the input at that step if needed)
-    def on_backward_begin(self, loss, out): pass
+    def on_loss_begin(self, out): pass
+        #Called after the forward pass but before the loss has been computed.
+        #Passes the output of the model.
+        #Returns the output (which can allow us to modify it)
+    def on_backward_begin(self, loss): pass
         #Called after the forward pass and the loss has been computed, but before the back propagation.
-        #Passes the loss and the output of the model.
+        #Passes the loss of the model.
         #Returns the loss (which can allow us to modify it, for instance for reg functions)
     def on_backward_end(self): pass
         #Called after the back propagation had been done (and the gradients computed) but before the step of the optimizer.
@@ -244,12 +249,17 @@ class CallbackHandler():
             if a is not None: xb,yb = a
         return xb,yb
     
-    def on_backward_begin(self, loss, out):
+    def on_loss_begin(self, out):
         for cb in self.callbacks:
-            a = cb.on_backward_begin(loss, out)
+            a = cb.on_backward_begin(out)
+            if a is not None: out = a
+        return out
+    
+    def on_backward_begin(self, loss):
+        for cb in self.callbacks:
+            a = cb.on_backward_begin(loss)
             if a is not None: loss = a
         return loss
-    
     
     def on_backward_end(self):        self('backward_end')
     def on_step_end(self):            self('step_end')
