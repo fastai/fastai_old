@@ -64,6 +64,7 @@ class HPOptimizer():
     
     #Helper functions
     def read_defaults(self):
+        self._beta = None
         if 'momentum' in self.opt_keys: self._mom = self.opt.param_groups[0]['momentum']
         if 'alpha' in self.opt_keys: self._beta = self.opt.param_groups[0]['alpha']
         if 'betas' in self.opt_keys: self._mom,self._beta = self.opt.param_groups[0]['betas']
