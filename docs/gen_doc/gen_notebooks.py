@@ -3,6 +3,8 @@ from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
 from pathlib import Path
 
+__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
+
 def get_empty_notebook():
     """
     Returns a default notbook with the minimum metadata.
@@ -125,8 +127,8 @@ def create_module_page(mod_name, dest_path):
             for name in in_ft_names:
                 cells += [get_doc_cell(f'{mod_name}', name), get_empty_cell()]
     nb['cells'] = init_cell + cells
-    json.dump(nb, open(dest_path/f'{mod_name}.ipynb','w'))
-    execute_nb(dest_path/f'{mod_name}.ipynb')
+    json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
+    execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
 
 def get_module_names(path_dir, exclude=['.ipynb_checkpoints', '__pycache__']):
     """
@@ -183,7 +185,7 @@ def update_pos(pos_dict, start_key, nbr=2):
     Updates the position dictionary by moving all positions after start_ket by nbr.
     """
     for key,idx in pos_dict.items():
-        if str.lower(key) >= str.lower(start_key): pos_dict[key] += nb
+        if str.lower(key) >= str.lower(start_key): pos_dict[key] += nbr
     return pos_dict
 
 def insert_cells(cells, pos_dict, mod_name, ft_name):
@@ -201,9 +203,9 @@ def insert_cells(cells, pos_dict, mod_name, ft_name):
 
 def update_module_page(mod_name, dest_path):
     """
-    Updates the documentation ntoebook of a given module.
+    Updates the documentation notebook of a given module.
     """
-    nb = read_nb(dest_path/f'{mod_name}.ipynb')
+    nb = read_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
     mod = importlib.import_module(mod_name)
     mod = importlib.reload(mod)
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
@@ -225,23 +227,14 @@ def update_module_page(mod_name, dest_path):
                 if name not in pos_dict.keys():
                     cells, pos_dict = insert_cells(cells, pos_dict, mod_name, name)
     nb['cells'] = cells
-    json.dump(nb, open(dest_path/f'{mod_name}.ipynb','w'))
-    execute_nb(dest_path/f'{mod_name}.ipynb')
+    json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
+    execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
 
 def update_all(mod_name, dest_path, exclude=['.ipynb_checkpoints', '__pycache__']):
     """
     Updates all the notebooks in a given package.
     """
     mod_files = get_module_names(Path(mod_name), exclude)
-    for file in mod_files:
-        print(f'Updating module page of {mod_name}')
-        update_module_page(mod_name, dest_path)
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--source_path", type=str, default='.', helper='the directory where the modules to document are')
-parser.add_argument("--dest_path", type=str, default='results', helper='the destination folder')
-parser.add_argument('--update', action='store_true', helper='decides if the script generates or updates the doc')
-arg = parser.parse_args()
-
-if arg.update: update_all(arg.source_path, Path(arg.dest_path))
-else: generate_all(arg.source_path, Path(arg.dest_path))
+    for f in mod_files:
+        print(f'Updating module page of {f}')
+        update_module_page(f, dest_path)
