@@ -81,7 +81,7 @@ class DeviceDataLoader():
         return iter(self.gen)
 
     @classmethod
-    def create(cls, *args, device=default_device, progress_func=tqdm, **kwargs):
+    def create(cls, *args, device=default_device, progress_func=partial(tqdm), **kwargs):
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func)
 
 def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
