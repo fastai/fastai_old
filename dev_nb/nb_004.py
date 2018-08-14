@@ -5,13 +5,13 @@
 
 from nb_003a import *
 
-class HPOptimizer():
-    def __init__(self, params, opt_fn, init_lr, true_wd=False):
-        self.opt = opt_fn(params, init_lr)
-        self._lr, self.true_wd = init_lr, true_wd
+class OptimWrapper():
+    def __init__(self, opt, wd=0., true_wd=False):
+        self.opt,self.true_wd = opt,true_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
+        self._wd = wd
     
     #Pytorch optimizer methods
     def step(self):
@@ -60,6 +60,7 @@ class HPOptimizer():
     #Helper functions
     def read_defaults(self):
         self._beta = None
+        if 'lr' in self.opt_keys: self._lr = self.opt.param_groups[0]['lr']
         if 'momentum' in self.opt_keys: self._mom = self.opt.param_groups[0]['momentum']
         if 'alpha' in self.opt_keys: self._beta = self.opt.param_groups[0]['alpha']
         if 'betas' in self.opt_keys: self._mom,self._beta = self.opt.param_groups[0]['betas']
@@ -288,14 +289,12 @@ class Learner():
     data: DataBunch
     model: nn.Module
     loss_fn: Callable = F.cross_entropy
-    opt_fn: Callable = optim.SGD
     metrics: Collection[Callable] = None
     true_wd: bool = False
     def __post_init__(self): self.model = self.model.to(self.data.device)
 
     def fit(self, epochs, lr, wd=0., callbacks=None):
-        self.opt = HPOptimizer(self.model.parameters(), self.opt_fn, init_lr=lr, true_wd=self.true_wd)
-        self.opt.wd = wd
+        self.opt = OptimWrapper(opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
         self.recorder = Recorder(self.opt, self.data.train_dl)
         if callbacks is None: callbacks = []
         callbacks = [self.recorder]+callbacks
@@ -349,8 +348,8 @@ class Recorder(Callback):
     
     def plot_losses(self):
         _, ax = plt.subplots(1,1)
-        iterations = list(range(len(rec.losses)))
-        ax.plot(iterations, rec.losses)
+        iterations = list(range(len(self.losses)))
+        ax.plot(iterations, self.losses)
         val_iter = self.nb_batches
         val_iter = np.array(val_iter).cumsum()
         ax.plot(val_iter, self.val_losses)
