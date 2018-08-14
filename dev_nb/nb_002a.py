@@ -178,35 +178,28 @@ def grid_sample(x, coords, mode='bilinear', padding_mode='reflect'):
 
 def affine_grid(x, matrix, size=None):
     if size is None: size = x.size()
-    elif isinstance(size, int): size=(x.size(0), size, size)
+    elif isinstance(size, int):
+        h,w = x.size(1),x.size(2)
+        size = (x.size(0), size, int(w*size/h)) if h<w else (x.size(0), int(h*size/w), size)
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
 def affines_mat(matrices=None):
     if matrices is None: matrices=[]
-    matrices = [FloatTensor(m) for m in matrices if m is not None]
-    return reduce(torch.matmul, matrices, torch.eye(3))
-
-def affine_mult(c,m):
-    ori_sz = c.size()
-    c = c.view(-1,2)
-    c = torch.addmm(m[:2,2], c,  m[:2,:2].t()) 
-    return c.view(ori_sz)
+    def _inner(img, **kwargs):
+        mats = [FloatTensor(m(img)) for m in matrices if m is not None and m != noop]
+        return reduce(torch.matmul, mats, torch.eye(3))
+    return _inner
 
 def apply_affine(m=None, func=None):
     def _inner(img, size=None, **kwargs):
-        c = affine_grid(img, torch.eye(3), size=size)
-        if func is not None: c = func(c, img.size())
-        if m is not None: c = affine_mult(c, m)
+        mat = torch.eye(3) if m is None else m(img)
+        c = affine_grid(img,  img.new_tensor(mat), size=size)
+        if func is not None: c = func(c)
         return grid_sample(img, c, **kwargs)
     return _inner
 
-class AffineTransform(Transform):
-    def __call__(self): return super().__call__()()
-
 def dict_groupby(iterable, key=None):
     return {k:list(v) for k,v in itertools.groupby(sorted(iterable, key=key), key=key)}
-
-def reg_affine(func): return reg_partial(AffineTransform, func)
 
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
@@ -218,36 +211,24 @@ def apply_tfms(tfms):
     pixel_func = compose(pixel_tfms)
     return lambda x, **kwargs: pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
 
-@reg_affine
-def rotate(degrees: uniform) -> TfmType.Affine:
+@reg_transform
+def rotate(x, degrees: uniform) -> TfmType.Affine:
     angle = degrees * math.pi / 180
     return [[cos(angle), -sin(angle), 0.],
             [sin(angle),  cos(angle), 0.],
             [0.        ,  0.        , 1.]]
 
-def get_zoom_mat(sw, sh, c, r):
-    return [[sw, 0,  c],
-            [0, sh,  r],
-            [0,  0, 1.]]
-
-@reg_affine
-def zoom(scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+@reg_transform
+def zoom(x, scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
     s = 1-1/scale
     col_c = s * (2*col_pct - 1)
     row_c = s * (2*row_pct - 1)
-    return get_zoom_mat(1/scale, 1/scale, col_c, row_c)
-
-@reg_affine
-def squish(scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
-    if scale <= 1: 
-        col_c = (1-scale) * (2*col_pct - 1)
-        return get_zoom_mat(scale, 1, col_c, 0.)
-    else:          
-        row_c = (1-1/scale) * (2*row_pct - 1)
-        return get_zoom_mat(1, 1/scale, 0., row_c)
+    return [[1/scale, 0,       col_c],
+            [0,       1/scale, row_c],
+            [0,       0,       1.    ]]
 
 @reg_transform
-def jitter(x, size, magnitude: uniform) -> TfmType.Coord:
+def jitter(x, magnitude: uniform) -> TfmType.Coord:
     return x.add_((torch.rand_like(x)-0.5)*magnitude*2)
 
 @reg_transform
@@ -258,8 +239,12 @@ def get_zoom_mat(sw, sh, c, r):
             [0, sh,  r],
             [0,  0, 1.]]
 
-def compute_zs_mat(sz, scale, squish, invert, row_pct, col_pct):
-    orig_ratio = math.sqrt(sz[2]/sz[1])
+@reg_transform
+def zoom_squish(x, scale: uniform = 1.0, squish: uniform=1.0, invert: rand_bool = False, 
+                row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+    #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
+    #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
+    orig_ratio = math.sqrt(x.size(2)/x.size(1))
     for s,r, i in zip(scale,squish, invert):
         s,r = math.sqrt(s),math.sqrt(r)
         if s * r <= 1 and s / r <= 1: #Test if we are completely inside the picture
@@ -269,15 +254,7 @@ def compute_zs_mat(sz, scale, squish, invert, row_pct, col_pct):
             col_c = (1-w) * (2*col_pct - 1)
             row_c = (1-h) * (2*row_pct - 1)
             return get_zoom_mat(w, h, col_c, row_c)
-        
-    #Fallback, hack to emulate a center crop without cropping anything yet.
+    
+    #Fallback: center crop
     if orig_ratio > 1: return get_zoom_mat(1/orig_ratio**2, 1, 0, 0.)
     else:              return get_zoom_mat(1, orig_ratio**2, 0, 0.)
-
-@reg_transform
-def zoom_squish(c, sz, scale: uniform = 1.0, squish: uniform=1.0, invert: rand_bool = False, 
-                row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Coord:
-    #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
-    #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
-    m = compute_zs_mat(sz, scale, squish, invert, row_pct, col_pct)
-    return affine_mult(c, FloatTensor(m))
