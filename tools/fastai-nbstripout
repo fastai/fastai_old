@@ -156,9 +156,9 @@ def strip_output(nb, keep_output, keep_count, doc_mode):
 
     nb_metadata   = ['signature', 'widgets', 'toc', 'varInspector',
                      'language_info']
-    cell_metadata = ['ExecuteTime', 'autoscroll' 'collapsed', 'deletable',
+    cell_metadata = ['ExecuteTime', 'autoscroll', 'collapsed', 'deletable',
                      'format', 'heading_collapsed', 'hidden', 'hide_input',
-                     'name', 'scrolled', 'tags', 'trusted']
+                     'name', 'scrolled', 'tags']
 
     # remove global meta entries (mainly inserted by extensions)
     for meta in nb_metadata: nb.metadata.pop(meta, None)
@@ -166,7 +166,6 @@ def strip_output(nb, keep_output, keep_count, doc_mode):
     # for doc mode we keep the outputs and certain metadata fields
     if doc_mode:
         cell_metadata.remove('hide_input')
-        cell_metadata.remove('trusted')
         keep_output = 1 # override the command line option
 
     for cell in _cells(nb):
