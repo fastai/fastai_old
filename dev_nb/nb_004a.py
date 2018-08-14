@@ -7,9 +7,8 @@ from nb_004 import *
 
 def to_half(b):  return [b[0].half(), b[1]]
 
-#For some reason DeviceDataLoader doesn't get overriden with no change of name, need to clean this up later.
 @dataclass
-class DeviceDataLoader1():
+class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
     progress_func: Callable
@@ -27,21 +26,7 @@ class DeviceDataLoader1():
     def create(cls, *args, device=default_device, progress_func=tqdm, **kwargs):
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, half=False)
 
-#Same for Databunch
-class DataBunch1():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader1.create(train_ds, bs, shuffle=True, num_workers=num_workers)
-        self.valid_dl = DeviceDataLoader1.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers)
-
-    @classmethod
-    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, **kwargs):
-        return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm), **kwargs)
-        
-    @property
-    def train_ds(self): return self.train_dl.dl.dataset
-    @property
-    def valid_ds(self): return self.valid_dl.dl.dataset
+nb_002b.DeviceDataLoader = DeviceDataLoader
 
 def bn2float(module):
     if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()
@@ -49,22 +34,17 @@ def bn2float(module):
     return module
 
 def model2half(model):
-    """
-    Converts the model to half precision except the batchnorm layers.
-    """
-    model = model.half()
-    return bn2float(model)
+    "Converts the model to half precision except the batchnorm layers"
+    return bn2float(model.half())
 
-from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
+from torch._utils import _unflatten_dense_tensors
+from torch.nn.utils import parameters_to_vector
 
 def get_master(model, flat_master=False):
-    """
-    Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32
-    """
+    "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"
     model_params = [param for param in model.parameters() if param.requires_grad]
     if flat_master:
-        #Flattens all the parameters in one big tensor.
-        master_params = _flatten_dense_tensors([param.data.float() for param in model_params])
+        master_params = parameters_to_vector([param.data.float() for param in model_params])
         master_params = torch.nn.Parameter(master_params)
         master_params.requires_grad = True
         if master_params.grad is None: master_params.grad = master_params.new(*master_params.size())
@@ -74,12 +54,11 @@ def get_master(model, flat_master=False):
         for param in master_params: param.requires_grad = True
         return model_params, master_params
 
+#export
 def model_g2master_g(model_params, master_params, flat_master=False):
-    """
-    Copies the model gradients to the master parameters for the optimizer step.
-    """
+    "Copies the model gradients to the master parameters for the optimizer step"
     if flat_master:
-        master_params[0].grad.data.copy_(_flatten_dense_tensors([p.grad.data.float() for p in model_params]))
+        master_params[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_params]))
     else:
         for model, master in zip(model_params, master_params):
             if model.grad is not None:
@@ -87,21 +66,21 @@ def model_g2master_g(model_params, master_params, flat_master=False):
                 master.grad.data.copy_(model.grad.data)
             else: master.grad = None
 
+#export
 def master2model(model_params, master_params, flat_master=False):
-    """
-    Copy master parameters to model parameters.
-    """
+    "Copy master parameters to model parameters"
     if flat_master:
         for model, master in zip(model_params, _unflatten_dense_tensors(master_params[0].data, model_params)):
             model.data.copy_(master)
-    else:
-        for model, master in zip(model_params, master_params):
-            model.data.copy_(master.data)
+    else: 
+        for model, master in zip(model_params, master_params): model.data.copy_(master.data)
 
+@dataclass
 class MixedPrecision(Callback):
-    
-    def __init__(self, learn, loss_scale=512, flat_master=False):
-        self.learn,self.loss_scale,self.flat_master = learn,loss_scale, flat_master
+    learn:Learner
+    loss_scale:int = 512
+    flat_master:bool = False
+    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn." 
     
     def on_train_begin(self, **kwargs):
         #Insures the dataloaders are in half precision.
@@ -128,9 +107,9 @@ class MixedPrecision(Callback):
         #Convert the gradients back to FP32 and divide them by the scale.
         model_g2master_g(self.model_params, self.master_params, self.flat_master)
         for param in self.master_params: param.grad.div_(self.loss_scale)
-        #Zeros the gradients of the model since the optimizer is disconnected.
-        self.learn.model.zero_grad()
     
     def on_step_end(self, **kwargs):
+        #Zeros the gradients of the model since the optimizer is disconnected.
+        self.learn.model.zero_grad()
         #Update the params from master to model.
         master2model(self.model_params, self.master_params, self.flat_master)
