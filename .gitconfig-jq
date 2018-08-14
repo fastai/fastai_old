@@ -1,8 +1,12 @@
 # You need to enable this configuration once after checking out the repo 
 # for the first time (assuming you checked it out into fastai_v1 dir):
 #
+# If you have jq installed (apt install jq), fastai-nbstripout-jq is a
+# significantly faster version. if you don't, then look inside
+# .gitconfig for a slower python version of the same.
+#
 # cd fastai_v1
-# git config --local include.path '../.gitconfig'
+# git config --local include.path '../.gitconfig-jq'
 #
 # to let the system decide which of the 2 config files to use
 # (i.e. whether you have jq installed or not) use:

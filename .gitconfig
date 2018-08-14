@@ -4,6 +4,8 @@
 # cd fastai_v1
 # git config --local include.path '../.gitconfig'
 #
+# for a much faster version please see .gitconfig-jq
+#
 # If you need to disable this instrumentation do:
 #
 # git config --local --unset include.path
