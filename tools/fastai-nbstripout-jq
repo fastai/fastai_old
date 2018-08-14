@@ -1,6 +1,12 @@
 #!/bin/sh
 
-# for reference see 
+# This script is identical in striping out functionality with
+# fastai-nbstripout, and supports textconv mode (with -t), and docs nb
+# mode (with -d)
+#
+# For instrumenting git to use this script look under fastai_v1/.gitconfig-jq
+#
+# For jq docs/examples see:
 # https://stedolan.github.io/jq/manual/
 # https://github.com/stedolan/jq/wiki/Cookbook
 
@@ -30,7 +36,7 @@ shift $((OPTIND-1))
 # if (.key == "key1" or .key == "key2")
 
 filter_docs='
-    (.cells[] | select(has("execution_count")) | .execution_count) = null
+   (.cells[] | select(has("execution_count")) | .execution_count) = null
   | .cells[].metadata |= with_entries(
       if (.key == "hide_input")
       then .     # keep the entry
