@@ -212,7 +212,13 @@ def accuracy(out, yb):
 
 def annealing_no(start, end, pct): return start
 def annealing_linear(start, end, pct): return start + pct * (end-start)
-def annealing_exponential(start, end, pct): return start * (end/start) ** pct
+def annealing_exp(start, end, pct): return start * (end/start) ** pct
+def annealing_cos(start, end, pct):
+    cos_out = np.cos(np.pi * pct) + 1
+    return end + (start-end)/2 * cos_out
+    
+def do_annealing_poly(start, end, pct, degree): return end + (start-end) * (1-pct)**degree
+def annealing_poly(degree): return functools.partial(do_annealing_poly, degree=degree)
 
 def is_tuple(x): return isinstance(x, tuple)
 
@@ -254,19 +260,38 @@ class OneCycleScheduler(Callback):
             self.idx_s += 1
             if self.idx_s >= len(self.lr_scheds): return True
 
+@dataclass
+class Learner():
+    data: DataBunch
+    model: nn.Module
+    opt_fn: Callable = optim.SGD
+    loss_fn: Callable = F.cross_entropy
+    metrics: Collection[Callable] = None
+    true_wd: bool = False
+    def __post_init__(self): self.model = self.model.to(self.data.device)
+
+    def fit(self, epochs, lr, wd=0., callbacks=None):
+        if not hasattr(self, 'opt'): self.create_opt(lr, wd)
+        self.recorder = Recorder(self.opt, self.data.train_dl)
+        if callbacks is None: callbacks = []
+        callbacks = [self.recorder]+callbacks
+        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
+    
+    def create_opt(self, lr, wd=0.):
+        self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
+
 class LRFinder(Callback):
     #TODO: add model.save in init or on_train_begin and model.load in on_train_end.
     
-    def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
-        self.learn = learn
-        self.sched = Stepper((start_lr, end_lr), num_it, annealing_exponential)
+    def __init__(self, opt, data, start_lr=1e-5, end_lr=10, num_it=200):
+        self.opt,self.data = opt,data
+        self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
         #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
         #during the call to fit.
-        self.valid_dl = learn.data.valid_dl
-        learn.data.valid_dl = None
+        self.valid_dl = data.valid_dl
+        self.data.valid_dl = None
     
     def on_train_begin(self, **kwargs):
-        self.opt = self.learn.opt
         self.opt.lr = self.sched.start
         self.stop,self.best_loss = False,0.
     
@@ -282,28 +307,13 @@ class LRFinder(Callback):
     
     def on_train_end(self, **kwargs):
         #Clean up and put back the valid_dl in its place.
-        self.learn.data.valid_dl = self.valid_dl
+        self.data.valid_dl = self.valid_dl
 
-@dataclass
-class Learner():
-    data: DataBunch
-    model: nn.Module
-    loss_fn: Callable = F.cross_entropy
-    metrics: Collection[Callable] = None
-    true_wd: bool = False
-    def __post_init__(self): self.model = self.model.to(self.data.device)
-
-    def fit(self, epochs, lr, wd=0., callbacks=None):
-        self.opt = OptimWrapper(opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
-        self.recorder = Recorder(self.opt, self.data.train_dl)
-        if callbacks is None: callbacks = []
-        callbacks = [self.recorder]+callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
-        
-    def lr_find(self, start_lr=1e-5, end_lr=10, num_it=100):
-        cb = LRFinder(self, start_lr, end_lr, num_it)
-        a = int(np.ceil(num_it/len(self.data.train_dl)))
-        self.fit(a, start_lr, callbacks=[cb])
+def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100):
+    learn.create_opt(start_lr)
+    cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
+    a = int(np.ceil(num_it/len(learn.data.train_dl)))
+    learn.fit(a, start_lr, callbacks=[cb])
 
 @dataclass
 class Recorder(Callback):
@@ -351,14 +361,14 @@ class Recorder(Callback):
         iterations = list(range(len(self.losses)))
         ax.plot(iterations, self.losses)
         val_iter = self.nb_batches
-        val_iter = np.array(val_iter).cumsum()
+        val_iter = np.cumsum(val_iter)
         ax.plot(val_iter, self.val_losses)
     
     def plot_metrics(self):
         assert len(self.metrics) != 0, "There is no metrics to plot."
         _, axes = plt.subplots(len(self.metrics[0]),1,figsize=(6, 4*len(self.metrics[0])))
         val_iter = self.nb_batches
-        val_iter = np.array(val_iter).cumsum()
+        val_iter = np.cumsum(val_iter)
         axes = axes.flatten() if len(self.metrics[0]) != 1 else [axes]
         for i, ax in enumerate(axes):
             values = [met[i] for met in self.metrics]
