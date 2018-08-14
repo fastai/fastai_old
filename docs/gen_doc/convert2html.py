@@ -1,4 +1,4 @@
-import re, nbformat, jupyter_contrib_nbextensions
+import os.path, re, nbformat, jupyter_contrib_nbextensions
 from nbconvert.preprocessors import Preprocessor
 from nbconvert import HTMLExporter
 from traitlets.config import Config
@@ -18,7 +18,7 @@ class HandleLinksPreprocessor(Preprocessor):
 exporter = HTMLExporter(Config())
 #Loads the template to deal with hidden cells.
 exporter.template_file = 'nbextensions.tpl'
-exporter.template_path.append(jupyter_contrib_nbextensions.__path__[0] + '\\templates')
+exporter.template_path.append(os.path.join(jupyter_contrib_nbextensions.__path__[0], 'templates'))
 #Preprocesser that converts the .ipynb links in .html
 exporter.register_preprocessor(HandleLinksPreprocessor, enabled=True)
 
