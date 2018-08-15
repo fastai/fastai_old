@@ -281,7 +281,6 @@ class Learner():
         self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
 
 class LRFinder(Callback):
-    #TODO: add model.save in init or on_train_begin and model.load in on_train_end.
     
     def __init__(self, opt, data, start_lr=1e-5, end_lr=10, num_it=200):
         self.opt,self.data = opt,data
@@ -310,6 +309,7 @@ class LRFinder(Callback):
         self.data.valid_dl = self.valid_dl
 
 def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100):
+    #TODO: add model.save in init or on_train_begin and model.load in on_train_end.
     learn.create_opt(start_lr)
     cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
