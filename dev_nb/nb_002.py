@@ -73,7 +73,8 @@ def logit_(x): return (x.div_(1-x)).log_()
 def brightness(x, change): return x.add_(scipy.special.logit(change))
 def contrast(x, scale): return x.mul_(scale)
 
-def apply_lighting(func): return lambda x: func(logit_(x)).sigmoid()
+def _apply_lighting(x, func): return func(logit_(x)).sigmoid()
+def apply_lighting(func):     return partial(_apply_lighting, func=func)
 
 def listify(p=None, q=None):
     if p is None: p=[]
@@ -99,10 +100,10 @@ def rand_bool(p, size=None): return uniform(0,1,size)<p
 
 TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting')
 
-def brightness(x, change: uniform) -> TfmType.Lighting:
+def brightness(x, change:uniform) -> TfmType.Lighting:
     return x.add_(scipy.special.logit(change))
 
-def contrast(x, scale: log_uniform) -> TfmType.Lighting:
+def contrast(x, scale:log_uniform) -> TfmType.Lighting:
     return x.mul_(scale)
 
 import inspect
@@ -221,7 +222,7 @@ def apply_tfms(tfms):
         compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
 
 @reg_affine
-def rotate(degrees: uniform) -> TfmType.Affine:
+def rotate(degrees:uniform) -> TfmType.Affine:
     angle = degrees * math.pi / 180
     return [[cos(angle), -sin(angle), 0.],
             [sin(angle),  cos(angle), 0.],
@@ -233,14 +234,14 @@ def get_zoom_mat(sw, sh, c, r):
             [0,  0, 1.]]
 
 @reg_affine
-def zoom(scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Affine:
     s = 1-1/scale
     col_c = s * (2*col_pct - 1)
     row_c = s * (2*row_pct - 1)
     return get_zoom_mat(1/scale, 1/scale, col_c, row_c)
 
 @reg_affine
-def squish(scale: uniform = 1.0, row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Affine:
+def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Affine:
     if scale <= 1: 
         col_c = (1-scale) * (2*col_pct - 1)
         return get_zoom_mat(scale, 1, col_c, 0.)
