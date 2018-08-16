@@ -7,6 +7,7 @@ from torch._utils import _unflatten_dense_tensors
 from torch.nn.utils import parameters_to_vector
 
 def bn2float(module:nn.Module) -> nn.Module:
+    "Puts all batchnorm layers back in FP32."
     if isinstance(module, nn.modules.batchnorm._BatchNorm): module.float()
     for child in module.children(): bn2float(child)
     return module
@@ -50,6 +51,7 @@ def master2model(model_params:Collection[Tensor], master_params:Collection[Tenso
 
 @dataclass
 class MixedPrecision(Callback):
+    "Callback that handles mixed-precision training"
     learn:Learner
     loss_scale:float=512.
     flat_master:bool=False

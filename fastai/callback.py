@@ -5,6 +5,7 @@ from . import core as c
 from . import torch_core as tc
 
 class OptimWrapper():
+    "Basic wrapper around an optimizer to simplify HP changes"
     def __init__(self, opt:optim.Optimizer, wd:float=0., true_wd:bool=False):
         self.opt,self.true_wd = opt,true_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
@@ -73,6 +74,8 @@ class OptimWrapper():
         return val
 
 class Callback():
+    "Basic definition of a callback"
+
     def on_train_begin(self, **kwargs): pass         
         #To initiliaze constants in the callback.
     def on_epoch_begin(self, **kwargs): pass
@@ -100,6 +103,8 @@ class Callback():
 
 @dataclass
 class CallbackHandler():
+    "Class actually called by the training loop and responsible for dispatching to callbacks"
+
     callbacks:Collection[Callback]
     beta:float = 0.98
 
@@ -164,6 +169,8 @@ class CallbackHandler():
 
 @dataclass
 class Recorder(Callback):
+    "Callback present in every learner to record basic stats"
+    
     opt:OptimWrapper
     train_dl:DeviceDataLoader=None
 

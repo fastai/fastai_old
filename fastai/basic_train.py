@@ -6,6 +6,7 @@ from . import torch_core as tc
 
 def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:tc.LossFunction, opt:OptimWrapper=None, 
                cb_handler:CallbackHandler=None, metrics:Collection[tc.Metric]=None) -> Collection[Union[float,int]]:
+    "Computes the loss for a batch and does the corresponding training step (if applicable)"
     if cb_handler is None: cb_handler = CallbackHandler([])
     out = model(xb)
     out = cb_handler.on_loss_begin(out)
@@ -24,6 +25,7 @@ def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:tc.LossFunction, o
 
 def fit(epochs:int, model:nn.Module, loss_fn:tc.LossFunction, opt:OptimWrapper, data:DataBunch, 
         callbacks:Collection[Callable]=None, metrics:Collection[tc.Metric]=None):
+    "Training loop of a model"
     cb_handler = CallbackHandler(callbacks)
     cb_handler.on_train_begin()
     
@@ -50,6 +52,8 @@ def fit(epochs:int, model:nn.Module, loss_fn:tc.LossFunction, opt:OptimWrapper, 
 
 @dataclass
 class Learner():
+    "Object that wraps together some data, a model, a loss function and an optimizer"
+    
     data:DataBunch
     model:nn.Module
     opt_fn:Callable=optim.SGD

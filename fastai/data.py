@@ -4,23 +4,28 @@ from .imports.torch import *
 from . import core as c
 from . import torch_core as tc
 
-def find_classes(folder:Path):
+def find_classes(folder:Path) -> Collection[Path]:
+    "Find all the classes in a given folder"
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
     assert(len(classes)>0)
     return sorted(classes, key=lambda d: d.name)
 
-def get_image_files(c:Path):
+def get_image_files(c:Path) -> Collection[Path]:
+    "Find all the image files in a given foldder"
     return [o for o in list(c.iterdir())
             if not o.name.startswith('.') and not o.is_dir()]
 
-def pil2tensor(image:Image):
+def pil2tensor(image:Image) -> Tensor:
+    "Transforms a PIL Image in a torch tensor"
     arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
     arr = arr.permute(2,0,1)
     return arr.float().div_(255)
 
 class FilesDataset(Dataset):
+    "Basic class to create a dataset from folders and files"
+
     def __init__(self, fns:Collection[c.FileLike], labels:Collection[str], classes:Collection[str]=None):
         if classes is None: classes = list(set(labels))
         self.classes = classes
@@ -55,6 +60,8 @@ class FilesDataset(Dataset):
 
 @dataclass
 class DeviceDataLoader():
+    "Wrapper around the dataloader that puts the tensors on the GPU and handles FP16 precision"
+
     dl:DataLoader
     device:torch.device
     progress_func:Callable
@@ -76,6 +83,8 @@ class DeviceDataLoader():
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, half=False)
 
 class DataBunch():
+    "Data object that regroups training and validation data"
+    
     def __init__(self, train_ds:Dataset, valid_ds:Dataset, bs:int=64, device:torch.device=None, num_workers:int=4):
         self.device,self.bs = tc.default_device if device is None else device,bs
         self.train_dl = DeviceDataLoader.create(train_ds, bs, shuffle=True, num_workers=num_workers, device=self.device)
