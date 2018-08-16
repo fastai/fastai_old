@@ -7,4 +7,5 @@ from .callback import *
 from . import core as c
 from .data import *
 from .metrics import *
+from . import torch_core as tc
 from .train import *

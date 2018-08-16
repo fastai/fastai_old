@@ -2,41 +2,43 @@ from .imports.core import *
 from .imports.vision import *
 from .imports.torch import *
 from . import core as c
+from . import torch_core as tc
 
-default_device = torch.device('cuda', 0) if torch.cuda.is_available() else torch.device('cpu')
-
-def find_classes(folder):
+def find_classes(folder:Path):
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
     assert(len(classes)>0)
     return sorted(classes, key=lambda d: d.name)
 
-def get_image_files(c):
+def get_image_files(c:Path):
     return [o for o in list(c.iterdir())
             if not o.name.startswith('.') and not o.is_dir()]
 
-def pil2tensor(image):
+def pil2tensor(image:Image):
     arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
     arr = arr.permute(2,0,1)
     return arr.float().div_(255)
 
 class FilesDataset(Dataset):
-    def __init__(self, fns, labels, classes=None):
+    def __init__(self, fns:Collection[c.FileLike], labels:Collection[str], classes:Collection[str]=None):
         if classes is None: classes = list(set(labels))
         self.classes = classes
         self.class2idx = {v:k for k,v in enumerate(classes)}
         self.fns = np.array(fns)
         self.y = [self.class2idx[o] for o in labels]
         
-    def __len__(self): return len(self.fns)
+    def __len__(self) -> int: return len(self.fns)
 
-    def __getitem__(self,i):
+    def __getitem__(self,i:int) -> torch.Tensor:
         x = Image.open(self.fns[i]).convert('RGB')
         return pil2tensor(x),self.y[i]
     
+    def __repr__(self) -> str:
+        return f'FilesDataset, length {len(self.fns)}, {len(self.classes)} classes: {str(self.classes)}'
+
     @classmethod
-    def from_folder(cls, folder, classes=None, test_pct=0.):
+    def from_folder(cls, folder:Path, classes:Collection[str]=None, test_pct:float=0.):
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
             
         fns,labels = [],[]
@@ -53,28 +55,36 @@ class FilesDataset(Dataset):
 
 @dataclass
 class DeviceDataLoader():
-    dl: DataLoader
-    device: torch.device
-    progress_func: Callable
-    half: bool = False
+    dl:DataLoader
+    device:torch.device
+    progress_func:Callable
+    half:bool = False
         
-    def __len__(self): return len(self.dl)
-    def __iter__(self):
-        self.gen = (c.to_device(self.device,o) for o in self.dl)
-        if self.half: self.gen = (c.to_half(o) for o in self.gen)
+    def __len__(self) -> int: return len(self.dl)
+    def __iter__(self) -> Iterator:
+        self.gen = (tc.to_device(self.device,o) for o in self.dl)
+        if self.half: self.gen = (tc.to_half(o) for o in self.gen)
         if self.progress_func is not None:
             self.gen = self.progress_func(self.gen, total=len(self.dl), leave=False)
         return iter(self.gen)
 
+    def __repr__(self) -> str:
+        return f'DeviceDataLoader, batch size={self.dl.batch_size}, {len(self.dl)} batches on {self.device}, FP16: {self.half}'
+
     @classmethod
-    def create(cls, *args, device=default_device, progress_func=c.tqdm, **kwargs):
+    def create(cls, *args, device:torch.device=tc.default_device, progress_func:Callable=c.tqdm, **kwargs):
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, half=False)
 
 class DataBunch():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(train_ds, bs, shuffle=True, num_workers=num_workers)
-        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers)
+    def __init__(self, train_ds:Dataset, valid_ds:Dataset, bs:int=64, device:torch.device=None, num_workers:int=4):
+        self.device,self.bs = tc.default_device if device is None else device,bs
+        self.train_dl = DeviceDataLoader.create(train_ds, bs, shuffle=True, num_workers=num_workers, device=self.device)
+        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers, device=self.device)
+
+    def __repr__(self) -> str:
+        res = f'DataBunch, batch_size={self.bs} on {self.device}.\n  train dataloader: {len(self.train_dl)} batches'
+        if self.valid_dl is not None: res += f'\n  validation dataloader: {len(self.valid_dl)} batches'
+        return res
 
     #TODO: uncomment when transforms are available
     #@classmethod
@@ -82,6 +92,6 @@ class DataBunch():
     #    return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm))
         
     @property
-    def train_ds(self): return self.train_dl.dl.dataset
+    def train_ds(self) -> Dataset: return self.train_dl.dl.dataset
     @property
-    def valid_ds(self): return self.valid_dl.dl.dataset
+    def valid_ds(self) -> Dataset: return self.valid_dl.dl.dataset

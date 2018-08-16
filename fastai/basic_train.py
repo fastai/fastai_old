@@ -1,15 +1,16 @@
 from .imports.core import *
 from .imports.torch import *
 from .data import DataBunch
-from .callback import OptimWrapper, CallbackHandler, Recorder
+from .callback import OptimWrapper, Callback, CallbackHandler, Recorder
+from . import torch_core as tc
 
-def loss_batch(model:nn.Module, xb:tensor, yb:tensor, loss_fn:Callable, opt:OptimWrapper=None, 
-               cb_handler:CallbackHandler=None, metrics:Collection[Callable]=None):
+def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:tc.LossFunction, opt:OptimWrapper=None, 
+               cb_handler:CallbackHandler=None, metrics:Collection[tc.Metric]=None) -> Collection[Union[float,int]]:
     if cb_handler is None: cb_handler = CallbackHandler([])
     out = model(xb)
     out = cb_handler.on_loss_begin(out)
     loss = loss_fn(out, yb)
-    mets = [f(out,yb).item() for f in metrics] if metrics is not None else []
+    mets = [f(out,yb) for f in metrics] if metrics is not None else []
     
     if opt is not None:
         loss = cb_handler.on_backward_begin(loss)
@@ -21,8 +22,8 @@ def loss_batch(model:nn.Module, xb:tensor, yb:tensor, loss_fn:Callable, opt:Opti
         
     return (loss.item(),) + tuple(mets) + (len(xb),)
 
-def fit(epochs:int, model:nn.Module, loss_fn:Callable, opt:OptimWrapper, data:DataBunch, 
-        callbacks:Collection[Callable]=None, metrics:Collection[Callable]=None):
+def fit(epochs:int, model:nn.Module, loss_fn:tc.LossFunction, opt:OptimWrapper, data:DataBunch, 
+        callbacks:Collection[Callable]=None, metrics:Collection[tc.Metric]=None):
     cb_handler = CallbackHandler(callbacks)
     cb_handler.on_train_begin()
     
@@ -49,23 +50,23 @@ def fit(epochs:int, model:nn.Module, loss_fn:Callable, opt:OptimWrapper, data:Da
 
 @dataclass
 class Learner():
-    data: DataBunch
-    model: nn.Module
-    opt_fn: Callable = optim.SGD
-    loss_fn: Callable = F.cross_entropy
-    metrics: Collection[Callable] = None
-    true_wd: bool = False
+    data:DataBunch
+    model:nn.Module
+    opt_fn:Callable=optim.SGD
+    loss_fn:tc.LossFunction=F.cross_entropy
+    metrics:Collection[tc.Metric]=None
+    true_wd:bool=False
     def __post_init__(self): 
         self.model = self.model.to(self.data.device)
         self.callbacks = []
 
-    def fit(self, epochs, lr, wd=0., callbacks=None):
+    def fit(self, epochs:int, lr:float, wd:float=0., callbacks:Collection[Callback]=None):
         if not hasattr(self, 'opt'): self.create_opt(lr, wd)
         if callbacks is None: callbacks = []
         callbacks = self.callbacks + callbacks
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
     
-    def create_opt(self, lr, wd=0.):
+    def create_opt(self, lr:float, wd:float=0.):
         self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
         self.recorder = Recorder(self.opt, self.data.train_dl)
         self.callbacks = [self.recorder] + self.callbacks
