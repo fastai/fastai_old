@@ -16,7 +16,7 @@ def model2half(model:nn.Module) -> nn.Module:
     "Converts the model to half precision except the batchnorm layers"
     return bn2float(model.half())
 
-def get_master(model:nn.Module, flat_master:bool=False) -> Tuple[Collection[Tensor], Collection[Tensor]]:
+def get_master(model:nn.Module, flat_master:bool=False) -> Tuple[List[Tensor], List[Tensor]]:
     "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"
     model_params = [param for param in model.parameters() if param.requires_grad]
     if flat_master:
@@ -30,7 +30,7 @@ def get_master(model:nn.Module, flat_master:bool=False) -> Tuple[Collection[Tens
         for param in master_params: param.requires_grad = True
         return model_params, master_params
 
-def model_g2master_g(model_params:Collection[Tensor], master_params:Collection[Tensor], flat_master:bool=False):
+def model_g2master_g(model_params:List[Tensor], master_params:List[Tensor], flat_master:bool=False):
     "Copies the model gradients to the master parameters for the optimizer step"
     if flat_master:
         master_params[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_params]))
@@ -41,7 +41,7 @@ def model_g2master_g(model_params:Collection[Tensor], master_params:Collection[T
                 master.grad.data.copy_(model.grad.data)
             else: master.grad = None
 
-def master2model(model_params:Collection[Tensor], master_params:Collection[Tensor], flat_master:bool=False):
+def master2model(model_params:List[Tensor], master_params:List[Tensor], flat_master:bool=False):
     "Copy master parameters to model parameters"
     if flat_master:
         for model, master in zip(model_params, _unflatten_dense_tensors(master_params[0].data, model_params)):
@@ -74,7 +74,7 @@ class MixedPrecision(Callback):
         #It's better to compute the loss in FP32, to avoid reduction overflow.
         return last_output.float()
     
-    def on_backward_begin(self, last_loss:tc.OneEltTensor, **kwargs) -> tc.OneEltTensor:
+    def on_backward_begin(self, last_loss:tc.Rank0Tensor, **kwargs) -> tc.Rank0Tensor:
         #To avoid gradient underflow, we scale the gradients
         return last_loss * self.loss_scale
     

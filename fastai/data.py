@@ -35,7 +35,7 @@ class FilesDataset(Dataset):
         
     def __len__(self) -> int: return len(self.fns)
 
-    def __getitem__(self,i:int) -> torch.Tensor:
+    def __getitem__(self,i:int) -> Tuple[Tensor, Any]:
         x = Image.open(self.fns[i]).convert('RGB')
         return pil2tensor(x),self.y[i]
     

@@ -1,4 +1,3 @@
-from .imports.core import *
 from .imports.torch import *
 
 def accuracy(out:Tensor, yb:Tensor) -> float:

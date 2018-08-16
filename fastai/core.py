@@ -40,5 +40,6 @@ def annealing_cos(start:float, end:float, pct:float) -> float:
     cos_out = np.cos(np.pi * pct) + 1
     return end + (start-end)/2 * cos_out
     
-def do_annealing_poly(start:float, end:float, pct:float, degree:float) -> float: return end + (start-end) * (1-pct)**degree
+def do_annealing_poly(start:float, end:float, pct:float, degree:float) -> float:
+    return end + (start-end) * (1-pct)**degree
 def annealing_poly(degree:float) -> Callable: return partial(do_annealing_poly, degree=degree)
