@@ -1,6 +1,6 @@
 from .imports.core import *
 from .imports.torch import *
 
-def accuracy(out, yb):
+def accuracy(out:Tensor, yb:Tensor) -> float:
     preds = torch.max(out, dim=1)[1]
-    return (preds==yb).float().mean()
+    return (preds==yb).float().mean().item()
