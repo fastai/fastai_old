@@ -5,7 +5,7 @@ from .callback import OptimWrapper, Callback, CallbackHandler, Recorder
 from . import torch_core as tc
 
 def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:tc.LossFunction, opt:OptimWrapper=None, 
-               cb_handler:CallbackHandler=None, metrics:Collection[tc.Metric]=None) -> Collection[Union[float,int]]:
+               cb_handler:CallbackHandler=None, metrics:Collection[tc.Metric]=None) -> Sequence[Union[float,int]]:
     "Computes the loss for a batch and does the corresponding training step (if applicable)"
     if cb_handler is None: cb_handler = CallbackHandler([])
     out = model(xb)
