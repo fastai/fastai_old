@@ -32,6 +32,8 @@ shift $((OPTIND-1))
 # 2. keep only certain cell metadata fields
 # 3. keep only certain nb metadata fields
 
+# XXX: needs to strip execution_count field inside outputs
+
 # to add more metadata entries to keep do:
 # if (.key == "key1" or .key == "key2")
 
