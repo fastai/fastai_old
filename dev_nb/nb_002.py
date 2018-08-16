@@ -181,24 +181,24 @@ def affine_grid(x, matrix, size=None):
     elif isinstance(size, int): size=(x.size(0), size, size)
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
+def affine_mult(c,m):
+    size = c.size()
+    c = c.view(-1,2)
+    c = torch.addmm(m[:2,2], c,  m[:2,:2].t()) 
+    return c.view(size)
+
+def _apply_affine(img, size=None, m=None, func=None, **kwargs):
+    c = affine_grid(img, torch.eye(3), size=size)
+    if func is not None: c = func(c, img.size())
+    if m is not None: c = affine_mult(c, img.new_tensor(m))
+    return grid_sample(img, c, **kwargs)
+
+def apply_affine(m=None, func=None): return partial(_apply_affine, m=m, func=func)
+
 def affines_mat(matrices=None):
     if matrices is None: matrices=[]
     matrices = [FloatTensor(m) for m in matrices if m is not None]
     return reduce(torch.matmul, matrices, torch.eye(3))
-
-def affine_mult(c,m):
-    ori_sz = c.size()
-    c = c.view(-1,2)
-    c = torch.addmm(m[:2,2], c,  m[:2,:2].t()) 
-    return c.view(ori_sz)
-
-def apply_affine(m=None, func=None):
-    def _inner(img, size=None, **kwargs):
-        c = affine_grid(img, torch.eye(3), size=size)
-        if func is not None: c = func(c, img.size())
-        if m is not None: c = affine_mult(c, m)
-        return grid_sample(img, c, **kwargs)
-    return _inner
 
 class AffineTransform(Transform):
     def __call__(self): return super().__call__()()
@@ -208,15 +208,17 @@ def dict_groupby(iterable, key=None):
 
 def reg_affine(func): return reg_partial(AffineTransform, func)
 
+def _apply_tfm_funcs(pixel_func,lighting_func,affine_func,start_func, x,**kwargs):
+    return pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
+
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
     start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
     affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms))
-    start_func = compose(start_tfms)
-    pixel_func = compose(pixel_tfms)
-    return lambda x, **kwargs: pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
+    return partial(_apply_tfm_funcs,
+        compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
 
 @reg_affine
 def rotate(degrees: uniform) -> TfmType.Affine:
@@ -252,11 +254,6 @@ def jitter(x, size, magnitude: uniform) -> TfmType.Coord:
 
 @reg_transform
 def flip_lr(x) -> TfmType.Pixel: return x.flip(2)
-
-def get_zoom_mat(sw, sh, c, r):
-    return [[sw, 0,  c],
-            [0, sh,  r],
-            [0,  0, 1.]]
 
 def compute_zs_mat(sz, scale, squish, invert, row_pct, col_pct):
     orig_ratio = math.sqrt(sz[2]/sz[1])
