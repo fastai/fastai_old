@@ -181,11 +181,6 @@ def affine_grid(x, matrix, size=None):
     elif isinstance(size, int): size=(x.size(0), size, size)
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
-def affines_mat(matrices=None):
-    if matrices is None: matrices=[]
-    matrices = [FloatTensor(m) for m in matrices if m is not None]
-    return reduce(torch.matmul, matrices, torch.eye(3))
-
 def affine_mult(c,m):
     size = c.size()
     c = c.view(-1,2)
@@ -195,10 +190,15 @@ def affine_mult(c,m):
 def _apply_affine(img, size=None, m=None, func=None, **kwargs):
     c = affine_grid(img, torch.eye(3), size=size)
     if func is not None: c = func(c, img.size())
-    if m is not None: c = affine_mult(c, m)
+    if m is not None: c = affine_mult(c, img.new_tensor(m))
     return grid_sample(img, c, **kwargs)
 
 def apply_affine(m=None, func=None): return partial(_apply_affine, m=m, func=func)
+
+def affines_mat(matrices=None):
+    if matrices is None: matrices=[]
+    matrices = [FloatTensor(m) for m in matrices if m is not None]
+    return reduce(torch.matmul, matrices, torch.eye(3))
 
 class AffineTransform(Transform):
     def __call__(self): return super().__call__()()
