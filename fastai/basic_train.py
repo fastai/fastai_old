@@ -24,7 +24,7 @@ def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:tc.LossFunction, o
     return (loss.item(),) + tuple(mets) + (len(xb),)
 
 def fit(epochs:int, model:nn.Module, loss_fn:tc.LossFunction, opt:OptimWrapper, data:DataBunch, 
-        callbacks:Collection[Callable]=None, metrics:Collection[tc.Metric]=None):
+        callbacks:Collection[Callback]=None, metrics:Collection[tc.Metric]=None):
     "Training loop of a model"
     cb_handler = CallbackHandler(callbacks)
     cb_handler.on_train_begin()

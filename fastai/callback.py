@@ -69,7 +69,7 @@ class OptimWrapper():
         if 'betas' in self.opt_keys: self._mom,self._beta = self.opt.param_groups[0]['betas']
         if 'weight_decay' in self.opt_keys: self._wd = self.opt.param_groups[0]['weight_decay']
     
-    def set_val(self, key:str, val:float):
+    def set_val(self, key:str, val:Union[float,Tuple[float,float]]):
         for pg in self.opt.param_groups: pg[key] = val
         return val
 
@@ -86,7 +86,7 @@ class Callback():
     def on_loss_begin(self, **kwargs) -> Tensor: pass
         #Called after the forward pass but before the loss has been computed.
         #Returns the output (which can allow us to modify it)
-    def on_backward_begin(self, **kwargs) -> tc.OneEltTensor: pass
+    def on_backward_begin(self, **kwargs) -> tc.Rank0Tensor: pass
         #Called after the forward pass and the loss has been computed, but before the back propagation.
         #Returns the loss (which can allow us to modify it, for instance for reg functions)
     def on_backward_end(self, **kwargs): pass
@@ -141,7 +141,7 @@ class CallbackHandler():
             if a is not None: self.state_dict['last_output'] = a
         return self.state_dict['last_output']
     
-    def on_backward_begin(self, loss) -> tc.OneEltTensor:
+    def on_backward_begin(self, loss) -> tc.Rank0Tensor:
         self.smoothener.add_value(loss.item())
         self.state_dict['last_loss'], self.state_dict['smooth_loss'] = loss, self.smoothener.smooth
         for cb in self.callbacks:
@@ -190,7 +190,7 @@ class Recorder(Callback):
         if self.train_dl is not None and self.train_dl.progress_func is not None: 
             self.train_dl.gen.set_postfix_str(smooth_loss)
     
-    def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:Collection[float], **kwargs):
+    def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:List[float], **kwargs):
         self.nb_batches.append(num_batch)
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
