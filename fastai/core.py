@@ -10,6 +10,7 @@ def is_tuple(x) -> bool:    return isinstance(x, tuple)
 def is_iterable(x) -> bool: return isinstance(x, Iterable)
 
 def listify(p=None, q=None) -> Collection:
+    "Makes p a list that looks like q"
     if p is None: p=[]
     elif is_iterable(p): p=[p]
     n = q if type(q)==int else 1 if q is None else len(q)
@@ -19,6 +20,8 @@ def listify(p=None, q=None) -> Collection:
 if in_notebook():  tqdm, trange = tqdm_notebook, tnrange
 
 class SmoothenValue():
+    "To compute the moving average of values"
+
     def __init__(self, beta:float):
         self.beta,self.n,self.mov_avg = beta,0,0
 
