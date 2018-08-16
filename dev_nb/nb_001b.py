@@ -71,7 +71,7 @@ if in_notebook():
 class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
-    progress_func: Callable
+    progress_func:Callable=None
         
     def __len__(self): return len(self.dl)
     def __iter__(self):
