@@ -120,7 +120,7 @@ class CallbackHandler():
         return res
     
     def on_train_begin(self): 
-        self.state_dict = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
+        self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
         self('train_begin')
         
     def on_epoch_begin(self): 
@@ -190,7 +190,7 @@ class Recorder(Callback):
         if self.train_dl is not None and self.train_dl.progress_func is not None: 
             self.train_dl.gen.set_postfix_str(smooth_loss)
     
-    def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:List[float], **kwargs):
+    def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:Sequence[float], **kwargs):
         self.nb_batches.append(num_batch)
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])

@@ -30,7 +30,7 @@ def get_master(model:nn.Module, flat_master:bool=False) -> Tuple[List[Tensor], L
         for param in master_params: param.requires_grad = True
         return model_params, master_params
 
-def model_g2master_g(model_params:List[Tensor], master_params:List[Tensor], flat_master:bool=False):
+def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
     "Copies the model gradients to the master parameters for the optimizer step"
     if flat_master:
         master_params[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_params]))
@@ -41,7 +41,7 @@ def model_g2master_g(model_params:List[Tensor], master_params:List[Tensor], flat
                 master.grad.data.copy_(model.grad.data)
             else: master.grad = None
 
-def master2model(model_params:List[Tensor], master_params:List[Tensor], flat_master:bool=False):
+def master2model(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
     "Copy master parameters to model parameters"
     if flat_master:
         for model, master in zip(model_params, _unflatten_dense_tensors(master_params[0].data, model_params)):
