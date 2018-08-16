@@ -78,24 +78,24 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
+def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, m=None, func=None, crop_func=None, **kwargs):
+    if size is not None: size = listify(size,2)
+    if m is None and func is None and size is None: return img
+    resize_target = get_resize_target(img, size, do_crop=do_crop)
+    c = affine_grid(img, torch.eye(3), size=resize_target)
+    if func is not None: c = func(c, img.size())
+    if m is not None: c = affine_mult(c, img.new_tensor(m))
+    res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
+    if padding_mode=='zeros': padding_mode='constant'
+    if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
+    return res
+
 def apply_affine(m=None, func=None, crop_func=None):
-    def _inner(img, size=None, padding_mode='reflect', do_crop=False, **kwargs):
-        if size is not None: size = listify(size,2)
-        if m is None:
-            if func is None and size is None: return img
-            else: m2=torch.eye(3)
-        else:
-            m2 = img.new_tensor(m)
-        resize_target = get_resize_target(img, size, do_crop=do_crop)
-        c = affine_grid(img, m2, size=resize_target)
-        if func is not None: c = func(c)
-        res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
-        if padding_mode=='zeros': padding_mode='constant'
-        if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
-        return res
-    return _inner
+    return partial(_apply_affine, m=m, func=func, crop_func=crop_func)
 
 nb_002.apply_affine = apply_affine
+
+from nb_002 import _apply_tfm_funcs
 
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
@@ -104,13 +104,5 @@ def apply_tfms(tfms):
     lighting_func = apply_lighting(compose(lighting_tfms))
     affine_func = apply_affine(
         affines_mat(affine_tfms), func=compose(coord_tfms), crop_func=compose(crop_tfms))
-    start_func = compose(start_tfms)
-    pixel_func = compose(pixel_tfms)
-    def _inner(x, **kwargs):
-        res = affine_func(start_func(x.clone()), **kwargs)
-        return pixel_func(lighting_func(res))
-    return _inner
-
-nb_002.apply_tfms = apply_tfms
-import nb_002b
-nb_002b.apply_tfms = apply_tfms
+    return partial(_apply_tfm_funcs,
+        compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
