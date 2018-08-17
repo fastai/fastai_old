@@ -249,7 +249,7 @@ class OneCycleScheduler(Callback):
     def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85), div_factor=10, pct_end=0.1):
         self.learn = learn
         a = int(len(learn.data.train_dl) * epochs * (1 - pct_end) / 2)
-        b = int(len(learn.data.train_dl) * epochs * pct_end)
+        b = len(learn.data.train_dl) * epochs - 2*a
         self.lr_scheds = [Stepper((lr_max/div_factor, lr_max), a),
                           Stepper((lr_max, lr_max/div_factor), a),
                           Stepper((lr_max/div_factor, lr_max/(div_factor*100)), b)]
