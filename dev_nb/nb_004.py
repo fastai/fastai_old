@@ -112,6 +112,7 @@ class CallbackHandler():
         
     def __post_init__(self):
         self.smoothener = SmoothenValue(self.beta)
+		self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
     
     def __call__(self, cb_name):
         return [getattr(cb, f'on_{cb_name}')(**self.state_dict) for cb in self.callbacks]
