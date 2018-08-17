@@ -261,11 +261,11 @@ class OneCycleScheduler(Callback):
         self.idx_s = 0
     
     def on_batch_end(self, **kwargs):
+        if self.idx_s >= len(self.lr_scheds): return True
         self.opt.lr = self.lr_scheds[self.idx_s].step()
         self.opt.mom = self.mom_scheds[self.idx_s].step()
         if self.lr_scheds[self.idx_s].is_done:
             self.idx_s += 1
-            if self.idx_s >= len(self.lr_scheds): return True
 
 @dataclass
 class Learner():
