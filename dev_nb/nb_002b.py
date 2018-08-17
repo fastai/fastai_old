@@ -46,9 +46,9 @@ class DataBunch():
     def valid_ds(self): return self.valid_dl.dl.dataset
 
 @reg_transform
-def normalize(x, mean,std) -> TfmType.Pixel: return (x-mean[...,None,None]) / std[...,None,None]
-
-def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
+def normalize(x,mean,std)->TfmType.Pixel: return (x-mean[...,None,None]) / std[...,None,None]
+@reg_transform
+def denormalize(x, mean,std)->TfmType.Pixel: return x*std[...,None,None] + mean[...,None,None]
 
 def conv_layer(ni, nf, ks=3, stride=1):
     return nn.Sequential(
