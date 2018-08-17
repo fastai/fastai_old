@@ -4,6 +4,11 @@
         #################################################
 
 from nb_003a import *
+from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
+from torch import Tensor
+
+Floats = Union[float, Collection[float]]
+Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
 
 class OptimWrapper():
     def __init__(self, opt, wd=0., true_wd=False):
@@ -105,20 +110,22 @@ class SmoothenValue():
         self.mov_avg = self.beta * self.mov_avg + (1 - self.beta) * val
         self.smooth = self.mov_avg / (1 - self.beta ** self.n)
 
+def _get_init_state(): return {'epoch':0, 'iteration':0, 'num_batch':0}
+
 @dataclass
 class CallbackHandler():
-    callbacks: Collection[Callable]
-    beta:float = 0.98
+    callbacks:Collection[Callable]
+    beta:float=0.98
         
     def __post_init__(self):
         self.smoothener = SmoothenValue(self.beta)
-		self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
+        self.state_dict:Dict[str,Union[int,float,Tensor]]=_get_init_state()
     
     def __call__(self, cb_name):
         return [getattr(cb, f'on_{cb_name}')(**self.state_dict) for cb in self.callbacks]
     
     def on_train_begin(self): 
-        self.state_dict = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
+        self.state_dict = _get_init_state()
         self('train_begin')
         
     def on_epoch_begin(self): 
@@ -239,7 +246,6 @@ class Stepper():
     def is_done(self):  return self.n >= self.num_it
 
 class OneCycleScheduler(Callback):
-    
     def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85), div_factor=10, pct_end=0.1):
         self.learn = learn
         a = int(len(learn.data.train_dl) * epochs * (1 - pct_end) / 2)
@@ -266,6 +272,7 @@ class Learner():
     data: DataBunch
     model: nn.Module
     opt_fn: Callable = optim.SGD
+#     loss_fn: LossType = F.cross_entropy
     loss_fn: Callable = F.cross_entropy
     metrics: Collection[Callable] = None
     true_wd: bool = False
@@ -282,7 +289,6 @@ class Learner():
         self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
 
 class LRFinder(Callback):
-    
     def __init__(self, opt, data, start_lr=1e-5, end_lr=10, num_it=200):
         self.opt,self.data = opt,data
         self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
@@ -310,7 +316,7 @@ class LRFinder(Callback):
         self.data.valid_dl = self.valid_dl
 
 def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100):
-    #TODO: add model.save in init or on_train_begin and model.load in on_train_end.
+    #TODO: add model.save and model.load.
     learn.create_opt(start_lr)
     cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
@@ -343,7 +349,7 @@ class Recorder(Callback):
         else:  print(epoch, smooth_loss)
     
     def plot_lr(self, show_moms=False):
-        iterations = list(range(len(learn.recorder.lrs)))
+        iterations = list(range(len(self.lrs)))
         if show_moms:
             _, axs = plt.subplots(1,2, figsize=(12,4))
             axs[0].plot(iterations, self.lrs)
