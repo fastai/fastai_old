@@ -2,8 +2,7 @@
 
 import io, sys, argparse
 
-if sys.stdin:
-    input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+if sys.stdin: input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 output_stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 parser = argparse.ArgumentParser()
@@ -13,16 +12,8 @@ parser.add_argument('-d', '--doc-mode', action="store_true", help="fastai docs n
 parser.add_argument('files', nargs='*', help='Files to strip output from')
 args = parser.parse_args()
 
-# rapidjson should be faster than json - but here it is not
-#try:
-#    import rapidjson as json
-#except:
-#    import json
-
-if args.r:
-    import rapidjson as json
-else:
-    import json
+if args.r: import rapidjson as json
+else:      import json
 
 # define which fields need to be kept:
 cell_metadata_keep_code = []
@@ -39,8 +30,8 @@ def clean_cell_outputs(o):
 def clean_cell_docs(o):
     if 'execution_count' in o: o['execution_count'] = None
     if 'outputs' in o:
-        for l in o['outputs']: clean_cell_outputs(l) 
-        
+        for l in o['outputs']: clean_cell_outputs(l)
+
     o['metadata'] = { k:o['metadata'][k] for k in o['metadata'].keys() if k in cell_metadata_keep_docs }
     return o
 
@@ -76,11 +67,10 @@ for filename in args.files:
         # XXX: if there is more than one file, this is probably wrong
         output_stream.write(x)
         output_stream.write("\n")
-        output_stream.flush()    
+        output_stream.flush()
     else:
         with io.open(filename, 'w', encoding='utf-8') as f:
-            f.write(x)
-            f.write("\n")
+            f.write(x+f.write("\n"))
 
 # implied textconv mode
 if not args.files and input_stream:

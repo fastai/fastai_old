@@ -65,11 +65,13 @@ def crop_pad(x, size, padding_mode='reflect',
     x = x[:, row:row+rows, col:col+cols]
     return x.contiguous() # without this, get NaN later - don't know why
 
-def get_crop_target(target_px, target_aspect=1.):
+def round_multiple(x, mult): return (int(x/mult+0.5)*mult)
+
+def get_crop_target(target_px, target_aspect=1., mult=32):
     target_px = listify(target_px, 2)
-    target_r = int(math.sqrt(target_px[0]*target_px[1]/target_aspect))
-    target_c = int(target_r*target_aspect)
-    return target_r,target_c
+    target_r = math.sqrt(target_px[0]*target_px[1]/target_aspect)
+    target_c = target_r*target_aspect
+    return round_multiple(target_r,mult),round_multiple(target_c,mult)
 
 def get_resize_target(img, crop_target, do_crop=False):
     if crop_target is None: return None
@@ -78,8 +80,10 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
-def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, m=None, func=None, crop_func=None, **kwargs):
-    if size is not None: size = listify(size,2)
+def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, aspect=None, mult=32,
+                  m=None, func=None, crop_func=None, **kwargs):
+    if size is not None and not isinstance(size, (tuple,list)):
+        size = listify(size,2) if aspect is None else get_crop_target(size, aspect, mult)
     if m is None and func is None and size is None: return img
     resize_target = get_resize_target(img, size, do_crop=do_crop)
     c = affine_grid(img, torch.eye(3), size=resize_target)
