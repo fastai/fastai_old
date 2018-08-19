@@ -48,19 +48,18 @@ def affine_grid(x, matrix, size=None):
 
 nb_002.affine_grid = affine_grid
 
+TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
 @reg_transform
 def pad(x, padding, mode='reflect') -> TfmType.Pixel:
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @reg_transform
-def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Final:
+def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Crop:
     size = listify(size,2)
     rows,cols = size
     row = int((x.size(1)-rows+1)*row_pct)
     col = int((x.size(2)-cols+1)*col_pct)
     return x[:, row:row+rows, col:col+cols]
-
-TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
 
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',
@@ -96,12 +95,13 @@ def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, aspect=
                   m=None, func=None, crop_func=None, **kwargs):
     if size is not None and not isinstance(size, (tuple,list)):
         size = listify(size,2) if aspect is None else get_crop_target(size, aspect, mult)
-    if m is None and func is None and size is None: return img
-    resize_target = get_resize_target(img, size, do_crop=do_crop)
-    c = affine_grid(img, torch.eye(3), size=resize_target)
-    if func is not None: c = func(c, img.size())
-    if m is not None: c = affine_mult(c, img.new_tensor(m))
-    res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
+    if not(m is None and func is None and size is None): 
+        resize_target = get_resize_target(img, size, do_crop=do_crop)
+        c = affine_grid(img, torch.eye(3), size=resize_target)
+        if func is not None: c = func(c, img.size())
+        if m is not None: c = affine_mult(c, img.new_tensor(m))
+        res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
+    else: res=img
     if padding_mode=='zeros': padding_mode='constant'
     if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
     return res
