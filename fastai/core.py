@@ -1,23 +1,20 @@
 from .imports.core import *
-from ipykernel.kernelapp import IPKernelApp
 
 FileLike = Union[str, Path]
+Floats = Union[float, Collection[float]]
 AnnealingFt = Union[Callable[[float,float,float],float],Callable[[float,float,float,float],float]]
 
-def in_notebook(): return IPKernelApp.initialized()
-
 def is_tuple(x) -> bool:    return isinstance(x, tuple)
+def is_listy(x) -> bool:    return isinstance(x, Collection)
 def is_iterable(x) -> bool: return isinstance(x, Iterable)
 
 def listify(p=None, q=None) -> Collection:
     "Makes p a list that looks like q"
     if p is None: p=[]
-    elif is_iterable(p): p=[p]
+    elif not is_iterable(p): p=[p]
     n = q if type(q)==int else 1 if q is None else len(q)
     if len(p)==1: p = p * n
     return p
-
-if in_notebook():  tqdm, trange = tqdm_notebook, tnrange
 
 class SmoothenValue():
     "To compute the moving average of values"

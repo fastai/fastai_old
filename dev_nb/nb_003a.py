@@ -95,13 +95,12 @@ def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, aspect=
                   m=None, func=None, crop_func=None, **kwargs):
     if size is not None and not isinstance(size, (tuple,list)):
         size = listify(size,2) if aspect is None else get_crop_target(size, aspect, mult)
-    if not(m is None and func is None and size is None): 
-        resize_target = get_resize_target(img, size, do_crop=do_crop)
-        c = affine_grid(img, torch.eye(3), size=resize_target)
-        if func is not None: c = func(c, img.size())
-        if m is not None: c = affine_mult(c, img.new_tensor(m))
-        res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
-    else: res=img
+    if m is None and func is None and size is None: return img
+    resize_target = get_resize_target(img, size, do_crop=do_crop)
+    c = affine_grid(img, torch.eye(3), size=resize_target)
+    if func is not None: c = func(c, img.size())
+    if m is not None: c = affine_mult(c, img.new_tensor(m))
+    res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
     if padding_mode=='zeros': padding_mode='constant'
     if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
     return res
