@@ -6,72 +6,88 @@ from . import torch_core as tc
 
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
-    def __init__(self, opt:optim.Optimizer, wd:float=0., true_wd:bool=False):
+    def __init__(self, opt:optim.Optimizer, wd:c.Floats=0., true_wd:bool=False):
         self.opt,self.true_wd = opt,true_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
-        self._wd = wd
+        self._wd = self.listify(wd, self.opt.param_groups)
     
     def __repr__(self) -> str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
 
     #Pytorch optimizer methods
     def step(self):
+        "Delegate to the optimizer step"
         # weight decay outside of optimizer step (AdamW)
         if self.true_wd:
-            for pg in self.opt.param_groups:
-                for p in pg['params']: p.data.mul_(1 - self._wd*pg['lr'])
-            self.set_val('weight_decay', 0)
+            for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
+                for p in pg['params']: p.data.mul_(1 - wd*lr)
+            self.set_val('weight_decay', self.listify(0, self._wd))
         self.opt.step()
     
     def zero_grad(self): self.opt.zero_grad()
     
     #Hyperparameters as properties
     @property
-    def lr(self) -> float: return self._lr
+    def lr(self) -> float: return self._lr[-1]
 
     @lr.setter
-    def lr(self, val:float): self._lr = self.set_val('lr', val)
+    def lr(self, val:c.Floats): self._lr = self.set_val('lr', self.listify(val, self._lr))
     
     @property
-    def mom(self) -> float: return self._mom
+    def mom(self) -> float: return self._mom[-1]
 
     @mom.setter
-    def mom(self, val:float):
-        if 'momentum' in self.opt_keys: self.set_val('momentum', val)
-        elif 'betas' in self.opt_keys:  self.set_val('betas', (val, self._beta))
-        self._mom = val
+    def mom(self, val:c.Floats):
+        if 'momentum' in self.opt_keys: self.set_val('momentum', self.listify(val, self._mom))
+        elif 'betas' in self.opt_keys:  self.set_val('betas', (self.listify(val, self._mom), self._beta))
+        self._mom = self.listify(val, self._mom)
     
     @property
-    def beta(self) -> float: return self._beta
+    def beta(self) -> float: return None if self._beta is None else self._beta[-1]
 
     @beta.setter
-    def beta(self, val:float):
-        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom,val))
-        elif 'alpha' in self.opt_keys:  self.set_val('alpha', val)
-        self._beta = val
+    def beta(self, val:c.Floats):
+        if val is None: return
+        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, self.listify(val, self._beta)))
+        elif 'alpha' in self.opt_keys:  self.set_val('alpha', self.listify(val, self._beta))
+        self._beta = self.listify(val, self._beta)
     
     @property
-    def wd(self) -> float: return self._wd
+    def wd(self) -> float: return self._wd[-1]
 
     @wd.setter
-    def wd(self, val:float):
-        if not self.true_wd: self.set_val('weight_decay', val)
-        self._wd = val
+    def wd(self, val:c.Floats):
+        if not self.true_wd: self.set_val('weight_decay', self.listify(val, self._wd))
+        self._wd = self.listify(val, self._wd)
     
     #Helper functions
     def read_defaults(self):
+        "Read the values inside the optimizer for the hyper-parameters"
         self._beta = None
-        if 'lr' in self.opt_keys: self._lr = self.opt.param_groups[0]['lr']
-        if 'momentum' in self.opt_keys: self._mom = self.opt.param_groups[0]['momentum']
-        if 'alpha' in self.opt_keys: self._beta = self.opt.param_groups[0]['alpha']
-        if 'betas' in self.opt_keys: self._mom,self._beta = self.opt.param_groups[0]['betas']
-        if 'weight_decay' in self.opt_keys: self._wd = self.opt.param_groups[0]['weight_decay']
+        if 'lr' in self.opt_keys: self._lr = self.read_val('lr')
+        if 'momentum' in self.opt_keys: self._mom = self.read_val('momentum')
+        if 'alpha' in self.opt_keys: self._beta = self.read_val('alpha')
+        if 'betas' in self.opt_keys: self._mom,self._beta = self.read_val('betas')
+        if 'weight_decay' in self.opt_keys: self._wd = self.read_val('weight_decay')
     
-    def set_val(self, key:str, val:Union[float,Tuple[float,float]]):
-        for pg in self.opt.param_groups: pg[key] = val
+    def set_val(self, key:str, val:Union[c.Floats, Tuple[c.Floats, c.Floats]]):
+        "Set the values inside the optimizer dictionary at the key"
+        if c.is_tuple(val): val = [(v1,v2) for v1,v2 in zip(*val)]
+        for v,pg in zip(val,self.opt.param_groups): pg[key] = v
         return val
+    
+    def read_val(self, key:str) -> Union[c.Floats, Tuple[c.Floats, c.Floats]]:
+        "Read a hyper-parameter key in the optimizer dictionary."
+        val = [pg[key] for pg in self.opt.param_groups]
+        if c.is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
+        return val
+    
+    def listify(self, p, q) -> List[Any]:
+        "Wrap listify with an assert."
+        if c.is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
+        return c.listify(p,q)
 
 class Callback():
     "Basic definition of a callback"
@@ -109,6 +125,7 @@ class CallbackHandler():
     beta:float = 0.98
 
     def __post_init__(self):
+        self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
         self.smoothener = c.SmoothenValue(self.beta)
     
     def __call__(self, cb_name:str):
@@ -172,7 +189,9 @@ class Recorder(Callback):
     "Callback present in every learner to record basic stats"
     
     opt:OptimWrapper
+    nb_epoch:int
     train_dl:DeviceDataLoader=None
+    pbar:Callable=None
 
     def __repr__(self) -> str:
         return f'Recorder\n  internal optimizer:{repr(self.opt)}\n  internal dataloader:{repr(self.train_dl)}'
@@ -187,16 +206,17 @@ class Recorder(Callback):
     def on_backward_begin(self, smooth_loss:float, **kwargs):
         #We record the loss here before any other callback has a chance to modify it.
         self.losses.append(smooth_loss)
-        if self.train_dl is not None and self.train_dl.progress_func is not None: 
-            self.train_dl.gen.set_postfix_str(smooth_loss)
+        if self.pbar is not None and hasattr(self.pbar,'child'): 
+            self.pbar.child.comment = f'{smooth_loss:.4f}'
     
     def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:Sequence[float], **kwargs):
         self.nb_batches.append(num_batch)
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
             if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            print(epoch, smooth_loss, *last_metrics)
-        else:  print(epoch, smooth_loss)
+            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
+            self.pbar.update_graph(*self.send_graphs())
+        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
     
     def plot_lr(self, show_moms:bool=False):
         iterations = list(range(len(self.lrs)))
@@ -230,6 +250,13 @@ class Recorder(Callback):
         for i, ax in enumerate(axes):
             values = [met[i] for met in self.metrics]
             ax.plot(val_iter, values)
+    
+    def send_graphs(self):
+        iters = list(range(len(self.losses)))
+        val_iter = np.array(self.nb_batches).cumsum()
+        x_bounds = (0, (self.nb_epoch - len(self.nb_batches)) * self.nb_batches[-1] + len(self.losses))
+        y_bounds = (0, max((max(self.losses), max(self.val_losses))))
+        return [(iters, self.losses), (val_iter, self.val_losses)], x_bounds, y_bounds
 
 class Stepper():
     def __init__(self, vals:Union[float,Tuple[float,float]], num_it:int, ft:c.AnnealingFt=None):
