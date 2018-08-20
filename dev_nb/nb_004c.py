@@ -13,7 +13,7 @@ class OptimWrapper():
         self.opt_keys.remove('params')
         self.read_defaults()
         self._wd = self.listify(wd, self.opt.param_groups)
-    
+
     def __repr__(self) -> str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
 
@@ -25,16 +25,16 @@ class OptimWrapper():
                 for p in pg['params']: p.data.mul_(1 - wd*lr)
             self.set_val('weight_decay', 0)
         self.opt.step()
-    
+
     def zero_grad(self): self.opt.zero_grad()
-    
+
     #Hyperparameters as properties
     @property
     def lr(self) -> float: return self._lr[-1]
 
     @lr.setter
     def lr(self, val:float): self._lr = self.set_val('lr', self.listify(val, self._lr))
-    
+
     @property
     def mom(self) -> float: return self._mom[-1]
 
@@ -43,7 +43,7 @@ class OptimWrapper():
         if 'momentum' in self.opt_keys: self.set_val('momentum', self.listify(val, self._mom))
         elif 'betas' in self.opt_keys:  self.set_val('betas', (self.listify(val, self._mom), self._beta))
         self._mom = self.listify(val, self._mom)
-    
+
     @property
     def beta(self) -> float: return None if self._beta is None else self._beta[-1]
 
@@ -53,7 +53,7 @@ class OptimWrapper():
         if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, self.listify(val, self._beta)))
         elif 'alpha' in self.opt_keys:  self.set_val('alpha', self.listify(val, self._beta))
         self._beta = self.listify(val, self._beta)
-    
+
     @property
     def wd(self) -> float: return self._wd[-1]
 
@@ -61,7 +61,7 @@ class OptimWrapper():
     def wd(self, val:float):
         if not self.true_wd: self.set_val('weight_decay', self.listify(val, self._wd))
         self._wd = self.listify(val, self._wd)
-    
+
     #Helper functions
     def read_defaults(self):
         "Read the values inside the optimizer for the hyper-parameters"
@@ -71,19 +71,19 @@ class OptimWrapper():
         if 'alpha' in self.opt_keys: self._beta = self.read_val('alpha')
         if 'betas' in self.opt_keys: self._mom,self._beta = self.read_val('betas')
         if 'weight_decay' in self.opt_keys: self._wd = self.read_val('weight_decay')
-    
+
     def set_val(self, key:str, val):
         "Set the values inside the optimizer dictionary at the key"
         if is_tuple(val): val = [(v1,v2) for v1,v2 in zip(*val)]
         for v,pg in zip(val,self.opt.param_groups): pg[key] = v
         return val
-    
+
     def read_val(self, key:str) -> Union[List[float],Tuple[List[float],List[float]]]:
         "Read a hyper-parameter key in the optimizer dictionary."
         val = [pg[key] for pg in self.opt.param_groups]
         if is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
         return val
-    
+
     def listify(self, p, q) -> List[Any]:
         "Wrap listify with an assert."
         if is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
@@ -99,7 +99,7 @@ def split_model(model:nn.Module, idx:Sequence[int]) -> List[nn.Module]:
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
-    
+
     data:DataBunch
     model:nn.Module
     opt_fn:Callable=optim.SGD
@@ -107,7 +107,7 @@ class Learner():
     metrics:Collection[Callable]=None
     true_wd:bool=False
     layer_groups:Collection[nn.Module]=None
-    def __post_init__(self): 
+    def __post_init__(self):
         self.model = self.model.to(self.data.device)
         self.callbacks = []
 
@@ -117,7 +117,7 @@ class Learner():
         if callbacks is None: callbacks = []
         callbacks = self.callbacks + callbacks
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
-    
+
     def create_opt(self, lr:Floats, wd:Floats=0.):
         if self.layer_groups is None: self.layer_groups = [self.model]
         lr = listify(lr, self.layer_groups)
@@ -173,8 +173,8 @@ class MixedPrecision(Callback):
     learn:Learner
     loss_scale:float=512.
     flat_master:bool=False
-    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn." 
-    
+    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn."
+
     def on_train_begin(self, **kwargs):
         #Insures the dataloaders are in half precision.
         self.learn.data.train_dl.half = True
@@ -188,21 +188,21 @@ class MixedPrecision(Callback):
         opt_params = [{'params': mp, 'lr': lr} for mp,lr in zip(self.master_params, self.learn.opt._lr)]
         self.learn.opt.opt = self.learn.opt_fn(opt_params)
         opt.mom,opt.wd,opt.beta = mom,wd,beta
-    
+
     def on_loss_begin(self, last_output:Tensor, **kwargs) -> Tensor:
         #It's better to compute the loss in FP32, to avoid reduction overflow.
         return last_output.float()
-    
+
     def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs) -> Rank0Tensor:
         #To avoid gradient underflow, we scale the gradients
         return last_loss * self.loss_scale
-    
+
     def on_backward_end(self, **kwargs):
         #Convert the gradients back to FP32 and divide them by the scale.
         model_g2master_g(self.model_params, self.master_params, self.flat_master)
         for group in self.master_params:
             for param in group: param.grad.div_(self.loss_scale)
-    
+
     def on_step_end(self, **kwargs):
         #Zeros the gradients of the model since the optimizer is disconnected.
         self.learn.model.zero_grad()

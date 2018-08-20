@@ -20,14 +20,14 @@ def loss_batch(model, xb, yb, loss_fn, opt=None):
         loss.backward()
         opt.step()
         opt.zero_grad()
-        
+
     return loss.item(), len(xb)
 
 class Lambda(nn.Module):
     def __init__(self, func):
         super().__init__()
         self.func=func
-        
+
     def forward(self, x): return self.func(x)
 
 def ResizeBatch(*size): return Lambda(lambda x: x.view((-1,)+size))
@@ -38,9 +38,9 @@ def PoolFlatten(): return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 class TfmDataset(Dataset):
     ds: Dataset
     tfm: Callable = None
-        
+
     def __len__(self): return len(self.ds)
-    
+
     def __getitem__(self,idx):
         x,y = self.ds[idx]
         if self.tfm is not None: x = self.tfm(x)
@@ -72,7 +72,7 @@ class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
     progress_func:Callable=None
-        
+
     def __len__(self): return len(self.dl)
     def __iter__(self):
         self.gen = (to_device(self.device,o) for o in self.dl)

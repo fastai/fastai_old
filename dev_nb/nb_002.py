@@ -41,7 +41,7 @@ class FilesDataset(Dataset):
             fnames = get_image_files(folder/cls)
             self.fns += fnames
             self.y += [i] * len(fnames)
-        
+
     def __len__(self): return len(self.fns)
 
     def __getitem__(self,i):
@@ -131,10 +131,10 @@ class Transform():
     def __init__(self, func, **kwargs):
         self.func,self.kw = func,kwargs
         self.tfm_type = self.func.__annotations__['return']
-        
+
     def __repr__(self):
         return f'{self.func.__name__}_tfm->{self.tfm_type.name}; {self.kw}'
-    
+
     def __call__(self):
         if 'p' in self.kw and not rand_bool(self.kw['p']): return noop
         kwargs = resolve_args(self.func, **self.kw)
@@ -185,7 +185,7 @@ def affine_grid(x, matrix, size=None):
 def affine_mult(c,m):
     size = c.size()
     c = c.view(-1,2)
-    c = torch.addmm(m[:2,2], c,  m[:2,:2].t()) 
+    c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
     return c.view(size)
 
 def _apply_affine(img, size=None, m=None, func=None, **kwargs):
@@ -242,10 +242,10 @@ def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType
 
 @reg_affine
 def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Affine:
-    if scale <= 1: 
+    if scale <= 1:
         col_c = (1-scale) * (2*col_pct - 1)
         return get_zoom_mat(scale, 1, col_c, 0.)
-    else:          
+    else:
         row_c = (1-1/scale) * (2*row_pct - 1)
         return get_zoom_mat(1, 1/scale, 0., row_c)
 
@@ -267,13 +267,13 @@ def compute_zs_mat(sz, scale, squish, invert, row_pct, col_pct):
             col_c = (1-w) * (2*col_pct - 1)
             row_c = (1-h) * (2*row_pct - 1)
             return get_zoom_mat(w, h, col_c, row_c)
-        
+
     #Fallback, hack to emulate a center crop without cropping anything yet.
     if orig_ratio > 1: return get_zoom_mat(1/orig_ratio**2, 1, 0, 0.)
     else:              return get_zoom_mat(1, orig_ratio**2, 0, 0.)
 
 @reg_transform
-def zoom_squish(c, sz, scale: uniform = 1.0, squish: uniform=1.0, invert: rand_bool = False, 
+def zoom_squish(c, sz, scale: uniform = 1.0, squish: uniform=1.0, invert: rand_bool = False,
                 row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Coord:
     #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
     #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)

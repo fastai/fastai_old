@@ -19,6 +19,8 @@ def notebook2script(fname):
     fname = os.path.splitext(fname)[0]
     number = fname.split('_')[0]
     fname_out = f'nb_{number}.py'
+    # remove trailing spaces
+    module = re.sub(r' +$', '', module, flags=re.MULTILINE)
     with open(fname_out,'w') as f: f.write(module[:-2])
     print(f"Converted to {fname_out}")
 
