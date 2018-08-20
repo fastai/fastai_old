@@ -15,16 +15,16 @@ def pad(x, padding, mode='reflect') -> TfmType.Start:
 def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Pixel:
     size = listify(size,2)
     rows,cols = size
-    row = int((x.size(1)-rows)*row_pct)
-    col = int((x.size(2)-cols)*col_pct)
+    row = int((x.size(1)-rows+1) * row_pct)
+    col = int((x.size(2)-cols+1) * col_pct)
     return x[:, row:row+rows, col:col+cols].contiguous()
 
 class TfmDataset(Dataset):
     def __init__(self, ds: Dataset, tfms: Collection[Callable] = None, **kwargs):
         self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
-        
+
     def __len__(self): return len(self.ds)
-    
+
     def __getitem__(self,idx):
         x,y = self.ds[idx]
         if self.tfms is not None: x = apply_tfms(self.tfms)(x, **self.kwargs)
@@ -39,7 +39,7 @@ class DataBunch():
     @classmethod
     def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, **kwargs):
         return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm))
-        
+
     @property
     def train_ds(self): return self.train_dl.dl.dataset
     @property
@@ -61,7 +61,7 @@ class ResLayer(nn.Module):
         super().__init__()
         self.conv1=conv_layer(ni, ni//2, ks=1)
         self.conv2=conv_layer(ni//2, ni, ks=3)
-        
+
     def forward(self, x): return x + self.conv2(self.conv1(x))
 
 class Darknet(nn.Module):
@@ -77,5 +77,5 @@ class Darknet(nn.Module):
             nf *= 2
         layers += [nn.AdaptiveAvgPool2d(1), Flatten(), nn.Linear(nf, num_classes)]
         self.layers = nn.Sequential(*layers)
-    
+
     def forward(self, x): return self.layers(x)

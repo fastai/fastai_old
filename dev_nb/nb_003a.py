@@ -17,25 +17,25 @@ class FilesDataset(Dataset):
         self.class2idx = {v:k for k,v in enumerate(classes)}
         self.fns = np.array(fns)
         self.y = [self.class2idx[o] for o in labels]
-        
+
     def __len__(self): return len(self.fns)
 
     def __getitem__(self,i):
         x = Image.open(self.fns[i]).convert('RGB')
         return pil2tensor(x),self.y[i]
-    
+
     @classmethod
     def from_folder(cls, folder, classes=None, test_pct=0.):
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
-            
+
         fns,labels = [],[]
         for cl in classes:
             fnames = get_image_files(folder/cl)
             fns += fnames
             labels += [cl] * len(fnames)
-            
+
         if test_pct==0.: return cls(fns, labels, classes=classes)
-        
+
         fns,labels = np.array(fns),np.array(labels)
         is_test = np.random.uniform(size=(len(fns),)) < test_pct
         return (cls(fns[~is_test], labels[~is_test], classes=classes),
@@ -50,17 +50,6 @@ def affine_grid(x, matrix, size=None):
 nb_002.affine_grid = affine_grid
 
 TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
-@reg_transform
-def pad(x, padding, mode='reflect') -> TfmType.Pixel:
-    return F.pad(x[None], (padding,)*4, mode=mode)[0]
-
-@reg_transform
-def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Crop:
-    size = listify(size,2)
-    rows,cols = size
-    row = int((x.size(1)-rows+1)*row_pct)
-    col = int((x.size(2)-cols+1)*col_pct)
-    return x[:, row:row+rows, col:col+cols]
 
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',
