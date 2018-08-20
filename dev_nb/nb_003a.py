@@ -50,6 +50,17 @@ def affine_grid(x, matrix, size=None):
 nb_002.affine_grid = affine_grid
 
 TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
+@reg_transform
+def pad(x, padding, mode='reflect') -> TfmType.Pixel:
+    return F.pad(x[None], (padding,)*4, mode=mode)[0]
+
+@reg_transform
+def crop(x, size, row_pct:uniform, col_pct:uniform) -> TfmType.Crop:
+    size = listify(size,2)
+    rows,cols = size
+    row = int((x.size(1)-rows+1)*row_pct)
+    col = int((x.size(2)-cols+1)*col_pct)
+    return x[:, row:row+rows, col:col+cols]
 
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',
@@ -60,8 +71,8 @@ def crop_pad(x, size, padding_mode='reflect',
         row_pad = max((rows-x.size(1)+1)//2, 0)
         col_pad = max((cols-x.size(2)+1)//2, 0)
         x = F.pad(x[None], (col_pad,col_pad,row_pad,row_pad), mode=padding_mode)[0]
-    row = int((x.size(1)-rows)*row_pct)
-    col = int((x.size(2)-cols)*col_pct)
+    row = int((x.size(1)-rows+1)*row_pct)
+    col = int((x.size(2)-cols+1)*col_pct)
 
     x = x[:, row:row+rows, col:col+cols]
     return x.contiguous() # without this, get NaN later - don't know why
@@ -100,6 +111,13 @@ def apply_affine(m=None, func=None, crop_func=None):
 
 nb_002.apply_affine = apply_affine
 
+def affines_mat(matrices=None):
+    if matrices is None or len(matrices) == 0: return None#Chaning here to return None instead of identity
+    matrices = [FloatTensor(m) for m in matrices if m is not None]
+    return reduce(torch.matmul, matrices, torch.eye(3))
+
+nb_002.affines_mat = affines_mat
+
 from nb_002 import _apply_tfm_funcs
 
 def apply_tfms(tfms):
@@ -108,6 +126,6 @@ def apply_tfms(tfms):
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
     affine_func = apply_affine(
-        affines_mat(affine_tfms), func=compose(coord_tfms), crop_func=compose(crop_tfms))
+        affines_mat(affine_tfms), func=compose(coord_tfms) if len(coord_tfms) != 0 else None, crop_func=compose(crop_tfms))
     return partial(_apply_tfm_funcs,
         compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))

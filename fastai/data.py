@@ -64,23 +64,20 @@ class DeviceDataLoader():
 
     dl:DataLoader
     device:torch.device
-    progress_func:Callable
     half:bool = False
         
     def __len__(self) -> int: return len(self.dl)
     def __iter__(self) -> Iterator:
         self.gen = (tc.to_device(self.device,o) for o in self.dl)
         if self.half: self.gen = (tc.to_half(o) for o in self.gen)
-        if self.progress_func is not None:
-            self.gen = self.progress_func(self.gen, total=len(self.dl), leave=False)
         return iter(self.gen)
 
     def __repr__(self) -> str:
         return f'DeviceDataLoader, batch size={self.dl.batch_size}, {len(self.dl)} batches on {self.device}, FP16: {self.half}'
 
     @classmethod
-    def create(cls, *args, device:torch.device=tc.default_device, progress_func:Callable=c.tqdm, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, half=False)
+    def create(cls, *args, device:torch.device=tc.default_device, **kwargs):
+        return cls(DataLoader(*args, **kwargs), device=device, half=False)
 
 class DataBunch():
     "Data object that regroups training and validation data"
