@@ -39,7 +39,7 @@ class FilesDataset(Dataset):
         fns,labels = np.array(fns),np.array(labels)
         is_test = np.random.uniform(size=(len(fns),)) < test_pct
         return (cls(fns[~is_test], labels[~is_test], classes=classes),
-                cls(fns[is_test], labels[is_test], classes=classes)
+                cls(fns[is_test], labels[is_test], classes=classes))
 
 def affine_grid(x, matrix, size=None):
     h,w = x.shape[1:]

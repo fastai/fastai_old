@@ -4,6 +4,7 @@
         #################################################
 
 from nb_004 import *
+import nb_002b
 
 def to_half(b):  return [b[0].half(), b[1]]
 
