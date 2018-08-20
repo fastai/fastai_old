@@ -83,7 +83,7 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | number of classes                   | c              |                                                  |
 |                  | batch                               | b              |                                                  |
 |                  | batch's x parts                     | xb             |                                                  |
-|                  | batch's y parts                     | xy             |                                                  |
+|                  | batch's y parts                     | yb             |                                                  |
 |                  | batch size                          | bs             |                                                  |
 |                  | multiple targets                    | multi          | is_multi                                         |
 |                  | regression                          | reg            | is_reg                                           |
