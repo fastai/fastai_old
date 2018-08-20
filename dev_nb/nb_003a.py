@@ -49,8 +49,6 @@ def affine_grid(x, matrix, size=None):
 
 nb_002.affine_grid = affine_grid
 
-TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
-
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',
              row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Crop:
