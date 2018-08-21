@@ -12,22 +12,29 @@ def to_half(b):  return [b[0].half(), b[1]]
 class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
-    progress_func: Callable
+    progress_func:Callable=None
+    tfms: List[Callable]=None
     half: bool = False
 
     def __len__(self): return len(self.dl)
+
+    def proc_batch(self,b):
+        b = to_device(self.device,b)
+        if self.half: b = to_half(b)
+        return b if self.tfms is None else self.tfms(b)
+
     def __iter__(self):
-        self.gen = (to_device(self.device,o) for o in self.dl)
-        if self.half: self.gen = (to_half(o) for o in self.gen)
+        self.gen = map(self.proc_batch, self.dl)
         if self.progress_func is not None:
             self.gen = self.progress_func(self.gen, total=len(self.dl), leave=False)
         return iter(self.gen)
 
     @classmethod
-    def create(cls, *args, device=default_device, progress_func=tqdm, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, half=False)
+    def create(cls, *args, device=default_device, progress_func=tqdm, tfms=tfms, **kwargs):
+        return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, tfms=tfms, half=False)
 
-nb_002b.DeviceDataLoader = DeviceDataLoader
+import nb_003b
+nb_003b.DeviceDataLoader = DeviceDataLoader
 
 def bn2float(module):
     if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()

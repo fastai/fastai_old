@@ -46,39 +46,13 @@ class TfmDataset(Dataset):
         return apply_tfms(self.tfms)(x, **self.kwargs, **xtra), y
 
 class DataBunch():
-    def __init__(self, train_dl, valid_dl, device=None, dl_tfms=None):
+    def __init__(self, train_dl, valid_dl, device=None, **kwargs):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, device=self.device, tfms=dl_tfms)
-        self.valid_dl = DeviceDataLoader(valid_dl, device=self.device, tfms=dl_tfms)
+        self.train_dl = DeviceDataLoader(train_dl, device=self.device, **kwargs)
+        self.valid_dl = DeviceDataLoader(valid_dl, device=self.device, **kwargs)
 
     @classmethod
-    def create(cls, train_ds, valid_ds, bs=64, device=None, num_workers=4,
-               train_tfm=None, valid_tfm=None, sample_func=None, dl_tfms=None):
-        if train_tfm is not None: train_tfm = TfmDataset(train_ds, train_tfm)
-        if valid_tfm is not None: valid_tfm = TfmDataset(valid_ds, valid_tfm)
-        if sample_func is None:
-            train_dl = DataLoader(train_ds, bs, shuffle=True, num_workers=num_workers)
-            valid_dl = DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers)
-        else:
-            train_samp = sample_func(train_ds, bs, True)
-            valid_samp = sample_func(valid_ds, bs*2, False)
-            train_dl = DataLoader(train_ds, num_workers=num_workers, batch_sampler=train_samp)
-            valid_dl = DataLoader(valid_ds, num_workers=num_workers, batch_sampler=valid_samp)
-        return cls(train_dl, valid_dl, device, dl_tfms=None)
-
-    @property
-    def train_ds(self): return self.train_dl.dl.dataset
-    @property
-    def valid_ds(self): return self.valid_dl.dl.dataset
-
-class DataBunch():
-    def __init__(self, train_dl, valid_dl, device=None, dl_tfms=None):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, device=self.device, tfms=dl_tfms)
-        self.valid_dl = DeviceDataLoader(valid_dl, device=self.device, tfms=dl_tfms)
-
-    @classmethod
-    def create(cls, train_ds, valid_ds, bs=64, device=None, num_workers=4,
+    def create(cls, train_ds, valid_ds, bs=64, device=None, num_workers=4, progress_func=tqdm,
                train_tfm=None, valid_tfm=None, sample_func=None, dl_tfms=None, **kwargs):
         if train_tfm is not None: train_tfm = TfmDataset(train_ds, train_tfm, **kwargs)
         if valid_tfm is not None: valid_tfm = TfmDataset(valid_ds, valid_tfm, **kwargs)
@@ -90,7 +64,7 @@ class DataBunch():
             valid_samp = sample_func(valid_ds, bs*2, False)
             train_dl = DataLoader(train_ds, num_workers=num_workers, batch_sampler=train_samp)
             valid_dl = DataLoader(valid_ds, num_workers=num_workers, batch_sampler=valid_samp)
-        return cls(train_dl, valid_dl, device, dl_tfms=None)
+        return cls(train_dl, valid_dl, device, tfms=dl_tfms, progress_func=progress_func)
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
