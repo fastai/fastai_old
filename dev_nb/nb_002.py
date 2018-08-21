@@ -74,8 +74,11 @@ def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
 def brightness(x, change): return x.add_(scipy.special.logit(change))
 def contrast(x, scale): return x.mul_(scale)
 
-def _apply_lighting(x, func): return func(logit_(x)).sigmoid()
-def apply_lighting(func):     return partial(_apply_lighting, func=func)
+def _apply_lighting(x, func):
+    if func is None: return x
+    return func(logit_(x)).sigmoid()
+
+def apply_lighting(func): return partial(_apply_lighting, func=func)
 
 def listify(p=None, q=None):
     if p is None: p=[]
@@ -88,7 +91,7 @@ def compose(funcs):
     def _inner(x, *args, **kwargs):
         for f in funcs: x = f(x, *args, **kwargs)
         return x
-    return _inner
+    return _inner if funcs else None
 
 def uniform(low, high, size=None):
     return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
@@ -208,7 +211,13 @@ def dict_groupby(iterable, key=None):
 def reg_affine(func): return reg_partial(AffineTransform, func)
 
 def _apply_tfm_funcs(pixel_func,lighting_func,affine_func,start_func, x,**kwargs):
-    return pixel_func(lighting_func(affine_func(start_func(x.clone()), **kwargs)))
+    if not np.any([pixel_func,lighting_func,affine_func,start_func]): return x
+    x = x.clone()
+    if start_func is not None:  x = start_func(x)
+    if affine_func is not None: x = affine_func(x, **kwargs)
+    if lighting_func is not None: x = lighting_func(x)
+    if pixel_func is not None: x = pixel_func(x)
+    return x
 
 def apply_tfms(tfms):
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
