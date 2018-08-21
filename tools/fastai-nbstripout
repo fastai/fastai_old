@@ -1,19 +1,15 @@
 #!/usr/bin/env python
 
-import io, sys, argparse
+import io, sys, argparse, json
 
 if sys.stdin: input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 output_stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', action="store_true", help="use rapidjson version")
 parser.add_argument('-t', '--textconv', action="store_true", help="Print results to output")
 parser.add_argument('-d', '--doc-mode', action="store_true", help="fastai docs nb-specific strip out")
 parser.add_argument('files', nargs='*', help='Files to strip output from')
 args = parser.parse_args()
-
-if args.r: import rapidjson as json
-else:      import json
 
 # define which fields need to be kept:
 cell_metadata_keep_code = []
@@ -70,7 +66,8 @@ for filename in args.files:
         output_stream.flush()
     else:
         with io.open(filename, 'w', encoding='utf-8') as f:
-            f.write(x+f.write("\n"))
+            f.write(x)
+            f.write("\n")
 
 # implied textconv mode
 if not args.files and input_stream:
