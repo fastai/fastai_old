@@ -41,7 +41,7 @@ but it's second best, since you may have a valid JSON, but invalid notebook form
 
 ## Git: a mandatory notebook strip out
 
-Currently we only store `source` code cells under git. If you would like to commit or submit a PR, you need to confirm to that standard.
+Currently we only store `source` code cells under git (and a few extra fields for documentation notebooks). If you would like to commit or submit a PR, you need to confirm to that standard.
 
 This is done automatically during `diff`/`commit` git operations, but you need to configure your local repository once to activate that instrumentation.
 
