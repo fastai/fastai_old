@@ -47,7 +47,7 @@ class FilesDataset(Dataset):
             self.y += [i] * len(fnames)
 
     def __len__(self): return len(self.fns)
-    def __getitem__(self,i): return pil2tensor(self.fns[i]),self.y[i]
+    def __getitem__(self,i): return open_image(self.fns[i]),self.y[i]
 
 def image2np(image): return image.cpu().permute(1,2,0).numpy()
 
@@ -68,8 +68,8 @@ def show_images(x,y,rows, classes, figsize=(9,9)):
         ax.set_title(classes[y[i]])
     plt.tight_layout()
 
-def logit(x): return (x/(1-x)).log()
-def logit_(x): return (x.div_(1-x)).log_()
+def logit(x):  return -(1/x-1).log()
+def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
 
 def brightness(x, change): return x.add_(scipy.special.logit(change))
 def contrast(x, scale): return x.mul_(scale)
@@ -171,11 +171,8 @@ def grid_sample_nearest(input, coords, padding_mode='zeros'):
     return result
 
 def grid_sample(x, coords, mode='bilinear', padding_mode='reflect'):
+    if padding_mode=='reflect': padding_mode='reflection'
     if mode=='nearest': return grid_sample_nearest(x[None], coords, padding_mode)[0]
-    if padding_mode=='reflect': # Reflect padding isn't implemented in grid_sample yet
-        coords[coords < -1] = coords[coords < -1].mul_(-1).add_(-2)
-        coords[coords > 1] = coords[coords > 1].mul_(-1).add_(2)
-        padding_mode='zeros'
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
 
 def affine_grid(x, matrix, size=None):
