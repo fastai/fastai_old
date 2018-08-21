@@ -20,9 +20,7 @@ class FilesDataset(Dataset):
 
     def __len__(self): return len(self.fns)
 
-    def __getitem__(self,i):
-        x = Image.open(self.fns[i]).convert('RGB')
-        return pil2tensor(x),self.y[i]
+    def __getitem__(self,i): return pil2tensor(self.fns[i]),self.y[i]
 
     @classmethod
     def from_folder(cls, folder, classes=None, test_pct=0.):
@@ -48,6 +46,8 @@ def affine_grid(x, matrix, size=None):
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
 nb_002.affine_grid = affine_grid
+
+TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
 
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',

@@ -32,6 +32,10 @@ def pil2tensor(image):
     arr = arr.permute(2,0,1)
     return arr.float().div_(255)
 
+def open_image(fn):
+    x = PIL.Image.open(fn).convert('RGB')
+    return pil2tensor(x)
+
 class FilesDataset(Dataset):
     def __init__(self, folder, classes=None):
         self.fns, self.y = [], []
@@ -43,10 +47,7 @@ class FilesDataset(Dataset):
             self.y += [i] * len(fnames)
 
     def __len__(self): return len(self.fns)
-
-    def __getitem__(self,i):
-        x = PIL.Image.open(self.fns[i]).convert('RGB')
-        return pil2tensor(x),self.y[i]
+    def __getitem__(self,i): return pil2tensor(self.fns[i]),self.y[i]
 
 def image2np(image): return image.cpu().permute(1,2,0).numpy()
 
