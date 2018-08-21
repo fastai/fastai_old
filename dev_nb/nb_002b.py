@@ -68,14 +68,14 @@ class DeviceDataLoader():
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, tfms=tfms)
 
 class DataBunch():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4, dl_tfms=None):
+    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4, **kwargs):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(train_ds, bs,   shuffle=True,  num_workers=num_workers, tfms=dl_tfms)
-        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers, tfms=dl_tfms)
+        self.train_dl = DeviceDataLoader.create(train_ds, bs,   shuffle=True,  num_workers=num_workers, **kwargs)
+        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers, **kwargs)
 
     @classmethod
-    def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, **kwargs):
-        return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm), **kwargs)
+    def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, dl_tfms=None, **kwargs):
+        return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm), tfms=dl_tfms, **kwargs)
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
