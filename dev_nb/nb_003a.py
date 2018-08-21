@@ -47,13 +47,8 @@ def affine_grid(x, matrix, size=None):
 
 nb_002.affine_grid = affine_grid
 
-<<<<<<< HEAD
 TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
 
-||||||| merged common ancestors
-=======
-TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
->>>>>>> 97a7382346ad836c17490ba4d547b9a92d6270c1
 @reg_transform
 def crop_pad(x, size, padding_mode='reflect',
              row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Crop:
