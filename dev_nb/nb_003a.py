@@ -20,7 +20,7 @@ class FilesDataset(Dataset):
 
     def __len__(self): return len(self.fns)
 
-    def __getitem__(self,i): return pil2tensor(self.fns[i]),self.y[i]
+    def __getitem__(self,i): return open_image(self.fns[i]),self.y[i]
 
     @classmethod
     def from_folder(cls, folder, classes=None, test_pct=0.):
@@ -112,7 +112,9 @@ def apply_tfms(tfms):
     start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms,crop_tfms = [
         resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
-    affine_func = apply_affine(
-        affines_mat(affine_tfms), func=compose(coord_tfms) if len(coord_tfms) != 0 else None, crop_func=compose(crop_tfms))
-    return partial(_apply_tfm_funcs,
-        compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
+    affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms), crop_func=compose(crop_tfms))
+    return partial(_apply_tfm_funcs, compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
+
+nb_002.apply_tfms = apply_tfms
+import nb_002b
+nb_002b.apply_tfms = apply_tfms
