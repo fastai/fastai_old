@@ -28,9 +28,20 @@ First, thanks a lot for wanting to help!
 
 * Please read [Contributing to the documentation]() *link to be added*
 
+## Validate any notebooks you're contributing to
+
+* When you are done working on a notebook improvement, if you were using a text editor to make  changed, please, make sure to validate that notebook's format, by simply loading it in the jupyter notebook.
+
+Alternatively, you could use a CLI JSON validation tool, e.g. [jsonlint](https://jsonlint.com/):
+
+    jsonlint-php example.ipynb
+
+but it's second best, since you may have a valid JSON, but invalid notebook format, as the latter has extra requirements on which fields are valid and which are not.
+
+
 ## Git: a mandatory notebook strip out
 
-Currently we only store `source` code cells under git. If you would like to commit or submit a PR, you need to confirm to that standard.
+Currently we only store `source` code cells under git (and a few extra fields for documentation notebooks). If you would like to commit or submit a PR, you need to confirm to that standard.
 
 This is done automatically during `diff`/`commit` git operations, but you need to configure your local repository once to activate that instrumentation.
 
