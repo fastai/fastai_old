@@ -5,6 +5,8 @@
 
 from nb_004a import *
 
+def is_listy(x) -> bool: return isinstance(x, (tuple,list))
+
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
     def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False):
@@ -120,7 +122,7 @@ class Learner():
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
         if self.layer_groups is None: self.layer_groups = [self.model]
-        lr = listify(lr, self.layer_groups)
+        lrs = listify(lr, self.layer_groups)
         opt = self.opt_fn([{'params':l.parameters(), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
         self.recorder = Recorder(self.opt, self.data.train_dl)
