@@ -1,10 +1,10 @@
-from ..imports.core import *
-from ..imports.torch import *
-from .. import torch_core as tc
-from ..callback import Callback
-from ..basic_train import Learner
+from ..torch_core import *
+from ..callback import *
+from ..basic_train import *
 from torch._utils import _unflatten_dense_tensors
 from torch.nn.utils import parameters_to_vector
+
+__all__ = [MixedPrecision]
 
 def bn2float(module:nn.Module) -> nn.Module:
     "Puts all batchnorm layers back in FP32."
@@ -60,8 +60,8 @@ class MixedPrecision(Callback):
     learn:Learner
     loss_scale:float=512.
     flat_master:bool=False
-    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn." 
-    
+    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn."
+
     def on_train_begin(self, **kwargs):
         #Insures the dataloaders are in half precision.
         self.learn.data.train_dl.half = True
@@ -75,21 +75,21 @@ class MixedPrecision(Callback):
         opt_params = [{'params': mp, 'lr': lr} for mp,lr in zip(self.master_params, self.learn.opt._lr)]
         self.learn.opt.opt = self.learn.opt_fn(opt_params)
         opt.mom,opt.wd,opt.beta = mom,wd,beta
-    
+
     def on_loss_begin(self, last_output:Tensor, **kwargs) -> Tensor:
         #It's better to compute the loss in FP32, to avoid reduction overflow.
         return last_output.float()
-    
-    def on_backward_begin(self, last_loss:tc.Rank0Tensor, **kwargs) -> tc.Rank0Tensor:
+
+    def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs) -> Rank0Tensor:
         #To avoid gradient underflow, we scale the gradients
         return last_loss * self.loss_scale
-    
+
     def on_backward_end(self, **kwargs):
         #Convert the gradients back to FP32 and divide them by the scale.
         model_g2master_g(self.model_params, self.master_params, self.flat_master)
         for group in self.master_params:
             for param in group: param.grad.div_(self.loss_scale)
-    
+
     def on_step_end(self, **kwargs):
         #Zeros the gradients of the model since the optimizer is disconnected.
         self.learn.model.zero_grad()
