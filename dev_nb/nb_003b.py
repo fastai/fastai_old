@@ -21,7 +21,7 @@ class SortAspectBatchSampler(Sampler):
         sort_nearest = sorted(enumerate(asp_nearests), key=itemgetter(1))
         self.groups = [[(a,{'aspect':b}) for a,b in o]
                   for _,o in groupby(sort_nearest, key=itemgetter(1))]
-        self.n = sum(math.ceil(len(g)/self.bs) for g in groups)
+        self.n = sum(math.ceil(len(g)/self.bs) for g in self.groups)
 
     def __len__(self): return self.n
 
