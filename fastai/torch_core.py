@@ -1,5 +1,5 @@
-from .imports.core import *
 from .imports.torch import *
+from .core import *
 
 default_device = torch.device('cuda', 0) if torch.cuda.is_available() else torch.device('cpu')
 
@@ -11,8 +11,9 @@ def to_device(device:torch.device, b:Collection): return [o.to(device) for o in 
 def to_half(b:Tuple[Tensor, Tensor]):  return [b[0].half(), b[1]]
 
 def split_model(model:nn.Module, idx:Sequence[int]) -> List[nn.Module]:
-    "Split the model according to the layers index in idx"
+    "Split the Sequential model according to the layers index in idx"
     layers = list(model.children())
     if idx[0] != 0: idx = [0] + idx
     if idx[-1] != len(layers): idx.append(len(layers))
     return [nn.Sequential(*layers[i:j]) for i,j in zip(idx[:-1],idx[1:])]
+

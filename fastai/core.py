@@ -5,7 +5,7 @@ Floats = Union[float, Collection[float]]
 AnnealingFt = Union[Callable[[float,float,float],float],Callable[[float,float,float,float],float]]
 
 def is_tuple(x) -> bool:    return isinstance(x, tuple)
-def is_listy(x) -> bool:    return isinstance(x, Collection)
+def is_listy(x) -> bool:    return isinstance(x, (tuple,list))
 def is_iterable(x) -> bool: return isinstance(x, Iterable)
 
 def listify(p=None, q=None) -> Collection:
@@ -24,7 +24,7 @@ class SmoothenValue():
 
     def __repr__(self) -> str:
         return f'SmoothenValue: current {self.smooth}, n={self.n}'
-    
+
     def add_value(self, val:float):
         self.n += 1
         self.mov_avg = self.beta * self.mov_avg + (1 - self.beta) * val
@@ -36,7 +36,8 @@ def annealing_exp(start:float, end:float, pct:float) -> float:    return start *
 def annealing_cos(start:float, end:float, pct:float) -> float:
     cos_out = np.cos(np.pi * pct) + 1
     return end + (start-end)/2 * cos_out
-    
+
 def do_annealing_poly(start:float, end:float, pct:float, degree:float) -> float:
     return end + (start-end) * (1-pct)**degree
 def annealing_poly(degree:float) -> Callable: return partial(do_annealing_poly, degree=degree)
+
