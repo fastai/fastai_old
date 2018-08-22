@@ -1,14 +1,13 @@
-from ..imports.core import *
-from .. import core as c
+from .core import *
 from ..data import DataBunch
-from ..callback import Callback, OptimWrapper, Stepper
+from ..callback import *
 
 class LRFinder(Callback):
     "Callback that handles the LR range test"
 
     def __init__(self, opt:OptimWrapper, data:DataBunch, start_lr:float=1e-5, end_lr:float=10, num_it:int=100):
         self.opt,self.data = opt,data
-        self.sched = Stepper((start_lr, end_lr), num_it, c.annealing_exp)
+        self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
         #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
         #during the call to fit.
         self.valid_dl = data.valid_dl
@@ -34,3 +33,4 @@ class LRFinder(Callback):
     def on_train_end(self, **kwargs):
         #Clean up and put back the valid_dl in its place.
         self.data.valid_dl = self.valid_dl
+
