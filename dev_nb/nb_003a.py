@@ -79,41 +79,41 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
+def is_listy(x)->bool: return isinstance(x, (tuple,list))
+
 def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, aspect=None, mult=32,
-                  m=None, func=None, crop_func=None, **kwargs):
-    if size is not None and not isinstance(size, (tuple,list)):
+                  mats=None, func=None, crop_func=None, **kwargs):
+    if size is not None and not is_listy(size):
         size = listify(size,2) if aspect is None else get_crop_target(size, aspect, mult)
-    if m is None and func is None and size is None: return img
+    if (not mats) and func is None and size is None: return img
     resize_target = get_resize_target(img, size, do_crop=do_crop)
     c = affine_grid(img, torch.eye(3), size=resize_target)
     if func is not None: c = func(c, img.size())
-    if m is not None: c = affine_mult(c, img.new_tensor(m))
+    if mats:
+        m = affines_mat(mats)
+        c = affine_mult(c, img.new_tensor(m))
     res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
     if padding_mode=='zeros': padding_mode='constant'
     if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
     return res
 
-def apply_affine(m=None, func=None, crop_func=None):
-    return partial(_apply_affine, m=m, func=func, crop_func=crop_func)
+def apply_affine(mats=None, func=None, crop_func=None):
+    return partial(_apply_affine, mats=mats, func=func, crop_func=crop_func)
 
 nb_002.apply_affine = apply_affine
-
-def affines_mat(matrices=None):
-    if matrices is None or len(matrices) == 0: return None#Chaning here to return None instead of identity
-    matrices = [FloatTensor(m) for m in matrices if m is not None]
-    return reduce(torch.matmul, matrices, torch.eye(3))
-
-nb_002.affines_mat = affines_mat
 
 from nb_002 import _apply_tfm_funcs
 
 def apply_tfms(tfms):
+    resolve_tfms(tfms)
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
     start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms,crop_tfms = [
-        resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
+        (grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
-    affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms), crop_func=compose(crop_tfms))
-    return partial(_apply_tfm_funcs, compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
+    mats = [o() for o in listify(affine_tfms)]
+    affine_func = apply_affine(mats, func=compose(coord_tfms), crop_func=compose(crop_tfms))
+    return partial(_apply_tfm_funcs,
+        compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
 
 nb_002.apply_tfms = apply_tfms
 import nb_002b

@@ -118,7 +118,6 @@ def get_default_args(func):
             if v.default is not inspect.Parameter.empty}
 
 def resolve_args(func, **kwargs):
-    kwargs.pop('p', None)
     def_args = get_default_args(func)
     for k,v in func.__annotations__.items():
         if k == 'return': continue
@@ -132,17 +131,19 @@ def resolve_args(func, **kwargs):
 def noop(x=None, *args, **kwargs): return x
 
 class Transform():
-    def __init__(self, func, **kwargs):
-        self.func,self.kw = func,kwargs
+    def __init__(self, func, p=1., **kwargs):
+        self.func,self.p,self.kw = func,p,kwargs
         self.tfm_type = self.func.__annotations__['return']
 
     def __repr__(self):
-        return f'{self.func.__name__}_tfm->{self.tfm_type.name}; {self.kw}'
+        return f'{self.func.__name__}_tfm->{self.tfm_type.name}; {self.kw} (p={self.p})'
 
-    def __call__(self):
-        if 'p' in self.kw and not rand_bool(self.kw['p']): return noop
-        kwargs = resolve_args(self.func, **self.kw)
-        return partial(self.func, **kwargs)
+    def resolve(self):
+        self.resolved = resolve_args(self.func, **self.kw)
+        self.do_run = rand_bool(self.p)
+
+    def __call__(self, x, *args, **kwargs):
+        return self.func(x, *args, **self.resolved, **kwargs) if self.do_run else x
 
 def reg_partial(cl, func):
     setattr(sys.modules[func.__module__], f'{func.__name__}_tfm', partial(cl,func))
@@ -150,7 +151,8 @@ def reg_partial(cl, func):
 
 def reg_transform(func): return reg_partial(Transform, func)
 
-def resolve_tfms(tfms): return [f() for f in listify(tfms)]
+def resolve_tfms(tfms):
+    for f in listify(tfms): f.resolve()
 
 @reg_transform
 def brightness(x, change: uniform) -> TfmType.Lighting:  return x.add_(scipy.special.logit(change))
@@ -183,32 +185,33 @@ def affine_grid(x, matrix, size=None):
     elif isinstance(size, int): size=(x.size(0), size, size)
     return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
 
+def affines_mat(matrices=None):
+    if matrices is None or len(matrices) == 0: return None
+    matrices = [FloatTensor(m) for m in matrices if m is not None]
+    return reduce(torch.matmul, matrices, torch.eye(3))
+
 def affine_mult(c,m):
     size = c.size()
     c = c.view(-1,2)
     c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
     return c.view(size)
 
-def _apply_affine(img, size=None, m=None, func=None, **kwargs):
+def _apply_affine(img, size=None, mats=None, func=None, **kwargs):
     c = affine_grid(img, torch.eye(3), size=size)
     if func is not None: c = func(c, img.size())
-    if m is not None: c = affine_mult(c, img.new_tensor(m))
+    if mats:
+        m = affines_mat(mats)
+        c = affine_mult(c, img.new_tensor(m))
     return grid_sample(img, c, **kwargs)
 
-def apply_affine(m=None, func=None): return partial(_apply_affine, m=m, func=func)
-
-def affines_mat(matrices=None):
-    if matrices is None: matrices=[]
-    matrices = [FloatTensor(m) for m in matrices if m is not None]
-    return reduce(torch.matmul, matrices, torch.eye(3))
+def apply_affine(mats=None, func=None): return partial(_apply_affine, mats=mats, func=func)
 
 class AffineTransform(Transform):
-    def __call__(self): return super().__call__()()
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **self.resolved, **kwargs) if self.do_run else None
 
 def dict_groupby(iterable, key=None):
     return {k:list(v) for k,v in itertools.groupby(sorted(iterable, key=key), key=key)}
-
-def reg_affine(func): return reg_partial(AffineTransform, func)
 
 def _apply_tfm_funcs(pixel_func,lighting_func,affine_func,start_func, x,**kwargs):
     if not np.any([pixel_func,lighting_func,affine_func,start_func]): return x
@@ -220,13 +223,17 @@ def _apply_tfm_funcs(pixel_func,lighting_func,affine_func,start_func, x,**kwargs
     return x
 
 def apply_tfms(tfms):
+    resolve_tfms(tfms)
     grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
     start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms = [
-        resolve_tfms(grouped_tfms.get(o)) for o in TfmType]
+        (grouped_tfms.get(o)) for o in TfmType]
     lighting_func = apply_lighting(compose(lighting_tfms))
-    affine_func = apply_affine(affines_mat(affine_tfms), func=compose(coord_tfms))
+    mats = [o() for o in listify(affine_tfms)]
+    affine_func = apply_affine(mats, func=compose(coord_tfms))
     return partial(_apply_tfm_funcs,
         compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
+
+def reg_affine(func): return reg_partial(AffineTransform, func)
 
 @reg_affine
 def rotate(degrees:uniform) -> TfmType.Affine:
