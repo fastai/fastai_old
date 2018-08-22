@@ -5,8 +5,6 @@
 
 from nb_004 import *
 
-def is_listy(x) -> bool: return isinstance(x, (tuple,list))
-
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
     def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False):
