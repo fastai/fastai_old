@@ -25,7 +25,7 @@ def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary'):
     ax.imshow(image2np(img), cmap=cmap)
     if hide_axis: ax.axis('off')
 
-def _apply_tfm_func1(pixel_func,lighting_func,affine_func,start_func, x, **kwargs):
+def _apply_tfm_func(pixel_func,lighting_func,affine_func,start_func, x, **kwargs):
     if not np.any([pixel_func,lighting_func,affine_func,start_func]): return x
     x = x.clone()
     if start_func is not None:  x = start_func(x)
@@ -36,11 +36,11 @@ def _apply_tfm_func1(pixel_func,lighting_func,affine_func,start_func, x, **kwarg
 
 def _apply_tfm_funcs(pixel_func,lighting_func,affine_func,start_func,
                      x, y=None, segmentation=False, **kwargs):
-    x = _apply_tfm_func1(pixel_func,lighting_func,affine_func,start_func, x, **kwargs)
+    x = _apply_tfm_func(pixel_func,lighting_func,affine_func,start_func, x, **kwargs)
     if y is None: return x
 
     if segmentation: lighting_func=None
-    y = _apply_tfm_func1(pixel_func, lighting_func,affine_func,start_func, y,
+    y = _apply_tfm_func(pixel_func, lighting_func,affine_func,start_func, y,
                          mode='nearest' if segmentation else 'bilinear', **kwargs)
     return x,y
 

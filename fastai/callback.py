@@ -158,7 +158,7 @@ class CallbackHandler():
         return self.state_dict['last_output']
 
     def on_backward_begin(self, loss) -> Rank0Tensor:
-        self.smoothener.add_value(loss.item())
+        self.smoothener.add_value(loss.detach())
         self.state_dict['last_loss'], self.state_dict['smooth_loss'] = loss, self.smoothener.smooth
         for cb in self.callbacks:
             a = cb.on_backward_begin(**self.state_dict)
@@ -213,7 +213,7 @@ class Recorder(Callback):
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
             if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
+            self.pbar.write(f'{epoch}, {smooth_loss}, {*last_metrics}')
             self.pbar.update_graph(*self.send_graphs())
         else:  self.pbar.write(f'{epoch}, {smooth_loss}')
 
