@@ -21,7 +21,7 @@ def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:LossFunction, opt:
         cb_handler.on_step_end()
         opt.zero_grad()
 
-    return (loss.item(),) + tuple(mets) + (len(xb),)
+    return (loss.detach(),) + tuple(mets) + (len(xb),)
 
 def fit(epochs:int, model:nn.Module, loss_fn:LossFunction, opt:OptimWrapper, data:DataBunch,
         callbacks:Collection[Callback]=None, metrics:Collection[Metric]=None, pbar:Callable=None):
