@@ -13,4 +13,4 @@ This is a group-up rewrite of fastai. At this stage nothing is functional. If yo
 To use the notebooks or the first modules in the fastai directory you will need:
 - to use python 3.7 or python 3.6 with [dataclasses](https://github.com/ericvsmith/dataclasses): pip install dataclasses
 - to use the master branch of pytorch master
-- to install [fast_progress](https://github.com/fastai/fast_progress) (clone the repository anywhere then use pip install -e fast_progress in the directory where you cloned it).
+- to install [fast_progress](https://github.com/fastai/fast_progress): pip install fast_progress
