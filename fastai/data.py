@@ -1,7 +1,6 @@
 from .torch_core import *
 
-__all__ = [find_classes, get_image_files, pil2tensor,
-           FilesDataset, DeviceDataLoader, DataBunch]
+__all__ = [DeviceDataLoader, DataBunch]
 
 @dataclass
 class DeviceDataLoader():
