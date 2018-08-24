@@ -13,11 +13,8 @@ from dataclasses import dataclass
 from typing import Any, Collection, Callable
 from functools import partial, reduce
 
-if torch.cuda.is_available():
-    default_device = torch.device('cuda')
-else:
-    default_device = torch.device('cpu')
-
+if torch.cuda.is_available(): default_device = torch.device('cuda')
+else: default_device = torch.device('cpu')
 device = default_device
 
 def loss_batch(model, xb, yb, loss_fn, opt=None):
