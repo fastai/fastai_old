@@ -13,10 +13,6 @@ from dataclasses import dataclass
 from typing import Any, Collection, Callable
 from functools import partial, reduce
 
-if torch.cuda.is_available(): default_device = torch.device('cuda')
-else: default_device = torch.device('cpu')
-device = default_device
-
 def loss_batch(model, xb, yb, loss_fn, opt=None):
     loss = loss_fn(model(xb), yb)
 
@@ -39,7 +35,7 @@ def Flatten(): return Lambda(lambda x: x.view((x.size(0), -1)))
 def PoolFlatten(): return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
 @dataclass
-class TfmDataset(Dataset):
+class DatasetTfm(Dataset):
     ds: Dataset
     tfm: Callable = None
 
@@ -65,7 +61,7 @@ from ipykernel.kernelapp import IPKernelApp
 def in_notebook(): return IPKernelApp.initialized()
 
 def to_device(device, b): return [o.to(device) for o in b]
-#default_device = torch.device('cuda')
+default_device = torch.device('cuda')
 
 if in_notebook():
     tqdm = tqdm_notebook
@@ -106,8 +102,8 @@ def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
 class DataBunch():
     def __init__(self, train_ds, valid_ds, bs=64, device=None, train_tfm=None, valid_tfm=None):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(TfmDataset(train_ds,train_tfm), bs, shuffle=True)
-        self.valid_dl = DeviceDataLoader.create(TfmDataset(valid_ds, valid_tfm), bs*2, shuffle=False)
+        self.train_dl = DeviceDataLoader.create(DatasetTfm(train_ds,train_tfm), bs, shuffle=True)
+        self.valid_dl = DeviceDataLoader.create(DatasetTfm(valid_ds, valid_tfm), bs*2, shuffle=False)
 
 class Learner():
     def __init__(self, data, model):
