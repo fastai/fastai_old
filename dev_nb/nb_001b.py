@@ -13,6 +13,10 @@ from dataclasses import dataclass
 from typing import Any, Collection, Callable
 from functools import partial, reduce
 
+if torch.cuda.is_available(): default_device = torch.device('cuda')
+else: default_device = torch.device('cpu')
+device = default_device
+
 def loss_batch(model, xb, yb, loss_fn, opt=None):
     loss = loss_fn(model(xb), yb)
 
@@ -61,7 +65,7 @@ from ipykernel.kernelapp import IPKernelApp
 def in_notebook(): return IPKernelApp.initialized()
 
 def to_device(device, b): return [o.to(device) for o in b]
-default_device = torch.device('cuda')
+#default_device = torch.device('cuda')
 
 if in_notebook():
     tqdm = tqdm_notebook
