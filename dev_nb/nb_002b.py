@@ -8,27 +8,15 @@ from nb_002 import *
 import typing
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 
-@reg_transform
-def pad(x, padding, mode='reflect') -> TfmType.Start:
-    return F.pad(x[None], (padding,)*4, mode=mode)[0]
-
-@reg_transform
-def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5) -> TfmType.Pixel:
-    size = listify(size,2)
-    rows,cols = size
-    row = int((x.size(1)-rows+1) * row_pct)
-    col = int((x.size(2)-cols+1) * col_pct)
-    return x[:, row:row+rows, col:col+cols].contiguous()
-
-class TfmDataset(Dataset):
-    def __init__(self, ds: Dataset, tfms: Collection[Callable] = None, **kwargs):
+class DatasetTfm(Dataset):
+    def __init__(self, ds:Dataset, tfms:Collection[Callable]=None, **kwargs):
         self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
 
     def __len__(self): return len(self.ds)
 
     def __getitem__(self,idx):
         x,y = self.ds[idx]
-        if self.tfms is not None: x = apply_tfms(self.tfms)(x, **self.kwargs)
+        if self.tfms is not None: x = apply_tfms(self.tfms, x, **self.kwargs)
         return x,y
 
 def normalize(x, mean,std):   return (x-mean[...,None,None]) / std[...,None,None]
@@ -40,9 +28,10 @@ def normalize_batch(b, mean, std, do_y=False):
     if do_y: y = normalize(y,mean,std)
     return x,y
 
-def normalize_funcs(mean, std, do_y=False):
-    return (partial(normalize_batch, mean=mean.to(default_device),std=std.to(default_device)),
-            partial(denormalize,     mean=mean,                   std=std))
+def normalize_funcs(mean, std, do_y=False, device=None):
+    if device is None: device=default_device
+    return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
+            partial(denormalize,     mean=mean,           std=std))
 
 @dataclass
 class DeviceDataLoader():
@@ -75,7 +64,7 @@ class DataBunch():
 
     @classmethod
     def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, dl_tfms=None, **kwargs):
-        return cls(TfmDataset(train_ds, train_tfm), TfmDataset(valid_ds, valid_tfm), tfms=dl_tfms, **kwargs)
+        return cls(DatasetTfm(train_ds, train_tfm), DatasetTfm(valid_ds, valid_tfm), tfms=dl_tfms, **kwargs)
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
