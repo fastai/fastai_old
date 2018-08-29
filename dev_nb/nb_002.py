@@ -257,6 +257,11 @@ class Image():
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
+    def affine(self, func, *args, **kwargs):
+        m = func(*args, **kwargs)
+        self.affine_mat = self.affine_mat @ self._px.new(m)
+        return self
+
     def set_sample(self, **kwargs):
         self.sample_kwargs = kwargs
         return self
@@ -265,11 +270,6 @@ class Image():
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
         self.flow = affine_grid(size)
-        return self
-
-    def affine(self, func, *args, **kwargs):
-        m = func(*args, **kwargs)
-        self.affine_mat = self.affine_mat @ self._px.new(m)
         return self
 
     @property
