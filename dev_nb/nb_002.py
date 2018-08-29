@@ -96,7 +96,7 @@ def listify(p=None, q=None):
     return p
 
 class Transform():
-    _attr=None
+    _wrap=None
     order=0
     def __init__(self, func, order=None):
         if order is not None: self.order=order
@@ -109,9 +109,8 @@ class Transform():
         else: return RandTransform(self, kwargs=kwargs, p=p)
 
     def calc(self, x, *args, **kwargs):
-        if self._attr:
-            setattr(x,self._attr, self.func(getattr(x,self._attr), *args, **kwargs))
-        else: self.func(x, *args, **kwargs)
+        if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
+        else:          return self.func(x, *args, **kwargs)
         return x
 
     @property
@@ -119,12 +118,7 @@ class Transform():
 
     def __repr__(self): return f'{self.name} ({self.func.__name__})'
 
-class TfmPixel(Transform):
-    order=10
-    _attr='px'
-class TfmLighting(Transform):
-    order=8
-    _attr='logit_px'
+class TfmLighting(Transform): order,_wrap = 8,'lighting'
 
 @dataclass
 class RandTransform():
@@ -251,6 +245,18 @@ class Image():
     @flow.setter
     def flow(self,v): self._flow=v
 
+    def lighting(self, func, *args, **kwargs):
+        self.logit_px = func(self.logit_px, *args, **kwargs)
+        return self
+
+    def pixel(self, func, *args, **kwargs):
+        self.px = func(self.px, *args, **kwargs)
+        return self
+
+    def coord(self, func, *args, **kwargs):
+        self.flow = func(self.flow, self.shape, *args, **kwargs)
+        return self
+
     def set_sample(self, **kwargs):
         self.sample_kwargs = kwargs
         return self
@@ -258,11 +264,12 @@ class Image():
     def resize(self, size):
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
-        self._flow = affine_grid(size)
+        self.flow = affine_grid(size)
         return self
 
-    def affine(self,m):
-        self._affine_mat = self.affine_mat @ self._px.new(m)
+    def affine(self, func, *args, **kwargs):
+        m = func(*args, **kwargs)
+        self.affine_mat = self.affine_mat @ self._px.new(m)
         return self
 
     @property
@@ -282,9 +289,8 @@ class Image():
     def show(self, ax=None, **kwargs): show_image(self.px, ax=ax, **kwargs)
     def clone(self): return self.__class__(self.px.clone())
 
-class TfmAffine(Transform):
-    order=5
-    def calc(self, x, *args, **kwargs): return x.affine(self.func(*args, **kwargs))
+class TfmAffine(Transform): order,_wrap = 5,'affine'
+class TfmPixel(Transform): order,_wrap = 10,'pixel'
 
 @TfmAffine
 def rotate(degrees:uniform):
@@ -324,11 +330,7 @@ def apply_tfms(tfms, x, do_resolve=True, size=None, **kwargs):
     for tfm in tfms: x = tfm(x)
     return x.px
 
-class TfmCoord(Transform):
-    order=4
-    def calc(self, x, *args, **kwargs):
-        x.flow = self.func(x.flow, x.shape, *args, **kwargs)
-        return x
+class TfmCoord(Transform): order,_wrap = 4,'coord'
 
 @TfmCoord
 def jitter(c, size, magnitude:uniform):
