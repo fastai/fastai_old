@@ -51,6 +51,8 @@ def affine_mult(c,m):
 
 nb_002.affine_mult = affine_mult
 
+class TfmCrop(TfmPixel): order=99
+
 @TfmCrop
 def crop_pad(x, size, padding_mode='reflect',
              row_pct:uniform = 0.5, col_pct:uniform = 0.5):
@@ -81,38 +83,37 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
-def apply_tfms(tfms, x, do_resolve=True, size=None, do_crop=False, aspect=1., mult=32,
-#                padding_mode='reflect', crop_func=None,
-               **kwargs):
+def is_listy(x)->bool: return isinstance(x, (tuple,list))
+
+def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, do_crop=False, aspect=1., mult=32,
+               padding_mode='reflect', **kwargs):
     if not tfms: return x
+    if not xtra: xtra={}
     tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
     if do_resolve: resolve_tfms(tfms)
     x = Image(x.clone())
+
+    crops = [o for o in tfms if isinstance(o.tfm, TfmCrop)]
+    crop_tfm = None
+    if crops:
+        crop_tfm = crops[0]
+        if size is None and 'size' in crop_tfm.kwargs:
+            size = crop_tfm.kwargs['size']
+
     if size is not None:
         if not is_listy(size): size = get_crop_target(size, aspect, mult)
         resize_target = get_resize_target(x, size, do_crop=do_crop)
-        x.resize(resize_size)
-    if kwargs: x.set_sample(**kwargs)
+        x.resize(resize_target)
+        if size!=resize_target:
+            assert crop_tfm
+            crop_tfm.resolved['size']=size
+            crop_tfm.resolved['padding_mode']= ('constant' if padding_mode=='zeros' else padding_mode)
+    x.set_sample(padding_mode=padding_mode, **kwargs)
+
     for tfm in tfms:
-        if isinstance(tfm, TfmCrop): tfm.resolved['size']=size
+        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
         x = tfm(x)
-#     if crop_func is not None:
-#         x = crop_func(x, size=size, padding_mode=padding_mode)
     return x.px
 
-from nb_002 import _apply_tfm_funcs
-
-def apply_tfms(tfms):
-    resolve_tfms(tfms)
-    grouped_tfms = dict_groupby(listify(tfms), lambda o: o.tfm_type)
-    start_tfms,affine_tfms,coord_tfms,pixel_tfms,lighting_tfms,crop_tfms = [
-        (grouped_tfms.get(o)) for o in TfmType]
-    lighting_func = apply_lighting(compose(lighting_tfms))
-    mats = [o() for o in listify(affine_tfms)]
-    affine_func = apply_affine(mats, func=compose(coord_tfms), crop_func=compose(crop_tfms))
-    return partial(_apply_tfm_funcs,
-        compose(pixel_tfms),lighting_func,affine_func,compose(start_tfms))
-
-nb_002.apply_tfms = apply_tfms
-import nb_002b
-nb_002b.apply_tfms = apply_tfms
+def rand_crop(*args, **kwargs): return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
+def rand_zoom(*args, **kwargs): return zoom(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)

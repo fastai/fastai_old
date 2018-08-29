@@ -15,7 +15,7 @@ class SortAspectBatchSampler(Sampler):
     ds:Dataset; bs:int; shuffle:bool = False
 
     def __post_init__(self):
-        asp_ratios = [operator.truediv(*Image.open(img).size) for img in self.ds.fns]
+        asp_ratios = [operator.truediv(*PIL.Image.open(img).size) for img in self.ds.fns]
         asp_ntiles = np.percentile(asp_ratios, [2,20,50,80,98])
         asp_nearests = [closest_ntile(o, asp_ntiles) for o in asp_ratios]
         sort_nearest = sorted(enumerate(asp_nearests), key=itemgetter(1))
@@ -30,9 +30,9 @@ class SortAspectBatchSampler(Sampler):
         else: groups = self.groups
         batches = [group[i:i+self.bs] for group in groups for i in range(0, len(group), self.bs)]
         if self.shuffle: batches = sample(batches, len(batches))
-        for o in batches: yield o
+        return iter(batches)
 
-class TfmDataset(Dataset):
+class DatasetTfm(Dataset):
     def __init__(self, ds: Dataset, tfms: Collection[Callable] = None, **kwargs):
         self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
 
@@ -43,7 +43,7 @@ class TfmDataset(Dataset):
         if isinstance(idx, tuple): idx,xtra = idx
         else: xtra={}
         x,y = self.ds[idx]
-        return apply_tfms(self.tfms)(x, **self.kwargs, **xtra), y
+        return apply_tfms(self.tfms, x, **{**self.kwargs, **xtra}), y
 
 class DataBunch():
     def __init__(self, train_dl, valid_dl, device=None, **kwargs):
@@ -54,8 +54,8 @@ class DataBunch():
     @classmethod
     def create(cls, train_ds, valid_ds, bs=64, device=None, num_workers=4, progress_func=tqdm,
                train_tfm=None, valid_tfm=None, sample_func=None, dl_tfms=None, **kwargs):
-        if train_tfm is not None: train_tfm = TfmDataset(train_ds, train_tfm, **kwargs)
-        if valid_tfm is not None: valid_tfm = TfmDataset(valid_ds, valid_tfm, **kwargs)
+        if train_tfm is not None: train_tfm = DatasetTfm(train_ds, train_tfm, **kwargs)
+        if valid_tfm is not None: valid_tfm = DatasetTfm(valid_ds, valid_tfm, **kwargs)
         if sample_func is None:
             train_dl = DataLoader(train_ds, bs,   shuffle=True,  num_workers=num_workers)
             valid_dl = DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers)
