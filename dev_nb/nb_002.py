@@ -110,7 +110,7 @@ class Transform():
 
     def calc(self, x, *args, **kwargs):
         if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
-        else:          return self.func(x, *args, **kwargs)
+        else:          return x.append_func(self.func, *args, **kwargs)
         return x
 
     @property
@@ -148,7 +148,7 @@ class RandTransform():
     def order(self): return self.tfm.order
 
     def __call__(self, x, *args, **kwargs):
-        return self.tfm(x, *args, **self.resolved, **kwargs) if self.do_run else x
+        return self.tfm(x, *args, **{**self.resolved, **kwargs}) if self.do_run else x
 
 @TfmLighting
 def brightness(x, change:uniform): return x.add_(scipy.special.logit(change))
@@ -320,14 +320,17 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
         row_c = (1-1/scale) * (2*row_pct - 1)
         return get_zoom_mat(1, 1/scale, 0., row_c)
 
-def apply_tfms(tfms, x, do_resolve=True, size=None, **kwargs):
+def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, **kwargs):
     if not tfms: return x
+    if not xtra: xtra={}
     tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
     if do_resolve: resolve_tfms(tfms)
     x = Image(x.clone())
-    if size is not None: x.resize(size)
     if kwargs: x.set_sample(**kwargs)
-    for tfm in tfms: x = tfm(x)
+    if size: x.resize(size)
+    for tfm in tfms:
+        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
+        else:               x = tfm(x)
     return x.px
 
 class TfmCoord(Transform): order,_wrap = 4,'coord'
