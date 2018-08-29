@@ -39,19 +39,21 @@ class FilesDataset(Dataset):
         return (cls(fns[~is_test], labels[~is_test], classes=classes),
                 cls(fns[is_test], labels[is_test], classes=classes))
 
-def affine_grid(x, matrix, size=None):
-    h,w = x.shape[1:]
-    if size is None: size=x.shape
-    matrix[0,1] *= h/w; matrix[1,0] *= w/h
-    return F.affine_grid(matrix[None,:2], torch.Size((1,)+size))
+def affine_mult(c,m):
+    if m is None: return c
+    size = c.size()
+    _,h,w,_ = size
+    m[0,1] *= h/w
+    m[1,0] *= w/h
+    c = c.view(-1,2)
+    c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
+    return c.view(size)
 
-nb_002.affine_grid = affine_grid
+nb_002.affine_mult = affine_mult
 
-TfmType = IntEnum('TfmType', 'Start Affine Coord Pixel Lighting Crop')
-
-@reg_transform
+@TfmCrop
 def crop_pad(x, size, padding_mode='reflect',
-             row_pct:uniform = 0.5, col_pct:uniform = 0.5) -> TfmType.Crop:
+             row_pct:uniform = 0.5, col_pct:uniform = 0.5):
     size = listify(size,2)
     rows,cols = size
     if x.size(1)<rows or x.size(2)<cols:
