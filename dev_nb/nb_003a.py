@@ -81,28 +81,24 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
-def is_listy(x)->bool: return isinstance(x, (tuple,list))
-
-def _apply_affine(img, size=None, padding_mode='reflect', do_crop=False, aspect=None, mult=32,
-                  mats=None, func=None, crop_func=None, **kwargs):
-    if size is not None and not is_listy(size):
-        size = listify(size,2) if aspect is None else get_crop_target(size, aspect, mult)
-    if (not mats) and func is None and size is None: return img
-    resize_target = get_resize_target(img, size, do_crop=do_crop)
-    c = affine_grid(img, torch.eye(3), size=resize_target)
-    if func is not None: c = func(c, img.size())
-    if mats:
-        m = affines_mat(mats)
-        c = affine_mult(c, img.new_tensor(m))
-    res = grid_sample(img, c, padding_mode=padding_mode, **kwargs)
-    if padding_mode=='zeros': padding_mode='constant'
-    if crop_func is not None: res = crop_func(res, size=size, padding_mode=padding_mode)
-    return res
-
-def apply_affine(mats=None, func=None, crop_func=None):
-    return partial(_apply_affine, mats=mats, func=func, crop_func=crop_func)
-
-nb_002.apply_affine = apply_affine
+def apply_tfms(tfms, x, do_resolve=True, size=None, do_crop=False, aspect=1., mult=32,
+#                padding_mode='reflect', crop_func=None,
+               **kwargs):
+    if not tfms: return x
+    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
+    if do_resolve: resolve_tfms(tfms)
+    x = Image(x.clone())
+    if size is not None:
+        if not is_listy(size): size = get_crop_target(size, aspect, mult)
+        resize_target = get_resize_target(x, size, do_crop=do_crop)
+        x.resize(resize_size)
+    if kwargs: x.set_sample(**kwargs)
+    for tfm in tfms:
+        if isinstance(tfm, TfmCrop): tfm.resolved['size']=size
+        x = tfm(x)
+#     if crop_func is not None:
+#         x = crop_func(x, size=size, padding_mode=padding_mode)
+    return x.px
 
 from nb_002 import _apply_tfm_funcs
 
