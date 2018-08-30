@@ -110,8 +110,7 @@ class Transform():
 
     def calc(self, x, *args, **kwargs):
         if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
-        else:          return x.append_func(self.func, *args, **kwargs)
-        return x
+        else:          return self.func(x, *args, **kwargs)
 
     @property
     def name(self): return self.__class__.__name__
@@ -319,6 +318,9 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
     else:
         row_c = (1-1/scale) * (2*row_pct - 1)
         return get_zoom_mat(1, 1/scale, 0., row_c)
+
+@partial(Transform, order=TfmAffine.order-2)
+def resize_image(x, size): return x.resize(size)
 
 def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, **kwargs):
     if not tfms: return x
