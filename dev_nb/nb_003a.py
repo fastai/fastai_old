@@ -70,11 +70,37 @@ def crop_pad(x, size, padding_mode='reflect',
 
 def round_multiple(x, mult): return (int(x/mult+0.5)*mult)
 
-def get_crop_target(target_px, target_aspect=1., mult=32):
+def get_crop_target(target_px, target_aspect=None, mult=32):
     target_px = listify(target_px, 2)
-    target_r = math.sqrt(target_px[0]*target_px[1]/target_aspect)
-    target_c = target_r*target_aspect
+    target_r,target_c = target_px
+    if target_aspect:
+        target_r = math.sqrt(target_r*target_c/target_aspect)
+        target_c = target_r*target_aspect
     return round_multiple(target_r,mult),round_multiple(target_c,mult)
+
+@partial(Transform, order=99)
+def crop_pad(img, size=None, mult=32, padding_mode=None,
+             row_pct:uniform = 0.5, col_pct:uniform = 0.5):
+    aspect = img.aspect if hasattr(img, 'aspect') else 1.
+    if not size and hasattr(img, 'size'): size = img.size
+    if not padding_mode:
+        if hasattr(img, 'sample_kwargs') and ('padding_mode' in img.sample_kwargs):
+            padding_mode = img.sample_kwargs['padding_mode']
+        else: padding_mode='reflect'
+    if padding_mode=='zeros': padding_mode='constant'
+
+    rows,cols = get_crop_target(size, aspect, mult=mult)
+    x = img.px
+    if x.size(1)<rows or x.size(2)<cols:
+        row_pad = max((rows-x.size(1)+1)//2, 0)
+        col_pad = max((cols-x.size(2)+1)//2, 0)
+        x = F.pad(x[None], (col_pad,col_pad,row_pad,row_pad), mode=padding_mode)[0]
+    row = int((x.size(1)-rows+1)*row_pct)
+    col = int((x.size(2)-cols+1)*col_pct)
+
+    x = x[:, row:row+rows, col:col+cols]
+    img.px = x.contiguous() # without this, get NaN later - don't know why
+    return img
 
 def get_resize_target(img, crop_target, do_crop=False):
     if crop_target is None: return None
@@ -83,37 +109,36 @@ def get_resize_target(img, crop_target, do_crop=False):
     ratio = (min if do_crop else max)(r/target_r, c/target_c)
     return ch,round(r/ratio),round(c/ratio)
 
+@partial(Transform, order=TfmAffine.order-2)
+def resize_image(x, *args, **kwargs): return x.resize(*args, **kwargs)
+
+def _resize(self, size=None, do_crop=False, mult=32):
+    assert self._flow is None
+    if not size and hasattr(self, 'size'): size = self.size
+    aspect = self.aspect if hasattr(self, 'aspect') else None
+    crop_target = get_crop_target(size, aspect, mult=mult)
+    target = get_resize_target(self, crop_target, do_crop)
+    self.flow = affine_grid(target)
+    return self
+
+Image.resize=_resize
+
 def is_listy(x)->bool: return isinstance(x, (tuple,list))
 
-def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, do_crop=False, aspect=1., mult=32,
+def apply_tfms(tfms, x, do_resolve=True, xtra=None, aspect=None, size=None,
                padding_mode='reflect', **kwargs):
     if not tfms: return x
     if not xtra: xtra={}
     tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
     if do_resolve: resolve_tfms(tfms)
     x = Image(x.clone())
-
-    crops = [o for o in tfms if isinstance(o.tfm, TfmCrop)]
-    crop_tfm = None
-    if crops:
-        crop_tfm = crops[0]
-        if size is None and 'size' in crop_tfm.kwargs:
-            size = crop_tfm.kwargs['size']
-
-    if size is not None:
-        if not is_listy(size): size = get_crop_target(size, aspect, mult)
-        resize_target = get_resize_target(x, size, do_crop=do_crop)
-        x.resize(resize_target)
-        if size!=resize_target:
-            assert crop_tfm
-            crop_tfm.resolved['size']=size
-            crop_tfm.resolved['padding_mode']= ('constant' if padding_mode=='zeros' else padding_mode)
     x.set_sample(padding_mode=padding_mode, **kwargs)
+    x.aspect = aspect
+    x.size = size
 
     for tfm in tfms:
         if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
         x = tfm(x)
     return x.px
 
-def rand_crop(*args, **kwargs): return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
 def rand_zoom(*args, **kwargs): return zoom(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
