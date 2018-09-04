@@ -275,7 +275,11 @@ class Learner():
     loss_fn: Callable = F.cross_entropy
     metrics: Collection[Callable] = None
     true_wd: bool = False
-    def __post_init__(self): self.model = self.model.to(self.data.device)
+    path:str = 'models'
+    def __post_init__(self):
+        self.model = self.model.to(self.data.device)
+        self.path = Path(self.path)
+        self.path.mkdir(parents=True, exist_ok=True)
 
     def fit(self, epochs, lr, wd=0., callbacks=None):
         if not hasattr(self, 'opt'): self.create_opt(lr, wd)
@@ -286,6 +290,9 @@ class Learner():
 
     def create_opt(self, lr, wd=0.):
         self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
+
+    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
 class LRFinder(Callback):
     def __init__(self, opt, data, start_lr=1e-5, end_lr=10, num_it=200):
@@ -315,11 +322,12 @@ class LRFinder(Callback):
         self.data.valid_dl = self.valid_dl
 
 def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100):
-    #TODO: add model.save and model.load.
     learn.create_opt(start_lr)
     cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
+    learn.save('tmp')
     learn.fit(a, start_lr, callbacks=[cb])
+    learn.load('tmp')
 
 @dataclass
 class Recorder(Callback):

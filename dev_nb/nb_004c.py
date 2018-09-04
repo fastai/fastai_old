@@ -32,8 +32,8 @@ class DeviceDataLoader():
     def create(cls, *args, device=default_device, progress_func=tqdm, tfms=tfms, **kwargs):
         return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, tfms=tfms, half=False)
 
-import nb_003b
-nb_003b.DeviceDataLoader = DeviceDataLoader
+import nb_002b
+nb_002b.DeviceDataLoader = DeviceDataLoader
 
 def bn2float(module):
     if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()

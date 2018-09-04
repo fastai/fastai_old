@@ -106,8 +106,11 @@ class Learner():
     loss_fn:Callable=F.cross_entropy
     metrics:Collection[Callable]=None
     true_wd:bool=False
+    path:str = 'models'
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
+        self.path = Path(self.path)
+        self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
         self.callbacks = []
 
@@ -125,3 +128,6 @@ class Learner():
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
         self.recorder = Recorder(self.opt, self.data.train_dl)
         self.callbacks = [self.recorder] + self.callbacks
+
+    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
