@@ -140,6 +140,9 @@ class RandTransform():
         # use defaults for any args not filled in yet
         for k,v in self.tfm.def_args.items():
             if k not in self.resolved: self.resolved[k]=v
+        # anything left over must be callable without params
+        for k,v in self.tfm.params.items():
+            if k not in self.resolved: self.resolved[k]=v()
 
         self.do_run = rand_bool(self.p)
 

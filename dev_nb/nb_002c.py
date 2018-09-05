@@ -14,11 +14,8 @@ def find_coeffs(orig_pts, targ_pts):
 
     A = FloatTensor(matrix)
     B = FloatTensor(orig_pts).view(8)
-    #The 8 scalars we seek are solution of AX = B, we use the pseudo inverse to compute them since it's more numerically stable.
-
-    res = torch.mv(torch.mm(torch.inverse(torch.mm(A.t(),A)), A.t()), B)
-    #res = numpy.dot(numpy.linalg.inv(A.T * A) * A.T, B)
-    return res
+    #The 8 scalars we seek are solution of AX = B
+    return torch.gesv(B,A)[0][:,0]
 
 def apply_perspective(coords, coeffs):
     size = coords.size()
@@ -30,13 +27,22 @@ def apply_perspective(coords, coeffs):
     coords.mul_(1/coords[:,2].unsqueeze(1))
     return coords[:,:2].view(size)
 
+_orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
+
+def _perspective_warp(c, targ_pts):
+    return apply_perspective(c, find_coeffs(_orig_pts, targ_pts))
+
 @TfmCoord
-def perspective_warp(c, img_size, magnitude:uniform=0):
+def perspective_warp(c, img_size, magnitude:partial(uniform,size=8)=0):
     magnitude = magnitude.view(4,2)
-    orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
-    targ_pts = [[x+m for x,m in zip(xs, ms)] for xs, ms in zip(orig_pts, magnitude)]
-    coeffs = find_coeffs(orig_pts, targ_pts)
-    return apply_perspective(c, coeffs)
+    targ_pts = [[x+m for x,m in zip(xs, ms)] for xs, ms in zip(_orig_pts, magnitude)]
+    return _perspective_warp(c, targ_pts)
+
+@TfmCoord
+def symmetric_warp(c, img_size, magnitude:partial(uniform,size=4)=0):
+    m = listify(magnitude, 4)
+    targ_pts = [[-1-m[3],-1-m[1]], [-1-m[2],1+m[1]], [1+m[3],-1-m[0]], [1+m[2],1+m[0]]]
+    return _perspective_warp(c, targ_pts)
 
 def rand_int(low,high): return random.randint(low, high)
 
