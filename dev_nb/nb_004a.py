@@ -23,7 +23,7 @@ class OptimWrapper():
         if self.true_wd:
             for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
                 for p in pg['params']: p.data.mul_(1 - wd*lr)
-            self.set_val('weight_decay', 0)
+            self.set_val('weight_decay', self.listify(0, self._wd))
         self.opt.step()
 
     def zero_grad(self): self.opt.zero_grad()
