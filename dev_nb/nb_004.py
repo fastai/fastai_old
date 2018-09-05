@@ -266,6 +266,12 @@ class OneCycleScheduler(Callback):
         if self.lr_scheds[self.idx_s].is_done:
             self.idx_s += 1
 
+def fit_one_cycle(learn:Learner, max_lr:float, cyc_len:int, moms:Tuple[float,float]=(0.95,0.85), div_factor:float=10.,
+                 pct_end:float=0.1, wd:float=0.):
+    "Fits a model following the 1cycle policy"
+    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms, div_factor, pct_end)]
+    learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
+
 @dataclass
 class Learner():
     data: DataBunch
