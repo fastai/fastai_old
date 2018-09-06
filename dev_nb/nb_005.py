@@ -85,5 +85,18 @@ class ConvLearner(Learner):
         for g in self.layer_groups[n:]:
             for p in g.parameters(): p.requires_grad = True
 
-    def freeze(self): self.freeze_to(len(self.layer_groups))
+    def freeze(self): self.freeze_to(-1)
     def unfreeze(self): self.freeze_to(0)
+
+bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
+
+def set_bn_eval(m):
+    for l in m.children():
+        set_bn_eval(l)
+        if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
+            l.eval()
+
+@dataclass
+class BnFreeze(Callback):
+    learn:Learner
+    def on_train_begin(self, **kwargs): set_bn_eval(self.learn.model)
