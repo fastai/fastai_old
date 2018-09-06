@@ -12,7 +12,7 @@ class OptimWrapper():
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
-        self._wd = self.listify(wd, self.opt.param_groups)
+        self.wd = wd
 
     def __repr__(self) -> str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
