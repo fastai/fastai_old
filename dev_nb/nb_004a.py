@@ -120,12 +120,14 @@ class Learner():
     true_wd:bool=True
     wd:Floats=1e-6
     path:str = 'models'
+    callback_fns:Collection[Callable]=None
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
         self.path = Path(self.path)
         self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
         if not self.layer_groups: self.layer_groups = [self.model]
+        self.callback_fns = listify(self.callback_fns)
         self.callbacks = []
 
     def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
@@ -133,6 +135,7 @@ class Learner():
         if not hasattr(self, 'opt'): self.create_opt(lr, wd)
         else: self.opt.wd = wd
         if callbacks is None: callbacks = []
+        callbacks += [cb(self) for cb in self.callback_fns]
         callbacks = self.callbacks + callbacks
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
 

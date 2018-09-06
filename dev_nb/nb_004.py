@@ -277,7 +277,6 @@ class Learner():
     data: DataBunch
     model: nn.Module
     opt_fn: Callable = optim.SGD
-#     loss_fn: LossType = F.cross_entropy
     loss_fn: Callable = F.cross_entropy
     metrics: Collection[Callable] = None
     true_wd: bool = False
