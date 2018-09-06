@@ -21,7 +21,7 @@ def get_transforms(do_flip=False, flip_vert=False, max_rotate=0., max_zoom=1., m
                    p_affine=0.75, p_lighting=0.5, xtra_tfms=None):
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
-    if max_warp:   res.append(perspective_warp(magnitude=(-max_warp,max_warp,8), p=p_affine))
+    if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
     if max_rotate: res.append(rotate(degrees=(-max_rotate,max_rotate), p=p_affine))
     if max_zoom>1: res.append(rand_zoom(scale=(1.,max_zoom), p=p_affine))
     if max_lighting:

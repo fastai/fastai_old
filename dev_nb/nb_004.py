@@ -327,12 +327,12 @@ class LRFinder(Callback):
         #Clean up and put back the valid_dl in its place.
         self.data.valid_dl = self.valid_dl
 
-def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100):
+def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
     learn.create_opt(start_lr)
     cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
     learn.save('tmp')
-    learn.fit(a, start_lr, callbacks=[cb])
+    learn.fit(a, start_lr, callbacks=[cb], **kwargs)
     learn.load('tmp')
 
 @dataclass

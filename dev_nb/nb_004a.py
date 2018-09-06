@@ -89,12 +89,24 @@ class OptimWrapper():
         if is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
         return listify(p,q)
 
-def split_model(model:nn.Module, idx:Sequence[int]) -> List[nn.Module]:
-    "Split the model according to the layers index in idx"
-    layers = list(model.children())
-    if idx[0] != 0: idx = [0] + idx
-    if idx[-1] != len(layers): idx.append(len(layers))
-    return [nn.Sequential(*layers[i:j]) for i,j in zip(idx[:-1],idx[1:])]
+flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if len(list(l.children())) else [l]
+def first_layer(m): return flatten_model(m)[0]
+
+def split_model_idx(model, idxs):
+    "Split the model according to the indices in [idxs]"
+    layers = flatten_model(model)
+    if idxs[0] != 0: idxs = [0] + idxs
+    if idxs[-1] != len(layers): idxs.append(len(layers))
+    return [nn.Sequential(*layers[i:j]) for i,j in zip(idxs[:-1],idxs[1:])]
+
+def split_model(model, splits, want_idxs=False):
+    "Split the model according to the layers in [splits]"
+    layers = flatten_model(model)
+    idxs = [layers.index(first_layer(s)) for s in listify(splits)]
+    res = split_model_idx(model, idxs)
+    return (res,idxs) if want_idxs else res
+
+AdamW = partial(optim.Adam, betas=(0.9,0.99))
 
 @dataclass
 class Learner():
@@ -102,19 +114,22 @@ class Learner():
 
     data:DataBunch
     model:nn.Module
-    opt_fn:Callable=optim.SGD
+    opt_fn:Callable=AdamW
     loss_fn:Callable=F.cross_entropy
     metrics:Collection[Callable]=None
-    true_wd:bool=False
+    true_wd:bool=True
+    wd:Floats=1e-6
     path:str = 'models'
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
         self.path = Path(self.path)
         self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
+        if not self.layer_groups: self.layer_groups = [self.model]
         self.callbacks = []
 
-    def fit(self, epochs:int, lr:Floats, wd:Floats=0., callbacks:Collection[Callback]=None):
+    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
+        if wd is None: wd = self.wd
         if not hasattr(self, 'opt'): self.create_opt(lr, wd)
         else: self.opt.wd = wd
         if callbacks is None: callbacks = []
@@ -128,6 +143,8 @@ class Learner():
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
         self.recorder = Recorder(self.opt, self.data.train_dl)
         self.callbacks = [self.recorder] + self.callbacks
+
+    def split(self, split_func): self.layer_groups = split_model(self.model, split_func(self.model))
 
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
