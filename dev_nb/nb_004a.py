@@ -108,6 +108,8 @@ def split_model(model, splits, want_idxs=False):
 
 AdamW = partial(optim.Adam, betas=(0.9,0.99))
 
+def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
+
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
@@ -132,20 +134,17 @@ class Learner():
 
     def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
         if wd is None: wd = self.wd
-        if not hasattr(self, 'opt'): self.create_opt(lr, wd)
-        else: self.opt.wd = wd
+        self.create_opt(lr, wd)
         if callbacks is None: callbacks = []
         callbacks += [cb(self) for cb in self.callback_fns]
-        callbacks = self.callbacks + callbacks
+        self.recorder = Recorder(self.opt, self.data.train_dl)
+        callbacks = [self.recorder] + self.callbacks + callbacks
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
-        if self.layer_groups is None: self.layer_groups = [self.model]
         lrs = listify(lr, self.layer_groups)
-        opt = self.opt_fn([{'params':l.parameters(), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
+        opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
-        self.recorder = Recorder(self.opt, self.data.train_dl)
-        self.callbacks = [self.recorder] + self.callbacks
 
     def split(self, split_func): self.layer_groups = split_model(self.model, split_func(self.model))
 
