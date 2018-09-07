@@ -300,15 +300,16 @@ class Learner():
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
 class LRFinder(Callback):
-    def __init__(self, opt, data, start_lr=1e-5, end_lr=10, num_it=200):
-        self.opt,self.data = opt,data
+    def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
+        self.learn,self.data = learn,learn.data
         self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
         #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
         #during the call to fit.
-        self.valid_dl = data.valid_dl
+        self.valid_dl = learn.data.valid_dl
         self.data.valid_dl = None
 
     def on_train_begin(self, **kwargs):
+        self.opt = self.learn.opt
         self.opt.lr = self.sched.start
         self.stop,self.best_loss = False,0.
 
@@ -327,8 +328,7 @@ class LRFinder(Callback):
         self.data.valid_dl = self.valid_dl
 
 def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
-    learn.create_opt(start_lr)
-    cb = LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)
+    cb = LRFinder(learn, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
     learn.save('tmp')
     learn.fit(a, start_lr, callbacks=[cb], **kwargs)
