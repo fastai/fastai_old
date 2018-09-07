@@ -106,6 +106,19 @@ def split_model(model, splits, want_idxs=False):
     res = split_model_idx(model, idxs)
     return (res,idxs) if want_idxs else res
 
+bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
+
+def set_bn_eval(m):
+    for l in m.children():
+        if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
+            l.eval()
+        set_bn_eval(l)
+
+@dataclass
+class BnFreeze(Callback):
+    learn:Learner
+    def on_epoch_begin(self, **kwargs): set_bn_eval(self.learn.model)
+
 AdamW = partial(optim.Adam, betas=(0.9,0.99))
 
 def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
@@ -146,7 +159,23 @@ class Learner():
         opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
 
-    def split(self, split_func): self.layer_groups = split_model(self.model, split_func(self.model))
+    def split(self, split_on):
+        if isinstance(split_on,Callable): split_on = split_on(self.model)
+        self.layer_groups = split_model(self.model, split_on)
+
+    def freeze_to(self, n):
+        for g in self.layer_groups[:n]:
+            for l in g:
+                if not isinstance(l, bn_types):
+                    for p in l.parameters(): p.requires_grad = False
+        for g in self.layer_groups[n:]:
+            for p in g.parameters(): p.requires_grad = True
+
+    def freeze(self):
+        assert(len(self.layer_groups)>1)
+        self.freeze_to(-1)
+
+    def unfreeze(self): self.freeze_to(0)
 
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
