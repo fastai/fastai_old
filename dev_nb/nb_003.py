@@ -8,17 +8,15 @@ from nb_002c import *
 
 import operator
 
-class FilesDataset(Dataset):
+class FilesDataset(DatasetBase):
     def __init__(self, fns, labels, classes=None):
         if classes is None: classes = list(set(labels))
         self.classes = classes
         self.class2idx = {v:k for k,v in enumerate(classes)}
-        self.fns = np.array(fns)
-        self.y = [self.class2idx[o] for o in labels]
+        self.x = np.array(fns)
+        self.y = np.array([self.class2idx[o] for o in labels])
 
-    def __len__(self): return len(self.fns)
-
-    def __getitem__(self,i): return open_image(self.fns[i]),self.y[i]
+    def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
     @classmethod
     def from_folder(cls, folder, classes=None, test_pct=0.):
