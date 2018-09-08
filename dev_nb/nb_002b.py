@@ -19,6 +19,9 @@ class DatasetTfm(Dataset):
         if self.tfms is not None: x = apply_tfms(self.tfms, x, **self.kwargs)
         return x,y
 
+    @property
+    def c(self): return self.ds.c
+
 def normalize(x, mean,std):   return (x-mean[...,None,None]) / std[...,None,None]
 def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
 

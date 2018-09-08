@@ -12,7 +12,7 @@ class OptimWrapper():
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
-        self._wd = self.listify(wd, self.opt.param_groups)
+        self.wd = wd
 
     def __repr__(self) -> str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
@@ -23,7 +23,7 @@ class OptimWrapper():
         if self.true_wd:
             for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
                 for p in pg['params']: p.data.mul_(1 - wd*lr)
-            self.set_val('weight_decay', 0)
+            self.set_val('weight_decay', self.listify(0, self._wd))
         self.opt.step()
 
     def zero_grad(self): self.opt.zero_grad()
@@ -89,12 +89,39 @@ class OptimWrapper():
         if is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
         return listify(p,q)
 
-def split_model(model:nn.Module, idx:Sequence[int]) -> List[nn.Module]:
-    "Split the model according to the layers index in idx"
-    layers = list(model.children())
-    if idx[0] != 0: idx = [0] + idx
-    if idx[-1] != len(layers): idx.append(len(layers))
-    return [nn.Sequential(*layers[i:j]) for i,j in zip(idx[:-1],idx[1:])]
+flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if len(list(l.children())) else [l]
+def first_layer(m): return flatten_model(m)[0]
+
+def split_model_idx(model, idxs):
+    "Split the model according to the indices in [idxs]"
+    layers = flatten_model(model)
+    if idxs[0] != 0: idxs = [0] + idxs
+    if idxs[-1] != len(layers): idxs.append(len(layers))
+    return [nn.Sequential(*layers[i:j]) for i,j in zip(idxs[:-1],idxs[1:])]
+
+def split_model(model, splits, want_idxs=False):
+    "Split the model according to the layers in [splits]"
+    layers = flatten_model(model)
+    idxs = [layers.index(first_layer(s)) for s in listify(splits)]
+    res = split_model_idx(model, idxs)
+    return (res,idxs) if want_idxs else res
+
+bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
+
+def set_bn_eval(m):
+    for l in m.children():
+        if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
+            l.eval()
+        set_bn_eval(l)
+
+@dataclass
+class BnFreeze(Callback):
+    learn:Learner
+    def on_epoch_begin(self, **kwargs): set_bn_eval(self.learn.model)
+
+AdamW = partial(optim.Adam, betas=(0.9,0.99))
+
+def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
 
 @dataclass
 class Learner():
@@ -102,26 +129,58 @@ class Learner():
 
     data:DataBunch
     model:nn.Module
-    opt_fn:Callable=optim.SGD
+    opt_fn:Callable=AdamW
     loss_fn:Callable=F.cross_entropy
     metrics:Collection[Callable]=None
-    true_wd:bool=False
+    true_wd:bool=True
+    wd:Floats=1e-6
+    path:str = 'models'
+    callback_fns:Collection[Callable]=None
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
+        self.path = Path(self.path)
+        self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
+        if not self.layer_groups: self.layer_groups = [self.model]
+        self.callback_fns = listify(self.callback_fns)
         self.callbacks = []
 
-    def fit(self, epochs:int, lr:Floats, wd:Floats=0., callbacks:Collection[Callback]=None):
-        if not hasattr(self, 'opt'): self.create_opt(lr, wd)
-        else: self.opt.wd = wd
+    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
+        if wd is None: wd = self.wd
+        self.create_opt(lr, wd)
         if callbacks is None: callbacks = []
-        callbacks = self.callbacks + callbacks
+        callbacks += [cb(self) for cb in self.callback_fns]
+        self.recorder = Recorder(self.opt, self.data.train_dl)
+        callbacks = [self.recorder] + self.callbacks + callbacks
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
-        if self.layer_groups is None: self.layer_groups = [self.model]
         lrs = listify(lr, self.layer_groups)
-        opt = self.opt_fn([{'params':l.parameters(), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
+        opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
-        self.recorder = Recorder(self.opt, self.data.train_dl)
-        self.callbacks = [self.recorder] + self.callbacks
+
+    def split(self, split_on):
+        if isinstance(split_on,Callable): split_on = split_on(self.model)
+        self.layer_groups = split_model(self.model, split_on)
+
+    def freeze_to(self, n):
+        for g in self.layer_groups[:n]:
+            for l in g:
+                if not isinstance(l, bn_types):
+                    for p in l.parameters(): p.requires_grad = False
+        for g in self.layer_groups[n:]:
+            for p in g.parameters(): p.requires_grad = True
+
+    def freeze(self):
+        assert(len(self.layer_groups)>1)
+        self.freeze_to(-1)
+
+    def unfreeze(self): self.freeze_to(0)
+
+    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+
+def requires_grad(l):
+    p = list(l.parameters())
+    if not p: return None
+    return p[0].requires_grad
