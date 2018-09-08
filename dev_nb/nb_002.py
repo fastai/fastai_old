@@ -36,7 +36,16 @@ def open_image(fn):
     x = PIL.Image.open(fn).convert('RGB')
     return pil2tensor(x)
 
-class FilesDataset(Dataset):
+class DatasetBase(Dataset):
+    def __len__(self): return len(self.x)
+    @property
+    def c(self): return self.y.shape[-1] if len(self.y.shape)>1 else 1
+
+class LabelDataset(DatasetBase):
+    @property
+    def c(self): return len(self.classes)
+
+class FilesDataset(LabelDataset):
     def __init__(self, folder, classes=None):
         self.fns, self.y = [], []
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
@@ -46,7 +55,6 @@ class FilesDataset(Dataset):
             self.fns += fnames
             self.y += [i] * len(fnames)
 
-    def __len__(self): return len(self.fns)
     def __getitem__(self,i): return open_image(self.fns[i]),self.y[i]
 
 def image2np(image): return image.cpu().permute(1,2,0).numpy()
@@ -140,6 +148,9 @@ class RandTransform():
         # use defaults for any args not filled in yet
         for k,v in self.tfm.def_args.items():
             if k not in self.resolved: self.resolved[k]=v
+        # anything left over must be callable without params
+        for k,v in self.tfm.params.items():
+            if k not in self.resolved: self.resolved[k]=v()
 
         self.do_run = rand_bool(self.p)
 
