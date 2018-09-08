@@ -105,7 +105,7 @@ def apply_init(m, init_fn):
     m.apply(lambda x: cond_init(x, init_fn))
 
 def _set_mom(m, mom):
-    if not isinstance(m, bn_types): m.momentum=mom
+    if isinstance(m, bn_types): m.momentum=mom
 
 def set_mom(m, mom): m.apply(lambda x: _set_mom(x, mom))
 
