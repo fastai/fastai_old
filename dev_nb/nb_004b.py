@@ -65,6 +65,7 @@ class Learner():
     metrics:Collection[Callable]=None
     true_wd:bool=True
     wd:Floats=1e-6
+    train_bn:bool=True
     path:str = 'models'
     callback_fns:Collection[Callable]=None
     layer_groups:Collection[nn.Module]=None
@@ -99,7 +100,7 @@ class Learner():
     def freeze_to(self, n):
         for g in self.layer_groups[:n]:
             for l in g:
-                if not isinstance(l, bn_types):
+                if not self.train_bn or not isinstance(l, bn_types):
                     for p in l.parameters(): p.requires_grad = False
         for g in self.layer_groups[n:]:
             for p in g.parameters(): p.requires_grad = True
