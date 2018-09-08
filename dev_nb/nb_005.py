@@ -117,4 +117,4 @@ class ConvLearner(Learner):
         model = nn.Sequential(body, head)
         super().__init__(data, model, **kwargs)
         self.split([model[1]])
-#         apply_init(model[1], nn.init.kaiming_normal_)
+        apply_init(model[1], nn.init.kaiming_normal_)

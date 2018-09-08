@@ -179,3 +179,8 @@ class Learner():
 
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+
+def requires_grad(l):
+    p = list(l.parameters())
+    if not p: return None
+    return p[0].requires_grad

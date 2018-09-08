@@ -39,9 +39,13 @@ def open_image(fn):
 class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
     @property
-    def c(self): return self.y.shape[-1]
+    def c(self): return self.y.shape[-1] if len(self.y.shape)>1 else 1
 
-class FilesDataset(DatasetBase):
+class LabelDataset(DatasetBase):
+    @property
+    def c(self): return len(self.classes)
+
+class FilesDataset(LabelDataset):
     def __init__(self, folder, classes=None):
         self.fns, self.y = [], []
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
