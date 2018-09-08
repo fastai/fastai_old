@@ -140,6 +140,7 @@ class Learner():
         self.path = Path(self.path)
         self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
+        self.metrics=listify(self.metrics)
         if not self.layer_groups: self.layer_groups = [self.model]
         self.callbacks = listify(self.callbacks)
         self.callback_fns = [Recorder] + listify(self.callback_fns)

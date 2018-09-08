@@ -302,6 +302,7 @@ class Learner():
     callbacks:Collection[Callback]=field(default_factory=list)
     def __post_init__(self):
         self.path = Path(self.path)
+        self.metrics=listify(self.metrics)
         self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
         self.callbacks = listify(self.callbacks)
@@ -380,6 +381,9 @@ class OneCycleScheduler(Callback):
         self.opt.mom = self.mom_scheds[self.idx_s].step()
         if self.lr_scheds[self.idx_s].is_done:
             self.idx_s += 1
+
+def one_cycle_scheduler(lr_max, **kwargs):
+    return partial(OneCycleScheduler, lr_max=lr_max, **kwargs)
 
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
                   div_factor:float=10., pct_start:float=0.5, pct_end:float=0.1, wd:float=0.):
