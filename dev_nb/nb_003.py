@@ -8,7 +8,7 @@ from nb_002c import *
 
 import operator
 
-class FilesDataset(DatasetBase):
+class FilesDataset(LabelDataset):
     def __init__(self, fns, labels, classes=None):
         if classes is None: classes = list(set(labels))
         self.classes = classes

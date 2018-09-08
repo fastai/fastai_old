@@ -91,7 +91,24 @@ class Learner():
         opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
 
-    def split(self, split_func): self.layer_groups = split_model(self.model, split_func(self.model))
+
+    def split(self, split_on):
+        if isinstance(split_on,Callable): split_on = split_on(self.model)
+        self.layer_groups = split_model(self.model, split_on)
+
+    def freeze_to(self, n):
+        for g in self.layer_groups[:n]:
+            for l in g:
+                if not isinstance(l, bn_types):
+                    for p in l.parameters(): p.requires_grad = False
+        for g in self.layer_groups[n:]:
+            for p in g.parameters(): p.requires_grad = True
+
+    def freeze(self):
+        assert(len(self.layer_groups)>1)
+        self.freeze_to(-1)
+
+    def unfreeze(self): self.freeze_to(0)
 
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
