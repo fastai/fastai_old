@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import os, sys, stat, argparse, subprocess
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-e', '--enable',  action="store_true", help="Trust repo-wide .gitconfig (default action)")
+parser.add_argument('-d', '--disable', action="store_true", help="Distrust repo-wide .gitconfig")
+parser.add_argument('-t', '--test',    action="store_true", help="Validate repo-wide .gitconfig config")
+args = parser.parse_args()
+
+
+# test exec bit
+def validate_script():
+    filepath = os.path.join('tools', 'fastai-nbstripout')
+    st = os.stat(filepath)
+
+    # some windows git setups lose exec bit on checkout
+    # https://stackoverflow.com/questions/26884337/how-do-i-get-windows-to-leave-the-executable-bit-alone/26931381#26931381
+    # we could fix the executable, but it's better for the user to fix their setup
+    # XXX: well, they won't be able to run this script either
+    if not bool(st.st_mode & stat.S_IXUSR):
+        print("""Your git configuration drops executable bit on files
+You may need to fix your git config with:
+    git config --global core.fileMode false
+and then re-checkout the repo files""")
+        sys.exit(f"Error: {filepath} is not executable")
+
+    # check that we can execute the script
+    cmd = f"{filepath} -h"
+    #print(f"Executing: {cmd}")
+    result = subprocess.run(cmd.split(), shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # we don't care for the output, just to see that it works
+    if result.returncode != 0:
+        print(f"Can't execute {filepath}")
+        if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
+
+def trust_enable():
+    validate_script()
+
+    cmd = "git config --local include.path ../.gitconfig"
+    print(f"Executing: {cmd}")
+    result = subprocess.run(cmd.split(), shell=False, check=False, stderr=subprocess.PIPE)
+    if result.returncode == 0:
+        print("Success: .gitconfig is now trusted")
+    else:
+        print("Failed to trust .gitconfig")
+        if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
+
+
+def trust_disable():
+
+    cmd = "git config --local --unset include.path"
+    print(f"Executing: {cmd}")
+    result = subprocess.run(cmd.split(), shell=False, check=False, stderr=subprocess.PIPE)
+    if result.returncode == 0:
+        print("Success: .gitconfig is now distrusted")
+    else:
+        print("Failed to distrust .gitconfig")
+        if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
+
+def trust_test():
+    validate_script()
+
+    cmd = "git config --list --show-origin"
+    print(f"Executing: {cmd}")
+    result = subprocess.run(cmd.split(), shell=False, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode == 0:
+        out = result.stdout.decode('utf-8')
+        if ".git/../.gitconfig" in out and "filter.fastai-nbstripout-code" in out:
+            print("Check: repo's .gitconfig is trusted")
+        else:
+            print("Check: repo's .gitconfig is not trusted, re-run with -e option to trust it")
+    else:
+        print(f"Failed to run {cmd}")
+        if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
+
+
+
+if args.test:      trust_test()
+elif args.disable: trust_disable()
+else:              trust_enable()
