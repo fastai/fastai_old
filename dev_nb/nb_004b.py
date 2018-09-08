@@ -4,170 +4,125 @@
         #################################################
 
 from nb_004a import *
-from fast_progress import master_bar,progress_bar
 
-def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
-    cb_handler = CallbackHandler(callbacks)
-    cb_handler.on_train_begin()
-    if pbar is None: pbar = master_bar(range(epochs))
-
-    for epoch in pbar:
-        model.train()
-        cb_handler.on_epoch_begin()
-
-        for xb,yb in progress_bar(data.train_dl, parent=pbar):
-            xb, yb = cb_handler.on_batch_begin(xb, yb)
-            loss,_ = loss_batch(model, xb, yb, loss_fn, opt, cb_handler)
-            if cb_handler.on_batch_end(loss): break
-
-        if hasattr(data,'valid_dl') and data.valid_dl is not None:
-            model.eval()
-            with torch.no_grad():
-                *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
-                                for xb,yb in progress_bar(data.valid_dl, parent=pbar)])
-            val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
-
-        else: val_metrics=None
-        if cb_handler.on_epoch_end(val_metrics): break
-
-    cb_handler.on_train_end()
+def to_half(b):  return [b[0].half(), b[1]]
 
 @dataclass
-class Learner():
-    "Object that wraps together some data, a model, a loss function and an optimizer"
+class DeviceDataLoader():
+    dl: DataLoader
+    device: torch.device
+    tfms: List[Callable]=None
+    half: bool = False
 
-    data:DataBunch
-    model:nn.Module
-    opt_fn:Callable=AdamW
-    loss_fn:Callable=F.cross_entropy
-    metrics:Collection[Callable]=None
-    true_wd:bool=True
-    wd:Floats=1e-6
-    train_bn:bool=True
-    path:str = 'models'
-    callback_fns:Collection[Callable]=None
-    layer_groups:Collection[nn.Module]=None
-    def __post_init__(self):
-        self.path = Path(self.path)
-        self.path.mkdir(parents=True, exist_ok=True)
-        self.model = self.model.to(self.data.device)
-        if not self.layer_groups: self.layer_groups = [self.model]
-        self.callback_fns = listify(self.callback_fns)
-        self.callbacks = []
+    def __len__(self): return len(self.dl)
 
-    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
-        if wd is None: wd = self.wd
-        self.create_opt(lr, wd)
-        if callbacks is None: callbacks = []
-        callbacks += [cb(self) for cb in self.callback_fns]
-        pbar = master_bar(range(epochs))
-        self.recorder = Recorder(self.opt, epochs, self.data.train_dl, pbar)
-        callbacks = [self.recorder] + self.callbacks + callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics, pbar=pbar)
+    def proc_batch(self,b):
+        b = to_device(self.device,b)
+        if self.tfms is not None: b = self.tfms(b)
+        return to_half(b) if self.half else b
 
-    def create_opt(self, lr:Floats, wd:Floats=0.):
-        lrs = listify(lr, self.layer_groups)
-        opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
-        self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
+    def __iter__(self):
+        self.gen = map(self.proc_batch, self.dl)
+        return iter(self.gen)
 
+    @classmethod
+    def create(cls, *args, device=default_device,tfms=tfms, **kwargs):
+        return cls(DataLoader(*args, **kwargs), device=device, tfms=tfms, half=False)
 
-    def split(self, split_on):
-        if isinstance(split_on,Callable): split_on = split_on(self.model)
-        self.layer_groups = split_model(self.model, split_on)
+import nb_002b
+nb_002b.DeviceDataLoader = DeviceDataLoader
 
-    def freeze_to(self, n):
-        for g in self.layer_groups[:n]:
-            for l in g:
-                if not self.train_bn or not isinstance(l, bn_types):
-                    for p in l.parameters(): p.requires_grad = False
-        for g in self.layer_groups[n:]:
-            for p in g.parameters(): p.requires_grad = True
+def bn2float(module):
+    if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()
+    for child in module.children(): bn2float(child)
+    return module
 
-    def freeze(self):
-        assert(len(self.layer_groups)>1)
-        self.freeze_to(-1)
+def model2half(model):
+    "Converts the model to half precision except the batchnorm layers"
+    return bn2float(model.half())
 
-    def unfreeze(self): self.freeze_to(0)
+from torch._utils import _unflatten_dense_tensors
+from torch.nn.utils import parameters_to_vector
 
-    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
-    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+def get_master(layer_groups:Collection[nn.Module], flat_master:bool=False) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
+    "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"
+    model_params = [[param for param in lg.parameters() if param.requires_grad] for lg in layer_groups]
+    if flat_master:
+        master_params = [parameters_to_vector([param.data.float() for param in lg]) for lg in model_params]
+        master_params = [torch.nn.Parameter(mp, requires_grad=True) for mp in master_params]
+        for mp in master_params:
+            if mp.grad is None: mp.grad = mp.new(*mp.size())
+        return model_params, [[mp] for mp in master_params]
+    else:
+        master_params = [[param.clone().float().detach() for param in lg] for lg in model_params]
+        for mp in master_params:
+            for param in mp: param.requires_grad = True
+        return model_params, master_params
 
-import nb_004a
-nb_004a.Learner = Learner
+def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
+    "Copies the model gradients to the master parameters for the optimizer step"
+    if flat_master:
+        for model_group,master_group in zip(model_params,master_params):
+            master_group[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_group]))
+    else:
+        for model_group,master_group in zip(model_params,master_params):
+            for model, master in zip(model_group, master_group):
+                if model.grad is not None:
+                    if master.grad is None: master.grad = master.data.new(*master.data.size())
+                    master.grad.data.copy_(model.grad.data)
+                else: master.grad = None
+
+def master2model(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
+    "Copy master parameters to model parameters"
+    if flat_master:
+        for model_group,master_group in zip(model_params,master_params):
+            for model, master in zip(model_group, _unflatten_dense_tensors(master_group[0].data, model_group)):
+                model.data.copy_(master)
+    else:
+        for model_group,master_group in zip(model_params,master_params):
+            for model, master in zip(model_group, master_group): model.data.copy_(master.data)
+
+from torch._utils import _unflatten_dense_tensors
+from torch.nn.utils import parameters_to_vector
 
 @dataclass
-class Recorder(Callback):
-    opt: torch.optim
-    nb_epoch:int
-    train_dl: DeviceDataLoader = None
-    pbar: master_bar = None
+class MixedPrecision(Callback):
+    "Callback that handles mixed-precision training"
+    learn:Learner
+    loss_scale:float=512.
+    flat_master:bool=False
+    def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn."
 
     def on_train_begin(self, **kwargs):
-        self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
+        #Insures the dataloaders are in half precision.
+        self.learn.data.train_dl.half = True
+        if hasattr(self.learn.data, 'valid_dl') and self.learn.data.valid_dl is not None:
+            self.learn.data.valid_dl.half = True
+        #Get a copy of the model params in FP32
+        self.model_params, self.master_params = get_master(self.learn.layer_groups, self.flat_master)
+        #Changes the optimizer so that the optimization step is done in FP32.
+        opt = self.learn.opt
+        mom,wd,beta = opt.mom,opt.wd,opt.beta
+        opt_params = [{'params': mp, 'lr': lr} for mp,lr in zip(self.master_params, self.learn.opt._lr)]
+        self.learn.opt.opt = self.learn.opt_fn(opt_params)
+        opt.mom,opt.wd,opt.beta = mom,wd,beta
 
-    def on_batch_begin(self, **kwargs):
-        self.lrs.append(self.opt.lr)
-        self.moms.append(self.opt.mom)
+    def on_loss_begin(self, last_output:Tensor, **kwargs) -> Tensor:
+        #It's better to compute the loss in FP32, to avoid reduction overflow.
+        return last_output.float()
 
-    def on_backward_begin(self, smooth_loss, **kwargs):
-        #We record the loss here before any other callback has a chance to modify it.
-        self.losses.append(smooth_loss)
-        if self.pbar is not None and hasattr(self.pbar,'child'):
-            self.pbar.child.comment = f'{smooth_loss:.4f}'
+    def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs) -> Rank0Tensor:
+        #To avoid gradient underflow, we scale the gradients
+        return last_loss * self.loss_scale
 
-    def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
-        self.nb_batches.append(num_batch)
-        if last_metrics is not None:
-            self.val_losses.append(last_metrics[0])
-            if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
-        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
+    def on_backward_end(self, **kwargs):
+        #Convert the gradients back to FP32 and divide them by the scale.
+        model_g2master_g(self.model_params, self.master_params, self.flat_master)
+        for group in self.master_params:
+            for param in group: param.grad.div_(self.loss_scale)
 
-    def plot_lr(self, show_moms=False):
-        iterations = list(range(len(self.lrs)))
-        if show_moms:
-            _, axs = plt.subplots(1,2, figsize=(12,4))
-            axs[0].plot(iterations, self.lrs)
-            axs[1].plot(iterations, self.moms)
-        else: plt.plot(iterations, self.lrs)
-
-    def plot(self, skip_start=10, skip_end=5):
-        lrs = self.lrs[skip_start:-skip_end] if skip_end > 0 else self.lrs[skip_start:]
-        losses = self.losses[skip_start:-skip_end] if skip_end > 0 else self.losses[skip_start:]
-        _, ax = plt.subplots(1,1)
-        ax.plot(lrs, losses)
-        ax.set_xscale('log')
-
-    def plot_losses(self):
-        _, ax = plt.subplots(1,1)
-        iterations = list(range(len(self.losses)))
-        ax.plot(iterations, self.losses)
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        ax.plot(val_iter, self.val_losses)
-
-    def plot_metrics(self):
-        assert len(self.metrics) != 0, "There is no metrics to plot."
-        _, axes = plt.subplots(len(self.metrics[0]),1,figsize=(6, 4*len(self.metrics[0])))
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        axes = axes.flatten() if len(self.metrics[0]) != 1 else [axes]
-        for i, ax in enumerate(axes):
-            values = [met[i] for met in self.metrics]
-            ax.plot(val_iter, values)
-
-import nb_004
-nb_004.Recorder = Recorder
-
-@dataclass
-class ShowGraph(Callback):
-    learn:Learner
-
-    def on_epoch_end(self, last_metrics, **kwargs):
-        if last_metrics is not None:
-            rec = learn.recorder
-            iters = list(range(len(rec.losses)))
-            val_iter = np.array(rec.nb_batches).cumsum()
-            x_bounds = (0, (rec.nb_epoch - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
-            y_bounds = (0, max((max(rec.losses), max(rec.val_losses))))
-            rec.pbar.update_graph([(iters, rec.losses), (val_iter, rec.val_losses)], x_bounds, y_bounds)
+    def on_step_end(self, **kwargs):
+        #Zeros the gradients of the model since the optimizer is disconnected.
+        self.learn.model.zero_grad()
+        #Update the params from master to model.
+        master2model(self.model_params, self.master_params, self.flat_master)
