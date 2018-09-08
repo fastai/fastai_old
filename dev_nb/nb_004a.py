@@ -121,11 +121,9 @@ class BnFreeze(Callback):
 
 def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
 
-#export
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
-
     data:DataBunch
     model:nn.Module
     opt_fn:Callable=AdamW
@@ -136,30 +134,27 @@ class Learner():
     train_bn:bool=True
     path:str = 'models'
     callback_fns:Collection[Callable]=None
+    callbacks:Collection[Callback]=field(default_factory=list)
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
         self.path = Path(self.path)
         self.path.mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
         if not self.layer_groups: self.layer_groups = [self.model]
-        self.callback_fns = listify(self.callback_fns)
-        self.callbacks = []
+        self.callbacks = listify(self.callbacks)
+        self.callback_fns = [Recorder] + listify(self.callback_fns)
 
     def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
         if wd is None: wd = self.wd
         self.create_opt(lr, wd)
-        if callbacks is None: callbacks = []
-        callbacks += [cb(self) for cb in self.callback_fns]
-        pbar = master_bar(range(epochs))
-        self.recorder = Recorder(self.opt, epochs, self.data.train_dl, pbar)
-        callbacks = [self.recorder] + self.callbacks + callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics, pbar=pbar)
+        callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
+        fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
+            callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
         lrs = listify(lr, self.layer_groups)
         opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
-
 
     def split(self, split_on):
         if isinstance(split_on,Callable): split_on = split_on(self.model)

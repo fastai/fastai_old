@@ -124,9 +124,9 @@ class CallbackHandler():
     def __call__(self, cb_name, **kwargs):
         return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
-    def on_train_begin(self):
+    def on_train_begin(self, epochs, pbar):
         self.state_dict = _get_init_state()
-        self('train_begin')
+        self('train_begin', epochs=epochs, pbar=pbar)
 
     def on_epoch_begin(self):
         self.state_dict['num_batch'] = 0
@@ -191,8 +191,8 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
 
 def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
     cb_handler = CallbackHandler(callbacks)
-    cb_handler.on_train_begin()
     if pbar is None: pbar = master_bar(range(epochs))
+    cb_handler.on_train_begin(epochs, pbar=pbar)
 
     exception=False
     try:
@@ -221,12 +221,14 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=No
 
 @dataclass
 class Recorder(Callback):
-    opt: torch.optim
-    nb_epoch:int
-    train_dl: DeviceDataLoader = None
-    pbar: master_bar = None
+    learn: Learner
+    def __post_init__(self):
+        self.opt = self.learn.opt
+        self.train_dl = self.learn.data.train_dl
+        self.learn.recorder = self
 
-    def on_train_begin(self, **kwargs):
+    def on_train_begin(self, epochs, pbar, **kwargs):
+        self.nb_epoch,self.pbar = epochs,pbar
         self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
 
     def on_batch_begin(self, **kwargs):
@@ -286,6 +288,38 @@ def accuracy(out, yb):
 
 AdamW = partial(optim.Adam, betas=(0.9,0.99))
 
+@dataclass
+class Learner():
+    data:DataBunch
+    model:nn.Module
+    opt_fn:Callable=AdamW
+    loss_fn:Callable=F.cross_entropy
+    metrics:Collection[Callable]=None
+    true_wd:bool=True
+    wd:Floats=1e-6
+    path:str = 'models'
+    callback_fns:Collection[Callable]=None
+    callbacks:Collection[Callback]=field(default_factory=list)
+    def __post_init__(self):
+        self.path = Path(self.path)
+        self.path.mkdir(parents=True, exist_ok=True)
+        self.model = self.model.to(self.data.device)
+        self.callbacks = listify(self.callbacks)
+        self.callback_fns = [Recorder] + listify(self.callback_fns)
+
+    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
+        if wd is None: wd = self.wd
+        self.create_opt(lr, wd)
+        callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
+        fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
+            callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
+
+    def create_opt(self, lr:Floats, wd:Floats=0.):
+        self.opt = OptimWrapper(self.opt_fn(self.model.parameters(),lr))
+
+    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+
 def annealing_no(start, end, pct): return start
 def annealing_linear(start, end, pct): return start + pct * (end-start)
 def annealing_exp(start, end, pct): return start * (end/start) ** pct
@@ -313,25 +347,29 @@ class Stepper():
     @property
     def is_done(self):  return self.n >= self.n_iter
 
+@dataclass
 class OneCycleScheduler(Callback):
-    def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85),
-                 div_factor=10, pct_start=0.5, pct_end=0.1):
-        self.learn = learn
-        n = len(learn.data.train_dl) * epochs
-        a = n * (1-pct_end)
-        a1 = int(a * pct_start)
-        a2 = int(a) - a1
-        self.phases = (a1, a2, n-a1-a2)
-        self.lr_scheds = self.steps(
-            (lr_max/div_factor, lr_max),
-            (lr_max, lr_max/div_factor),
-            (lr_max/div_factor, lr_max/(div_factor*100)))
-        self.mom_scheds = self.steps(moms, (moms[1], moms[0]), moms[0])
+    learn:Learner
+    lr_max:float
+    moms:Tuple[float]=(0.95,0.85)
+    div_factor:int=10
+    pct_start:float=0.5
+    pct_end:float=0.1
 
     def steps(self, *steps_cfg):
         return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
 
-    def on_train_begin(self, **kwargs):
+    def on_train_begin(self, epochs, **kwargs):
+        n = len(self.learn.data.train_dl) * epochs
+        a = n * (1-self.pct_end)
+        a1 = int(a * self.pct_start)
+        a2 = int(a) - a1
+        self.phases = (a1, a2, n-a1-a2)
+        self.lr_scheds = self.steps(
+            (self.lr_max/self.div_factor, self.lr_max),
+            (self.lr_max, self.lr_max/self.div_factor),
+            (self.lr_max/self.div_factor, self.lr_max/(self.div_factor*100)))
+        self.mom_scheds = self.steps(self.moms, (self.moms[1], self.moms[0]), self.moms[0])
         self.opt = self.learn.opt
         self.opt.lr,self.opt.mom = self.lr_scheds[0].start,self.mom_scheds[0].start
         self.idx_s = 0
@@ -346,7 +384,7 @@ class OneCycleScheduler(Callback):
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
                   div_factor:float=10., pct_start:float=0.5, pct_end:float=0.1, wd:float=0.):
     "Fits a model following the 1cycle policy"
-    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms=moms, div_factor=div_factor,
+    cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
                              pct_start=pct_start, pct_end=pct_end)]
     learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
 
@@ -360,6 +398,7 @@ class LRFinder(Callback):
         self.data.valid_dl = None
 
     def on_train_begin(self, **kwargs):
+        self.learn.save('tmp')
         self.opt = self.learn.opt
         self.opt.lr = self.sched.start
         self.stop,self.best_loss = False,0.
@@ -375,15 +414,13 @@ class LRFinder(Callback):
     def on_epoch_end(self, **kwargs): return self.stop
 
     def on_train_end(self, **kwargs):
-        #Clean up and put back the valid_dl in its place.
         self.data.valid_dl = self.valid_dl
+        self.learn.load('tmp')
 
 def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
     cb = LRFinder(learn, start_lr, end_lr, num_it)
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
-    learn.save('tmp')
     learn.fit(a, start_lr, callbacks=[cb], **kwargs)
-    learn.load('tmp')
 
 @dataclass
 class ShowGraph(Callback):
