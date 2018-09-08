@@ -5,6 +5,7 @@
 
 from nb_003 import *
 from torch import Tensor
+from fast_progress import master_bar,progress_bar
 
 Floats = Union[float, Collection[float]]
 Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
@@ -120,8 +121,8 @@ class CallbackHandler():
         self.smoothener = SmoothenValue(self.beta)
         self.state_dict:Dict[str,Union[int,float,Tensor]]=_get_init_state()
 
-    def __call__(self, cb_name):
-        return [getattr(cb, f'on_{cb_name}')(**self.state_dict) for cb in self.callbacks]
+    def __call__(self, cb_name, **kwargs):
+        return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
     def on_train_begin(self):
         self.state_dict = _get_init_state()
@@ -169,7 +170,7 @@ class CallbackHandler():
         self.state_dict['epoch'] += 1
         return stop
 
-    def on_train_end(self): self('train_end')
+    def on_train_end(self, exception): self('train_end', exception=exception)
 
 def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
     if cb_handler is None: cb_handler = CallbackHandler([])
@@ -188,34 +189,102 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
 
     return (loss.item(),) + tuple(mets) + (len(xb),)
 
-def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
+def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
     cb_handler = CallbackHandler(callbacks)
     cb_handler.on_train_begin()
+    if pbar is None: pbar = master_bar(range(epochs))
 
-    for epoch in tnrange(epochs):
-        model.train()
-        cb_handler.on_epoch_begin()
+    exception=False
+    try:
+        for epoch in pbar:
+            model.train()
+            cb_handler.on_epoch_begin()
 
-        for xb,yb in data.train_dl:
-            xb, yb = cb_handler.on_batch_begin(xb, yb)
-            loss,_ = loss_batch(model, xb, yb, loss_fn, opt, cb_handler)
-            if cb_handler.on_batch_end(loss): break
+            for xb,yb in progress_bar(data.train_dl, parent=pbar):
+                xb, yb = cb_handler.on_batch_begin(xb, yb)
+                loss,_ = loss_batch(model, xb, yb, loss_fn, opt, cb_handler)
+                if cb_handler.on_batch_end(loss): break
 
-        if hasattr(data,'valid_dl') and data.valid_dl is not None:
-            model.eval()
-            with torch.no_grad():
-                *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
-                                for xb,yb in data.valid_dl])
-            val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
+            if hasattr(data,'valid_dl') and data.valid_dl is not None:
+                model.eval()
+                with torch.no_grad():
+                    *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
+                                    for xb,yb in progress_bar(data.valid_dl, parent=pbar)])
+                val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
 
-        else: val_metrics=None
-        if cb_handler.on_epoch_end(val_metrics): break
+            else: val_metrics=None
+            if cb_handler.on_epoch_end(val_metrics): break
+    except Exception as e:
+        exception = e
+        raise e
+    finally: cb_handler.on_train_end(exception)
 
-    cb_handler.on_train_end()
+@dataclass
+class Recorder(Callback):
+    opt: torch.optim
+    nb_epoch:int
+    train_dl: DeviceDataLoader = None
+    pbar: master_bar = None
+
+    def on_train_begin(self, **kwargs):
+        self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
+
+    def on_batch_begin(self, **kwargs):
+        self.lrs.append(self.opt.lr)
+        self.moms.append(self.opt.mom)
+
+    def on_backward_begin(self, smooth_loss, **kwargs):
+        #We record the loss here before any other callback has a chance to modify it.
+        self.losses.append(smooth_loss)
+        if self.pbar is not None and hasattr(self.pbar,'child'):
+            self.pbar.child.comment = f'{smooth_loss:.4f}'
+
+    def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
+        self.nb_batches.append(num_batch)
+        if last_metrics is not None:
+            self.val_losses.append(last_metrics[0])
+            if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
+            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
+        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
+
+    def plot_lr(self, show_moms=False):
+        iterations = list(range(len(self.lrs)))
+        if show_moms:
+            _, axs = plt.subplots(1,2, figsize=(12,4))
+            axs[0].plot(iterations, self.lrs)
+            axs[1].plot(iterations, self.moms)
+        else: plt.plot(iterations, self.lrs)
+
+    def plot(self, skip_start=10, skip_end=5):
+        lrs = self.lrs[skip_start:-skip_end] if skip_end > 0 else self.lrs[skip_start:]
+        losses = self.losses[skip_start:-skip_end] if skip_end > 0 else self.losses[skip_start:]
+        _, ax = plt.subplots(1,1)
+        ax.plot(lrs, losses)
+        ax.set_xscale('log')
+
+    def plot_losses(self):
+        _, ax = plt.subplots(1,1)
+        iterations = list(range(len(self.losses)))
+        ax.plot(iterations, self.losses)
+        val_iter = self.nb_batches
+        val_iter = np.cumsum(val_iter)
+        ax.plot(val_iter, self.val_losses)
+
+    def plot_metrics(self):
+        assert len(self.metrics) != 0, "There is no metrics to plot."
+        _, axes = plt.subplots(len(self.metrics[0]),1,figsize=(6, 4*len(self.metrics[0])))
+        val_iter = self.nb_batches
+        val_iter = np.cumsum(val_iter)
+        axes = axes.flatten() if len(self.metrics[0]) != 1 else [axes]
+        for i, ax in enumerate(axes):
+            values = [met[i] for met in self.metrics]
+            ax.plot(val_iter, values)
 
 def accuracy(out, yb):
     preds = torch.max(out, dim=1)[1]
     return (preds==yb).float().mean()
+
+AdamW = partial(optim.Adam, betas=(0.9,0.99))
 
 def annealing_no(start, end, pct): return start
 def annealing_linear(start, end, pct): return start + pct * (end-start)
@@ -230,33 +299,41 @@ def annealing_poly(degree): return functools.partial(do_annealing_poly, degree=d
 def is_tuple(x): return isinstance(x, tuple)
 
 class Stepper():
-    def __init__(self, vals, num_it, ft=None):
+    def __init__(self, vals, n_iter, ft=None):
         self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
-        self.num_it = num_it
+        self.n_iter = n_iter
         if ft is None: self.ft = annealing_linear if is_tuple(vals) else annealing_no
         else:          self.ft = ft
         self.n = 0
 
     def step(self):
         self.n += 1
-        return self.ft(self.start, self.end, self.n/self.num_it)
+        return self.ft(self.start, self.end, self.n/self.n_iter)
 
     @property
-    def is_done(self):  return self.n >= self.num_it
+    def is_done(self):  return self.n >= self.n_iter
 
 class OneCycleScheduler(Callback):
-    def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85), div_factor=10, pct_end=0.1):
+    def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85),
+                 div_factor=10, pct_start=0.5, pct_end=0.1):
         self.learn = learn
-        a = int(len(learn.data.train_dl) * epochs * (1 - pct_end) / 2)
-        b = len(learn.data.train_dl) * epochs - 2*a
-        self.lr_scheds = [Stepper((lr_max/div_factor, lr_max), a),
-                          Stepper((lr_max, lr_max/div_factor), a),
-                          Stepper((lr_max/div_factor, lr_max/(div_factor*100)), b)]
-        self.mom_scheds = [Stepper(moms, a), Stepper((moms[1], moms[0]), a), Stepper(moms[0], b)]
+        n = len(learn.data.train_dl) * epochs
+        a = n * (1-pct_end)
+        a1 = int(a * pct_start)
+        a2 = int(a) - a1
+        self.phases = (a1, a2, n-a1-a2)
+        self.lr_scheds = self.steps(
+            (lr_max/div_factor, lr_max),
+            (lr_max, lr_max/div_factor),
+            (lr_max/div_factor, lr_max/(div_factor*100)))
+        self.mom_scheds = self.steps(moms, (moms[1], moms[0]), moms[0])
+
+    def steps(self, *steps_cfg):
+        return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
 
     def on_train_begin(self, **kwargs):
         self.opt = self.learn.opt
-        self.opt.lr, self.opt.mom = self.lr_scheds[0].start, self.mom_scheds[0].start
+        self.opt.lr,self.opt.mom = self.lr_scheds[0].start,self.mom_scheds[0].start
         self.idx_s = 0
 
     def on_batch_end(self, **kwargs):
@@ -266,38 +343,12 @@ class OneCycleScheduler(Callback):
         if self.lr_scheds[self.idx_s].is_done:
             self.idx_s += 1
 
-def fit_one_cycle(learn:Learner, max_lr:float, cyc_len:int, moms:Tuple[float,float]=(0.95,0.85), div_factor:float=10.,
-                 pct_end:float=0.1, wd:float=0.):
+def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
+                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.1, wd:float=0.):
     "Fits a model following the 1cycle policy"
-    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms, div_factor, pct_end)]
+    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms=moms, div_factor=div_factor,
+                             pct_start=pct_start, pct_end=pct_end)]
     learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
-
-@dataclass
-class Learner():
-    data: DataBunch
-    model: nn.Module
-    opt_fn: Callable = optim.SGD
-    loss_fn: Callable = F.cross_entropy
-    metrics: Collection[Callable] = None
-    true_wd: bool = False
-    path:str = 'models'
-    def __post_init__(self):
-        self.model = self.model.to(self.data.device)
-        self.path = Path(self.path)
-        self.path.mkdir(parents=True, exist_ok=True)
-
-    def fit(self, epochs, lr, wd=0., callbacks=None):
-        if not hasattr(self, 'opt'): self.create_opt(lr, wd)
-        self.recorder = Recorder(self.opt, self.data.train_dl)
-        if callbacks is None: callbacks = []
-        callbacks = [self.recorder]+callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
-
-    def create_opt(self, lr, wd=0.):
-        self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
-
-    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
-    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
 class LRFinder(Callback):
     def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
@@ -335,60 +386,14 @@ def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
     learn.load('tmp')
 
 @dataclass
-class Recorder(Callback):
-    opt: torch.optim
-    train_dl: DeviceDataLoader = None
+class ShowGraph(Callback):
+    learn:Learner
 
-    def on_train_begin(self, **kwargs):
-        self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
-
-    def on_batch_begin(self, **kwargs):
-        self.lrs.append(self.opt.lr)
-        self.moms.append(self.opt.mom)
-
-    def on_backward_begin(self, smooth_loss, **kwargs):
-        #We record the loss here before any other callback has a chance to modify it.
-        self.losses.append(smooth_loss)
-        if self.train_dl is not None and self.train_dl.progress_func is not None:
-            self.train_dl.gen.set_postfix_str(smooth_loss)
-
-    def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
-        self.nb_batches.append(num_batch)
+    def on_epoch_end(self, last_metrics, **kwargs):
         if last_metrics is not None:
-            self.val_losses.append(last_metrics[0])
-            if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            print(epoch, smooth_loss, *last_metrics)
-        else:  print(epoch, smooth_loss)
-
-    def plot_lr(self, show_moms=False):
-        iterations = list(range(len(self.lrs)))
-        if show_moms:
-            _, axs = plt.subplots(1,2, figsize=(12,4))
-            axs[0].plot(iterations, self.lrs)
-            axs[1].plot(iterations, self.moms)
-        else: plt.plot(iterations, self.lrs)
-
-    def plot(self, skip_start=10, skip_end=5):
-        lrs = self.lrs[skip_start:-skip_end] if skip_end > 0 else self.lrs[skip_start:]
-        losses = self.losses[skip_start:-skip_end] if skip_end > 0 else self.losses[skip_start:]
-        _, ax = plt.subplots(1,1)
-        ax.plot(lrs, losses)
-        ax.set_xscale('log')
-
-    def plot_losses(self):
-        _, ax = plt.subplots(1,1)
-        iterations = list(range(len(self.losses)))
-        ax.plot(iterations, self.losses)
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        ax.plot(val_iter, self.val_losses)
-
-    def plot_metrics(self):
-        assert len(self.metrics) != 0, "There is no metrics to plot."
-        _, axes = plt.subplots(len(self.metrics[0]),1,figsize=(6, 4*len(self.metrics[0])))
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        axes = axes.flatten() if len(self.metrics[0]) != 1 else [axes]
-        for i, ax in enumerate(axes):
-            values = [met[i] for met in self.metrics]
-            ax.plot(val_iter, values)
+            rec = learn.recorder
+            iters = list(range(len(rec.losses)))
+            val_iter = np.array(rec.nb_batches).cumsum()
+            x_bounds = (0, (rec.nb_epoch - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
+            y_bounds = (0, max((max(rec.losses), max(rec.val_losses))))
+            rec.pbar.update_graph([(iters, rec.losses), (val_iter, rec.val_losses)], x_bounds, y_bounds)

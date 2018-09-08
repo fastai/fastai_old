@@ -55,41 +55,29 @@ def simple_cnn(actns, kernel_szs, strides):
     layers.append(PoolFlatten())
     return nn.Sequential(*layers)
 
-from tqdm import tqdm, tqdm_notebook, trange, tnrange
-from ipykernel.kernelapp import IPKernelApp
-
-def in_notebook(): return IPKernelApp.initialized()
-
 def to_device(device, b): return [o.to(device) for o in b]
 default_device = torch.device('cuda')
-
-if in_notebook():
-    tqdm = tqdm_notebook
-    trange = tnrange
 
 @dataclass
 class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
-    progress_func:Callable=None
 
     def __len__(self): return len(self.dl)
+    def proc_batch(self,b): return to_device(self.device,b)
+
     def __iter__(self):
-        self.gen = (to_device(self.device,o) for o in self.dl)
-        if self.progress_func is not None:
-            self.gen = self.progress_func(self.gen, total=len(self.dl), leave=False)
+        self.gen = map(self.proc_batch, self.dl)
         return iter(self.gen)
 
     @classmethod
-    def create(cls, *args, device=default_device, progress_func=tqdm, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func)
+    def create(cls, *args, device=default_device, **kwargs): return cls(DataLoader(*args, **kwargs), device=device)
 
 def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
-    for epoch in tnrange(epochs):
+    for epoch in range(epochs):
         model.train()
         for xb,yb in train_dl:
             loss,_ = loss_batch(model, xb, yb, loss_fn, opt)
-            if train_dl.progress_func is not None: train_dl.gen.set_postfix_str(loss)
 
         model.eval()
         with torch.no_grad():
@@ -100,10 +88,16 @@ def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
         print(epoch, val_loss)
 
 class DataBunch():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, train_tfm=None, valid_tfm=None):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(DatasetTfm(train_ds,train_tfm), bs, shuffle=True)
-        self.valid_dl = DeviceDataLoader.create(DatasetTfm(valid_ds, valid_tfm), bs*2, shuffle=False)
+    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, device:torch.device=None, **kwargs):
+        self.device = default_device if self is None else self
+        self.train_dl = DeviceDataLoader(train_dl, self.device, **kwargs)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, **kwargs)
+
+    @classmethod
+    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, num_workers=4, **kwargs):
+        return cls(DataLoader(DatasetTfm(train_ds,train_tfm), bs, shuffle=True, num_workers=num_workers),
+                   DataLoader(DatasetTfm(valid_ds, valid_tfm), bs*2, shuffle=False, num_workers=num_workers),
+                   **kwargs)
 
 class Learner():
     def __init__(self, data, model):

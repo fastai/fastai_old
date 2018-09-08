@@ -6,28 +6,6 @@
 from nb_004a import *
 from fast_progress import master_bar,progress_bar
 
-@dataclass
-class DeviceDataLoader():
-    dl: DataLoader
-    device: torch.device
-    tfms: List[Callable]=None
-
-    def __len__(self): return len(self.dl)
-
-    def proc_batch(self,b):
-        b = to_device(self.device,b)
-        return b if self.tfms is None else self.tfms(b)
-
-    def __iter__(self):
-        self.gen = map(self.proc_batch, self.dl)
-        return iter(self.gen)
-
-    @classmethod
-    def create(cls, *args, device=default_device, tfms=tfms, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, tfms=tfms)
-
-nb_002b.DeviceDataLoader = DeviceDataLoader
-
 def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
     cb_handler = CallbackHandler(callbacks)
     cb_handler.on_train_begin()

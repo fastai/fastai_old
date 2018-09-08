@@ -119,10 +119,9 @@ class BnFreeze(Callback):
     learn:Learner
     def on_epoch_begin(self, **kwargs): set_bn_eval(self.learn.model)
 
-AdamW = partial(optim.Adam, betas=(0.9,0.99))
-
 def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
 
+#export
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
@@ -151,14 +150,16 @@ class Learner():
         self.create_opt(lr, wd)
         if callbacks is None: callbacks = []
         callbacks += [cb(self) for cb in self.callback_fns]
-        self.recorder = Recorder(self.opt, self.data.train_dl)
+        pbar = master_bar(range(epochs))
+        self.recorder = Recorder(self.opt, epochs, self.data.train_dl, pbar)
         callbacks = [self.recorder] + self.callbacks + callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
+        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics, pbar=pbar)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
         lrs = listify(lr, self.layer_groups)
         opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
         self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
+
 
     def split(self, split_on):
         if isinstance(split_on,Callable): split_on = split_on(self.model)
