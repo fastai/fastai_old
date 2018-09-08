@@ -83,26 +83,26 @@ def is_listy(x)->bool: return isinstance(x, (tuple,list))
 
 def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None,
                mult=32, do_crop=True, padding_mode='reflect', **kwargs):
-    if not tfms: return x
-    if not xtra: xtra={}
-    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-    if do_resolve: resolve_tfms(tfms)
-    x = Image(x.clone())
-    x.set_sample(padding_mode=padding_mode, **kwargs)
-    if size:
-        crop_target = get_crop_target(size, mult=mult)
-        target = get_resize_target(x, crop_target, do_crop=do_crop)
-        x.resize(target)
+    if tfms or xtra or size:
+        if not xtra: xtra={}
+        tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
+        if do_resolve: resolve_tfms(tfms)
+        x = x.clone()
+        x.set_sample(padding_mode=padding_mode, **kwargs)
+        if size:
+            crop_target = get_crop_target(size, mult=mult)
+            target = get_resize_target(x, crop_target, do_crop=do_crop)
+            x.resize(target)
 
-    size_tfms = [o for o in tfms if isinstance(o.tfm,TfmCrop)]
-    for tfm in tfms:
-        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
-        elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
-        else: x = tfm(x)
-    return x.px
+        size_tfms = [o for o in tfms if isinstance(o.tfm,TfmCrop)]
+        for tfm in tfms:
+            if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
+            elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
+            else: x = tfm(x)
+    return x.data
 
-import nb_002b
-nb_002b.apply_tfms = apply_tfms
+import nb_002
+nb_002.apply_tfms = apply_tfms
 
 def rand_zoom(*args, **kwargs): return zoom(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
 def rand_crop(*args, **kwargs): return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
