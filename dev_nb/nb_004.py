@@ -5,7 +5,7 @@
 
 from nb_003 import *
 from torch import Tensor
-from fast_progress import master_bar,progress_bar
+from fast_progress1 import master_bar,progress_bar
 
 Floats = Union[float, Collection[float]]
 Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
@@ -126,7 +126,8 @@ class CallbackHandler():
 
     def on_train_begin(self, epochs, pbar):
         self.state_dict = _get_init_state()
-        self('train_begin', epochs=epochs, pbar=pbar)
+        self.state_dict['n_epochs'],self.state_dict['pbar'] = epochs,pbar
+        self('train_begin')
 
     def on_epoch_begin(self):
         self.state_dict['num_batch'] = 0
@@ -189,9 +190,9 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
 
     return (loss.item(),) + tuple(mets) + (len(xb),)
 
-def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
+def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
     cb_handler = CallbackHandler(callbacks)
-    if pbar is None: pbar = master_bar(range(epochs))
+    pbar = master_bar(range(epochs))
     cb_handler.on_train_begin(epochs, pbar=pbar)
 
     exception=False
@@ -227,8 +228,8 @@ class Recorder(Callback):
         self.train_dl = self.learn.data.train_dl
         self.learn.recorder = self
 
-    def on_train_begin(self, epochs, pbar, **kwargs):
-        self.nb_epoch,self.pbar = epochs,pbar
+    def on_train_begin(self, pbar, **kwargs):
+        self.pbar = pbar
         self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
 
     def on_batch_begin(self, **kwargs):
@@ -313,7 +314,7 @@ class Learner():
         self.create_opt(lr, wd)
         callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
-            callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
+            callbacks=self.callbacks+callbacks)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
         self.opt = OptimWrapper(self.opt_fn(self.model.parameters(),lr))
@@ -431,11 +432,11 @@ def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
 class ShowGraph(Callback):
     learn:Learner
 
-    def on_epoch_end(self, last_metrics, **kwargs):
+    def on_epoch_end(self, n_epochs, last_metrics, **kwargs):
         if last_metrics is not None:
             rec = learn.recorder
             iters = list(range(len(rec.losses)))
             val_iter = np.array(rec.nb_batches).cumsum()
-            x_bounds = (0, (rec.nb_epoch - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
+            x_bounds = (0, (n_epochs - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
             y_bounds = (0, max((max(rec.losses), max(rec.val_losses))))
             rec.pbar.update_graph([(iters, rec.losses), (val_iter, rec.val_losses)], x_bounds, y_bounds)
