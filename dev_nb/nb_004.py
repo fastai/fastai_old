@@ -5,7 +5,7 @@
 
 from nb_003 import *
 from torch import Tensor
-from fast_progress1 import master_bar,progress_bar
+from fast_progress import master_bar,progress_bar
 
 Floats = Union[float, Collection[float]]
 Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
