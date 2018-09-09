@@ -88,11 +88,13 @@ def get_default_args(func):
             if v.default is not inspect.Parameter.empty}
 
 def listify(p=None, q=None):
+    "Makes `p` same length as `q`"
     if p is None: p=[]
     elif not isinstance(p, Iterable): p=[p]
-    n = q if type(q)==int else 1 if q is None else len(q)
+    n = q if type(q)==int else len(p) if q is None else len(q)
     if len(p)==1: p = p * n
-    return p
+    assert len(p)==n, f'List len mismatch ({len(p)} vs {n})'
+    return list(p)
 
 class Transform():
     _wrap=None

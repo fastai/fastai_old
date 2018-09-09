@@ -38,7 +38,7 @@ class OptimWrapper():
         if self.true_wd:
             for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
                 for p in pg['params']: p.data.mul_(1 - wd*lr)
-            self.set_val('weight_decay', self.listify(0, self._wd))
+            self.set_val('weight_decay', listify(0, self._wd))
         self.opt.step()
 
     def zero_grad(self): self.opt.zero_grad()
@@ -48,16 +48,16 @@ class OptimWrapper():
     def lr(self) -> float: return self._lr[-1]
 
     @lr.setter
-    def lr(self, val:float): self._lr = self.set_val('lr', self.listify(val, self._lr))
+    def lr(self, val:float): self._lr = self.set_val('lr', listify(val, self._lr))
 
     @property
     def mom(self) -> float: return self._mom[-1]
 
     @mom.setter
     def mom(self, val:float):
-        if 'momentum' in self.opt_keys: self.set_val('momentum', self.listify(val, self._mom))
-        elif 'betas' in self.opt_keys:  self.set_val('betas', (self.listify(val, self._mom), self._beta))
-        self._mom = self.listify(val, self._mom)
+        if 'momentum' in self.opt_keys: self.set_val('momentum', listify(val, self._mom))
+        elif 'betas' in self.opt_keys:  self.set_val('betas', (listify(val, self._mom), self._beta))
+        self._mom = listify(val, self._mom)
 
     @property
     def beta(self) -> float: return None if self._beta is None else self._beta[-1]
@@ -65,17 +65,17 @@ class OptimWrapper():
     @beta.setter
     def beta(self, val:float):
         if val is None: return
-        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, self.listify(val, self._beta)))
-        elif 'alpha' in self.opt_keys:  self.set_val('alpha', self.listify(val, self._beta))
-        self._beta = self.listify(val, self._beta)
+        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, listify(val, self._beta)))
+        elif 'alpha' in self.opt_keys:  self.set_val('alpha', listify(val, self._beta))
+        self._beta = listify(val, self._beta)
 
     @property
     def wd(self) -> float: return self._wd[-1]
 
     @wd.setter
     def wd(self, val:float):
-        if not self.true_wd: self.set_val('weight_decay', self.listify(val, self._wd))
-        self._wd = self.listify(val, self._wd)
+        if not self.true_wd: self.set_val('weight_decay', listify(val, self._wd))
+        self._wd = listify(val, self._wd)
 
     #Helper functions
     def read_defaults(self):
@@ -98,11 +98,6 @@ class OptimWrapper():
         val = [pg[key] for pg in self.opt.param_groups]
         if is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
         return val
-
-    def listify(self, p, q) -> List[Any]:
-        "Wrap listify with an assert."
-        if is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
-        return listify(p,q)
 
 flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if len(list(l.children())) else [l]
 def first_layer(m): return flatten_model(m)[0]
@@ -200,7 +195,7 @@ class Learner():
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
-                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.1, wd:float=0.):
+                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.3, wd:float=0.):
     "Fits a model following the 1cycle policy"
     max_lr = learn.lr_range(max_lr)
     cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
