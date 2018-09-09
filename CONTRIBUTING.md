@@ -49,7 +49,7 @@ Therefore, your developing process will always start with:
 
     git clone https://github.com/fastai/fastai_v1
     cd fastai_v1
-    git config --local include.path '../.gitconfig'
+    tools/trust-origin-git-config
 
 The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via 'tools/fastai-nbstripout' which will do all the work for you.
 
@@ -59,10 +59,9 @@ Note: we can't make this happen automatically, since git will ignore a repositor
 
 If you'd like to check whether you already trusted git with using `fastai_v1/.gitconfig` please look inside `fastai_v1/.git/config`, which should have this entry:
 
+    [include]
+            path = ../.gitconfig
 
-```
-[include]
-        path = ../.gitconfig
+or alternatively run:
 
-```
-
+    tools/trust-origin-git-config -t

@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 
-import os, sys, stat, argparse, subprocess
+# This script facilitates trusting/distrusting of the repo-wide .gitconfig
+#
+# trust:
+#   tools/trust-origin-git-config
+# or
+#   tools/trust-origin-git-config -e
+# which is the same as:
+#   git config --local include.path ../.gitconfig
+#
+# distrust:
+#   tools/trust-origin-git-config -d
+# which is the same as:
+#   git config --local --unset include.path
+
+import os, argparse, subprocess
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--enable',  action="store_true", help="Trust repo-wide .gitconfig (default action)")
@@ -12,18 +26,6 @@ args = parser.parse_args()
 # test exec bit
 def validate_script():
     filepath = os.path.join('tools', 'fastai-nbstripout')
-    st = os.stat(filepath)
-
-    # some windows git setups lose exec bit on checkout
-    # https://stackoverflow.com/questions/26884337/how-do-i-get-windows-to-leave-the-executable-bit-alone/26931381#26931381
-    # we could fix the executable, but it's better for the user to fix their setup
-    # XXX: well, they won't be able to run this script either
-    if not bool(st.st_mode & stat.S_IXUSR):
-        print("""Your git configuration drops executable bit on files
-You may need to fix your git config with:
-    git config --global core.fileMode false
-and then re-checkout the repo files""")
-        sys.exit(f"Error: {filepath} is not executable")
 
     # check that we can execute the script
     cmd = f"{filepath} -h"
@@ -34,16 +36,17 @@ and then re-checkout the repo files""")
         print(f"Can't execute {filepath}")
         if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
 
+
 def trust_enable():
-    validate_script()
+    #validate_script()
 
     cmd = "git config --local include.path ../.gitconfig"
     print(f"Executing: {cmd}")
     result = subprocess.run(cmd.split(), shell=False, check=False, stderr=subprocess.PIPE)
     if result.returncode == 0:
-        print("Success: .gitconfig is now trusted")
+        print("Success: repo's .gitconfig is now trusted")
     else:
-        print("Failed to trust .gitconfig")
+        print("Failed to trust repo's .gitconfig")
         if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
 
 
@@ -53,13 +56,13 @@ def trust_disable():
     print(f"Executing: {cmd}")
     result = subprocess.run(cmd.split(), shell=False, check=False, stderr=subprocess.PIPE)
     if result.returncode == 0:
-        print("Success: .gitconfig is now distrusted")
+        print("Success: repo's .gitconfig is now distrusted")
     else:
-        print("Failed to distrust .gitconfig")
+        print("Failed to distrust repo's .gitconfig")
         if result.stderr: print(f"Error: {result.stderr.decode('utf-8')}")
 
 def trust_test():
-    validate_script()
+    #validate_script()
 
     cmd = "git config --list --show-origin"
     print(f"Executing: {cmd}")
