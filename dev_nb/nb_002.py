@@ -34,7 +34,7 @@ def pil2tensor(image):
 
 def open_image(fn):
     x = PIL.Image.open(fn).convert('RGB')
-    return pil2tensor(x)
+    return Image(pil2tensor(x))
 
 class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
@@ -47,34 +47,25 @@ class LabelDataset(DatasetBase):
 
 class FilesDataset(LabelDataset):
     def __init__(self, folder, classes=None):
-        self.fns, self.y = [], []
+        self.x,self.y = [],[]
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
         self.classes = classes
         for i, cls in enumerate(classes):
             fnames = get_image_files(folder/cls)
-            self.fns += fnames
+            self.x += fnames
             self.y += [i] * len(fnames)
 
-    def __getitem__(self,i): return open_image(self.fns[i]),self.y[i]
+    def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
-def image2np(image): return image.cpu().permute(1,2,0).numpy()
+def image2np(image):
+    res = image.cpu().permute(1,2,0).numpy()
+    return res[...,0] if res.shape[2]==1 else res
 
-def show_image(img, ax=None, figsize=(3,3), hide_axis=True):
+def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
-    ax.imshow(image2np(img))
+    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
-
-def show_image_batch(dl, classes, rows=None, figsize=(12,15)):
-    x,y = next(iter(dl))
-    if rows is None: rows = int(math.sqrt(len(x)))
-    show_images(x[:rows*rows],y[:rows*rows],rows, classes)
-
-def show_images(x,y,rows, classes, figsize=(9,9)):
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()):
-        show_image(x[i], ax)
-        ax.set_title(classes[y[i]])
-    plt.tight_layout()
+    return ax
 
 def logit(x):  return -(1/x-1).log()
 def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
@@ -97,11 +88,13 @@ def get_default_args(func):
             if v.default is not inspect.Parameter.empty}
 
 def listify(p=None, q=None):
+    "Makes `p` same length as `q`"
     if p is None: p=[]
     elif not isinstance(p, Iterable): p=[p]
-    n = q if type(q)==int else 1 if q is None else len(q)
+    n = q if type(q)==int else len(p) if q is None else len(q)
     if len(p)==1: p = p * n
-    return p
+    assert len(p)==n, f'List len mismatch ({len(p)} vs {n})'
+    return list(p)
 
 class Transform():
     _wrap=None
@@ -170,12 +163,40 @@ def resolve_tfms(tfms):
     for f in listify(tfms): f.resolve()
 
 def apply_tfms(tfms, x, do_resolve=True):
-    if not tfms: return x
-    tfms = listify(tfms)
-    if do_resolve: resolve_tfms(tfms)
-    x = Image(x.clone())
-    for tfm in tfms: x = tfm(x)
-    return x.px
+    if tfms:
+        tfms = listify(tfms)
+        if do_resolve: resolve_tfms(tfms)
+        x = x.clone()
+        for tfm in tfms: x = tfm(x)
+    return x.data
+
+class DatasetTfm(Dataset):
+    def __init__(self, ds:Dataset, tfms:Collection[Callable]=None, **kwargs):
+        self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
+
+    def __len__(self): return len(self.ds)
+
+    def __getitem__(self,idx):
+        x,y = self.ds[idx]
+        return apply_tfms(self.tfms, x, **self.kwargs), y
+
+    @property
+    def c(self): return self.ds.c
+
+import nb_001b
+nb_001b.DatasetTfm = DatasetTfm
+
+def show_image_batch(dl, classes, rows=None, figsize=(12,15)):
+    x,y = next(iter(dl))
+    if rows is None: rows = int(math.sqrt(len(x)))
+    show_images(x[:rows*rows],y[:rows*rows],rows, classes)
+
+def show_images(x,y,rows, classes, figsize=(9,9)):
+    fig, axs = plt.subplots(rows,rows,figsize=figsize)
+    for i, ax in enumerate(axs.flatten()):
+        show_image(x[i], ax)
+        ax.set_title(classes[y[i]])
+    plt.tight_layout()
 
 def grid_sample_nearest(input, coords, padding_mode='zeros'):
     if padding_mode=='border': coords.clamp(-1,1)
@@ -299,6 +320,9 @@ class Image():
     def show(self, ax=None, **kwargs): show_image(self.px, ax=ax, **kwargs)
     def clone(self): return self.__class__(self.px.clone())
 
+    @property
+    def data(self): return self.px
+
 class TfmAffine(Transform): order,_wrap = 5,'affine'
 class TfmPixel(Transform): order,_wrap = 10,'pixel'
 
@@ -330,21 +354,18 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
         row_c = (1-1/scale) * (2*row_pct - 1)
         return get_zoom_mat(1, 1/scale, 0., row_c)
 
-@partial(Transform, order=TfmAffine.order-2)
-def resize_image(x, size): return x.resize(size)
-
 def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, **kwargs):
-    if not tfms: return x
-    if not xtra: xtra={}
-    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-    if do_resolve: resolve_tfms(tfms)
-    x = Image(x.clone())
-    if kwargs: x.set_sample(**kwargs)
-    if size: x.resize(size)
-    for tfm in tfms:
-        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
-        else:               x = tfm(x)
-    return x.px
+    if tfms or size:
+        if not xtra: xtra={}
+        tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
+        if do_resolve: resolve_tfms(tfms)
+        x = x.clone()
+        if kwargs: x.set_sample(**kwargs)
+        if size: x.resize(size)
+        for tfm in tfms:
+            if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
+            else:               x = tfm(x)
+    return x.data
 
 class TfmCoord(Transform): order,_wrap = 4,'coord'
 
