@@ -45,8 +45,8 @@ class DeviceDataLoader():
 class DataBunch():
     def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, device:torch.device=None, tfms=None):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, self.device)
-        self.valid_dl = DeviceDataLoader(valid_dl, self.device)
+        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
 
     @classmethod
     def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, num_workers=4,

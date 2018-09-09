@@ -352,10 +352,11 @@ class Stepper():
 class OneCycleScheduler(Callback):
     learn:Learner
     lr_max:float
-    moms:Tuple[float]=(0.95,0.85)
+    moms:Floats=(0.95,0.85)
     div_factor:int=10
     pct_start:float=0.5
     pct_end:float=0.1
+    def __post_init__(self): self.moms=tuple(listify(self.moms,2))
 
     def steps(self, *steps_cfg):
         return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
@@ -390,7 +391,7 @@ def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,flo
     "Fits a model following the 1cycle policy"
     cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
                              pct_start=pct_start, pct_end=pct_end)]
-    learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
+    learn.fit(cyc_len, max_lr, wd=wd, callbacks=cbs)
 
 class LRFinder(Callback):
     def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):

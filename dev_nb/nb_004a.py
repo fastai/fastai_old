@@ -5,6 +5,14 @@
 
 from nb_004 import *
 
+def requires_grad(l, b=None):
+    ps = list(l.parameters())
+    if not ps: return None
+    if b is None: return ps[0].requires_grad
+    for p in ps: p.requires_grad=b
+
+def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
+
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
     def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False):
@@ -13,6 +21,13 @@ class OptimWrapper():
         self.opt_keys.remove('params')
         self.read_defaults()
         self.wd = wd
+
+    @classmethod
+    def create(cls, opt_fn, lr, layer_groups, **kwargs):
+        opt = opt_fn([{'params': trainable_params(l), 'lr':0} for l in layer_groups])
+        opt = cls(opt, **kwargs)
+        opt.lr = listify(lr, layer_groups)
+        return opt
 
     def __repr__(self) -> str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
@@ -119,7 +134,10 @@ class BnFreeze(Callback):
     learn:Learner
     def on_epoch_begin(self, **kwargs): set_bn_eval(self.learn.model)
 
-def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
+def even_mults(start, stop, n):
+    mult = stop/start
+    step = mult**(1/(n-1))
+    return np.array([start*(step**i) for i in range(n)])
 
 @dataclass
 class Learner():
@@ -145,7 +163,14 @@ class Learner():
         self.callbacks = listify(self.callbacks)
         self.callback_fns = [Recorder] + listify(self.callback_fns)
 
-    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
+    def lr_range(self, lr):
+        if not isinstance(lr,slice): return lr
+        if lr.start: res = even_mults(lr.start, lr.stop, len(self.layer_groups))
+        else: res = [lr.stop/3]*(len(self.layer_groups)-1) + [lr.stop]
+        return np.array(res)
+
+    def fit(self, epochs:int, lr:Union[Floats,slice], wd:Floats=None, callbacks:Collection[Callback]=None):
+        lr = self.lr_range(lr)
         if wd is None: wd = self.wd
         self.create_opt(lr, wd)
         callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
@@ -153,9 +178,7 @@ class Learner():
             callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
-        lrs = listify(lr, self.layer_groups)
-        opt = self.opt_fn([{'params': trainable_params(l), 'lr':lr} for l,lr in zip(self.layer_groups, lrs)])
-        self.opt = OptimWrapper(opt, wd=wd, true_wd=self.true_wd)
+        self.opt = OptimWrapper.create(self.opt_fn, lr, self.layer_groups, wd=wd, true_wd=self.true_wd)
 
     def split(self, split_on):
         if isinstance(split_on,Callable): split_on = split_on(self.model)
@@ -164,10 +187,8 @@ class Learner():
     def freeze_to(self, n):
         for g in self.layer_groups[:n]:
             for l in g:
-                if not self.train_bn or not isinstance(l, bn_types):
-                    for p in l.parameters(): p.requires_grad = False
-        for g in self.layer_groups[n:]:
-            for p in g.parameters(): p.requires_grad = True
+                if not self.train_bn or not isinstance(l, bn_types): requires_grad(l, False)
+        for g in self.layer_groups[n:]: requires_grad(g, True)
 
     def freeze(self):
         assert(len(self.layer_groups)>1)
@@ -178,7 +199,13 @@ class Learner():
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
-def requires_grad(l):
-    p = list(l.parameters())
-    if not p: return None
-    return p[0].requires_grad
+def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
+                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.1, wd:float=0.):
+    "Fits a model following the 1cycle policy"
+    max_lr = learn.lr_range(max_lr)
+    cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
+                             pct_start=pct_start, pct_end=pct_end)]
+    learn.fit(cyc_len, max_lr, wd=wd, callbacks=cbs)
+
+Learner.fit_one_cycle = fit_one_cycle
+Learner.lr_find = lr_find
