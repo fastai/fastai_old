@@ -8,20 +8,6 @@ from nb_002 import *
 import typing
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 
-class DatasetTfm(Dataset):
-    def __init__(self, ds:Dataset, tfms:Collection[Callable]=None, **kwargs):
-        self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
-
-    def __len__(self): return len(self.ds)
-
-    def __getitem__(self,idx):
-        x,y = self.ds[idx]
-        if self.tfms is not None: x = apply_tfms(self.tfms, x, **self.kwargs)
-        return x,y
-
-    @property
-    def c(self): return self.ds.c
-
 def normalize(x, mean,std):   return (x-mean[...,None,None]) / std[...,None,None]
 def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
 
@@ -40,7 +26,6 @@ def normalize_funcs(mean, std, do_y=False, device=None):
 class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
-    progress_func:Callable=None
     tfms: List[Callable]=None
 
     def __len__(self): return len(self.dl)
@@ -51,28 +36,32 @@ class DeviceDataLoader():
 
     def __iter__(self):
         self.gen = map(self.proc_batch, self.dl)
-        if self.progress_func is not None:
-            self.gen = self.progress_func(self.gen, total=len(self.dl), leave=False)
         return iter(self.gen)
 
     @classmethod
-    def create(cls, *args, device=default_device, progress_func=tqdm, tfms=tfms, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, progress_func=progress_func, tfms=tfms)
+    def create(cls, *args, device=default_device, tfms=tfms, **kwargs):
+        return cls(DataLoader(*args, **kwargs), device=device, tfms=tfms)
 
 class DataBunch():
-    def __init__(self, train_ds, valid_ds, bs=64, device=None, num_workers=4, **kwargs):
+    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, device:torch.device=None, tfms=None):
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader.create(train_ds, bs,   shuffle=True,  num_workers=num_workers, **kwargs)
-        self.valid_dl = DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, num_workers=num_workers, **kwargs)
+        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
 
     @classmethod
-    def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, dl_tfms=None, **kwargs):
-        return cls(DatasetTfm(train_ds, train_tfm), DatasetTfm(valid_ds, valid_tfm), tfms=dl_tfms, **kwargs)
+    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, num_workers=4,
+               tfms=None, device=None, **kwargs):
+        if train_tfm or not isinstance(train_ds, DatasetTfm): train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
+        if valid_tfm or not isinstance(valid_ds, DatasetTfm): valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
+        return cls(DataLoader(train_ds, bs, shuffle=True, num_workers=num_workers),
+                   DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers), device=device, tfms=tfms)
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
     @property
     def valid_ds(self): return self.valid_dl.dl.dataset
+    @property
+    def c(self): return self.train_ds.c
 
 def conv_layer(ni, nf, ks=3, stride=1):
     return nn.Sequential(

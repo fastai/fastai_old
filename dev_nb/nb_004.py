@@ -5,6 +5,7 @@
 
 from nb_003 import *
 from torch import Tensor
+from fast_progress import master_bar,progress_bar
 
 Floats = Union[float, Collection[float]]
 Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
@@ -120,12 +121,12 @@ class CallbackHandler():
         self.smoothener = SmoothenValue(self.beta)
         self.state_dict:Dict[str,Union[int,float,Tensor]]=_get_init_state()
 
-    def __call__(self, cb_name):
-        return [getattr(cb, f'on_{cb_name}')(**self.state_dict) for cb in self.callbacks]
+    def __call__(self, cb_name, **kwargs):
+        return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
-    def on_train_begin(self):
+    def on_train_begin(self, epochs, pbar):
         self.state_dict = _get_init_state()
-        self('train_begin')
+        self('train_begin', epochs=epochs, pbar=pbar)
 
     def on_epoch_begin(self):
         self.state_dict['num_batch'] = 0
@@ -169,7 +170,7 @@ class CallbackHandler():
         self.state_dict['epoch'] += 1
         return stop
 
-    def on_train_end(self): self('train_end')
+    def on_train_end(self, exception): self('train_end', exception=exception)
 
 def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
     if cb_handler is None: cb_handler = CallbackHandler([])
@@ -188,158 +189,46 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
 
     return (loss.item(),) + tuple(mets) + (len(xb),)
 
-def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
+def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None, pbar=None):
     cb_handler = CallbackHandler(callbacks)
-    cb_handler.on_train_begin()
+    if pbar is None: pbar = master_bar(range(epochs))
+    cb_handler.on_train_begin(epochs, pbar=pbar)
 
-    for epoch in tnrange(epochs):
-        model.train()
-        cb_handler.on_epoch_begin()
+    exception=False
+    try:
+        for epoch in pbar:
+            model.train()
+            cb_handler.on_epoch_begin()
 
-        for xb,yb in data.train_dl:
-            xb, yb = cb_handler.on_batch_begin(xb, yb)
-            loss,_ = loss_batch(model, xb, yb, loss_fn, opt, cb_handler)
-            if cb_handler.on_batch_end(loss): break
+            for xb,yb in progress_bar(data.train_dl, parent=pbar):
+                xb, yb = cb_handler.on_batch_begin(xb, yb)
+                loss,_ = loss_batch(model, xb, yb, loss_fn, opt, cb_handler)
+                if cb_handler.on_batch_end(loss): break
 
-        if hasattr(data,'valid_dl') and data.valid_dl is not None:
-            model.eval()
-            with torch.no_grad():
-                *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
-                                for xb,yb in data.valid_dl])
-            val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
+            if hasattr(data,'valid_dl') and data.valid_dl is not None:
+                model.eval()
+                with torch.no_grad():
+                    *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
+                                    for xb,yb in progress_bar(data.valid_dl, parent=pbar)])
+                val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
 
-        else: val_metrics=None
-        if cb_handler.on_epoch_end(val_metrics): break
-
-    cb_handler.on_train_end()
-
-def accuracy(out, yb):
-    preds = torch.max(out, dim=1)[1]
-    return (preds==yb).float().mean()
-
-def annealing_no(start, end, pct): return start
-def annealing_linear(start, end, pct): return start + pct * (end-start)
-def annealing_exp(start, end, pct): return start * (end/start) ** pct
-def annealing_cos(start, end, pct):
-    cos_out = np.cos(np.pi * pct) + 1
-    return end + (start-end)/2 * cos_out
-
-def do_annealing_poly(start, end, pct, degree): return end + (start-end) * (1-pct)**degree
-def annealing_poly(degree): return functools.partial(do_annealing_poly, degree=degree)
-
-def is_tuple(x): return isinstance(x, tuple)
-
-class Stepper():
-    def __init__(self, vals, num_it, ft=None):
-        self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
-        self.num_it = num_it
-        if ft is None: self.ft = annealing_linear if is_tuple(vals) else annealing_no
-        else:          self.ft = ft
-        self.n = 0
-
-    def step(self):
-        self.n += 1
-        return self.ft(self.start, self.end, self.n/self.num_it)
-
-    @property
-    def is_done(self):  return self.n >= self.num_it
-
-class OneCycleScheduler(Callback):
-    def __init__(self, learn, lr_max, epochs, moms=(0.95,0.85), div_factor=10, pct_end=0.1):
-        self.learn = learn
-        a = int(len(learn.data.train_dl) * epochs * (1 - pct_end) / 2)
-        b = len(learn.data.train_dl) * epochs - 2*a
-        self.lr_scheds = [Stepper((lr_max/div_factor, lr_max), a),
-                          Stepper((lr_max, lr_max/div_factor), a),
-                          Stepper((lr_max/div_factor, lr_max/(div_factor*100)), b)]
-        self.mom_scheds = [Stepper(moms, a), Stepper((moms[1], moms[0]), a), Stepper(moms[0], b)]
-
-    def on_train_begin(self, **kwargs):
-        self.opt = self.learn.opt
-        self.opt.lr, self.opt.mom = self.lr_scheds[0].start, self.mom_scheds[0].start
-        self.idx_s = 0
-
-    def on_batch_end(self, **kwargs):
-        if self.idx_s >= len(self.lr_scheds): return True
-        self.opt.lr = self.lr_scheds[self.idx_s].step()
-        self.opt.mom = self.mom_scheds[self.idx_s].step()
-        if self.lr_scheds[self.idx_s].is_done:
-            self.idx_s += 1
-
-def fit_one_cycle(learn:Learner, max_lr:float, cyc_len:int, moms:Tuple[float,float]=(0.95,0.85), div_factor:float=10.,
-                 pct_end:float=0.1, wd:float=0.):
-    "Fits a model following the 1cycle policy"
-    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms, div_factor, pct_end)]
-    learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
-
-@dataclass
-class Learner():
-    data: DataBunch
-    model: nn.Module
-    opt_fn: Callable = optim.SGD
-    loss_fn: Callable = F.cross_entropy
-    metrics: Collection[Callable] = None
-    true_wd: bool = False
-    path:str = 'models'
-    def __post_init__(self):
-        self.model = self.model.to(self.data.device)
-        self.path = Path(self.path)
-        self.path.mkdir(parents=True, exist_ok=True)
-
-    def fit(self, epochs, lr, wd=0., callbacks=None):
-        if not hasattr(self, 'opt'): self.create_opt(lr, wd)
-        self.recorder = Recorder(self.opt, self.data.train_dl)
-        if callbacks is None: callbacks = []
-        callbacks = [self.recorder]+callbacks
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, callbacks=callbacks, metrics=self.metrics)
-
-    def create_opt(self, lr, wd=0.):
-        self.opt = OptimWrapper(self.opt_fn(self.model.parameters(), lr), wd=wd, true_wd=self.true_wd)
-
-    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
-    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
-
-class LRFinder(Callback):
-    def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
-        self.learn,self.data = learn,learn.data
-        self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
-        #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
-        #during the call to fit.
-        self.valid_dl = learn.data.valid_dl
-        self.data.valid_dl = None
-
-    def on_train_begin(self, **kwargs):
-        self.opt = self.learn.opt
-        self.opt.lr = self.sched.start
-        self.stop,self.best_loss = False,0.
-
-    def on_batch_end(self, iteration, smooth_loss, **kwargs):
-        if iteration==0 or smooth_loss < self.best_loss: self.best_loss = smooth_loss
-        self.opt.lr = self.sched.step()
-        if self.sched.is_done or smooth_loss > 4*self.best_loss:
-            #We use the smoothed loss to decide on the stopping since it's less shaky.
-            self.stop=True
-            return True
-
-    def on_epoch_end(self, **kwargs): return self.stop
-
-    def on_train_end(self, **kwargs):
-        #Clean up and put back the valid_dl in its place.
-        self.data.valid_dl = self.valid_dl
-
-def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
-    cb = LRFinder(learn, start_lr, end_lr, num_it)
-    a = int(np.ceil(num_it/len(learn.data.train_dl)))
-    learn.save('tmp')
-    learn.fit(a, start_lr, callbacks=[cb], **kwargs)
-    learn.load('tmp')
+            else: val_metrics=None
+            if cb_handler.on_epoch_end(val_metrics): break
+    except Exception as e:
+        exception = e
+        raise e
+    finally: cb_handler.on_train_end(exception)
 
 @dataclass
 class Recorder(Callback):
-    opt: torch.optim
-    train_dl: DeviceDataLoader = None
+    learn: Learner
+    def __post_init__(self):
+        self.opt = self.learn.opt
+        self.train_dl = self.learn.data.train_dl
+        self.learn.recorder = self
 
-    def on_train_begin(self, **kwargs):
+    def on_train_begin(self, epochs, pbar, **kwargs):
+        self.nb_epoch,self.pbar = epochs,pbar
         self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
 
     def on_batch_begin(self, **kwargs):
@@ -349,16 +238,16 @@ class Recorder(Callback):
     def on_backward_begin(self, smooth_loss, **kwargs):
         #We record the loss here before any other callback has a chance to modify it.
         self.losses.append(smooth_loss)
-        if self.train_dl is not None and self.train_dl.progress_func is not None:
-            self.train_dl.gen.set_postfix_str(smooth_loss)
+        if self.pbar is not None and hasattr(self.pbar,'child'):
+            self.pbar.child.comment = f'{smooth_loss:.4f}'
 
     def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
         self.nb_batches.append(num_batch)
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
             if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            print(epoch, smooth_loss, *last_metrics)
-        else:  print(epoch, smooth_loss)
+            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
+        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
 
     def plot_lr(self, show_moms=False):
         iterations = list(range(len(self.lrs)))
@@ -392,3 +281,161 @@ class Recorder(Callback):
         for i, ax in enumerate(axes):
             values = [met[i] for met in self.metrics]
             ax.plot(val_iter, values)
+
+def accuracy(out, yb):
+    preds = torch.max(out, dim=1)[1]
+    return (preds==yb).float().mean()
+
+AdamW = partial(optim.Adam, betas=(0.9,0.99))
+
+@dataclass
+class Learner():
+    data:DataBunch
+    model:nn.Module
+    opt_fn:Callable=AdamW
+    loss_fn:Callable=F.cross_entropy
+    metrics:Collection[Callable]=None
+    true_wd:bool=True
+    wd:Floats=1e-6
+    path:str = 'models'
+    callback_fns:Collection[Callable]=None
+    callbacks:Collection[Callback]=field(default_factory=list)
+    def __post_init__(self):
+        self.path = Path(self.path)
+        self.metrics=listify(self.metrics)
+        self.path.mkdir(parents=True, exist_ok=True)
+        self.model = self.model.to(self.data.device)
+        self.callbacks = listify(self.callbacks)
+        self.callback_fns = [Recorder] + listify(self.callback_fns)
+
+    def fit(self, epochs:int, lr:Floats, wd:Floats=None, callbacks:Collection[Callback]=None):
+        if wd is None: wd = self.wd
+        self.create_opt(lr, wd)
+        callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
+        fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
+            callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
+
+    def create_opt(self, lr:Floats, wd:Floats=0.):
+        self.opt = OptimWrapper(self.opt_fn(self.model.parameters(),lr))
+
+    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+
+def annealing_no(start, end, pct): return start
+def annealing_linear(start, end, pct): return start + pct * (end-start)
+def annealing_exp(start, end, pct): return start * (end/start) ** pct
+def annealing_cos(start, end, pct):
+    cos_out = np.cos(np.pi * pct) + 1
+    return end + (start-end)/2 * cos_out
+
+def do_annealing_poly(start, end, pct, degree): return end + (start-end) * (1-pct)**degree
+def annealing_poly(degree): return functools.partial(do_annealing_poly, degree=degree)
+
+def is_tuple(x): return isinstance(x, tuple)
+
+class Stepper():
+    def __init__(self, vals, n_iter, ft=None):
+        self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
+        self.n_iter = n_iter
+        if ft is None: self.ft = annealing_linear if is_tuple(vals) else annealing_no
+        else:          self.ft = ft
+        self.n = 0
+
+    def step(self):
+        self.n += 1
+        return self.ft(self.start, self.end, self.n/self.n_iter)
+
+    @property
+    def is_done(self):  return self.n >= self.n_iter
+
+@dataclass
+class OneCycleScheduler(Callback):
+    learn:Learner
+    lr_max:float
+    moms:Floats=(0.95,0.85)
+    div_factor:int=10
+    pct_start:float=0.5
+    pct_end:float=0.3
+    def __post_init__(self): self.moms=tuple(listify(self.moms,2))
+
+    def steps(self, *steps_cfg):
+        return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
+
+    def on_train_begin(self, epochs, **kwargs):
+        n = len(self.learn.data.train_dl) * epochs
+        a = n * (1-self.pct_end)
+        a1 = int(a * self.pct_start)
+        a2 = int(a) - a1
+        self.phases = (a1, a2, n-a1-a2)
+        self.lr_scheds = self.steps(
+            (self.lr_max/self.div_factor, self.lr_max),
+            (self.lr_max, self.lr_max/self.div_factor),
+            (self.lr_max/self.div_factor, self.lr_max/(self.div_factor*100)))
+        self.mom_scheds = self.steps(self.moms, (self.moms[1], self.moms[0]), self.moms[0])
+        self.opt = self.learn.opt
+        self.opt.lr,self.opt.mom = self.lr_scheds[0].start,self.mom_scheds[0].start
+        self.idx_s = 0
+
+    def on_batch_end(self, **kwargs):
+        if self.idx_s >= len(self.lr_scheds): return True
+        self.opt.lr = self.lr_scheds[self.idx_s].step()
+        self.opt.mom = self.mom_scheds[self.idx_s].step()
+        if self.lr_scheds[self.idx_s].is_done:
+            self.idx_s += 1
+
+def one_cycle_scheduler(lr_max, **kwargs):
+    return partial(OneCycleScheduler, lr_max=lr_max, **kwargs)
+
+def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
+                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.3, wd:float=0.):
+    "Fits a model following the 1cycle policy"
+    cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
+                             pct_start=pct_start, pct_end=pct_end)]
+    learn.fit(cyc_len, max_lr, wd=wd, callbacks=cbs)
+
+class LRFinder(Callback):
+    def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
+        self.learn,self.data = learn,learn.data
+        self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
+        #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
+        #during the call to fit.
+        self.valid_dl = learn.data.valid_dl
+        self.data.valid_dl = None
+
+    def on_train_begin(self, **kwargs):
+        self.learn.save('tmp')
+        self.opt = self.learn.opt
+        self.opt.lr = self.sched.start
+        self.stop,self.best_loss = False,0.
+
+    def on_batch_end(self, iteration, smooth_loss, **kwargs):
+        if iteration==0 or smooth_loss < self.best_loss: self.best_loss = smooth_loss
+        self.opt.lr = self.sched.step()
+        if self.sched.is_done or smooth_loss > 4*self.best_loss:
+            #We use the smoothed loss to decide on the stopping since it's less shaky.
+            self.stop=True
+            return True
+
+    def on_epoch_end(self, **kwargs): return self.stop
+
+    def on_train_end(self, **kwargs):
+        self.data.valid_dl = self.valid_dl
+        self.learn.load('tmp')
+
+def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
+    cb = LRFinder(learn, start_lr, end_lr, num_it)
+    a = int(np.ceil(num_it/len(learn.data.train_dl)))
+    learn.fit(a, start_lr, callbacks=[cb], **kwargs)
+
+@dataclass
+class ShowGraph(Callback):
+    learn:Learner
+
+    def on_epoch_end(self, last_metrics, **kwargs):
+        if last_metrics is not None:
+            rec = learn.recorder
+            iters = list(range(len(rec.losses)))
+            val_iter = np.array(rec.nb_batches).cumsum()
+            x_bounds = (0, (rec.nb_epoch - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
+            y_bounds = (0, max((max(rec.losses), max(rec.val_losses))))
+            rec.pbar.update_graph([(iters, rec.losses), (val_iter, rec.val_losses)], x_bounds, y_bounds)
