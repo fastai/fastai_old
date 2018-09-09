@@ -124,9 +124,9 @@ class CallbackHandler():
     def __call__(self, cb_name, **kwargs):
         return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
-    def on_train_begin(self, epochs, pbar):
+    def on_train_begin(self, epochs, pbar, metrics):
         self.state_dict = _get_init_state()
-        self.state_dict['n_epochs'],self.state_dict['pbar'] = epochs,pbar
+        self.state_dict['n_epochs'],self.state_dict['pbar'],self.state_dict['metrics'] = epochs,pbar,metrics
         self('train_begin')
 
     def on_epoch_begin(self):
@@ -193,7 +193,7 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
 def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
     cb_handler = CallbackHandler(callbacks)
     pbar = master_bar(range(epochs))
-    cb_handler.on_train_begin(epochs, pbar=pbar)
+    cb_handler.on_train_begin(epochs, pbar=pbar, metrics=metrics)
 
     exception=False
     try:
@@ -228,8 +228,10 @@ class Recorder(Callback):
         self.train_dl = self.learn.data.train_dl
         self.learn.recorder = self
 
-    def on_train_begin(self, pbar, **kwargs):
+    def on_train_begin(self, pbar, metrics, **kwargs):
         self.pbar = pbar
+        self.names = ['epoch', 'train loss', 'valid loss'] + [fn.__name__ for fn in metrics]
+        self.pbar.write('  '.join(self.names))
         self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
 
     def on_batch_begin(self, **kwargs):
@@ -247,8 +249,16 @@ class Recorder(Callback):
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
             if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            self.pbar.write(f'{epoch}, {smooth_loss}, {last_metrics}')
-        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
+            self.format_stats([epoch, smooth_loss] + last_metrics)
+        else:  self.format_stats([epoch, smooth_loss])
+
+    def format_stats(self, stats):
+        str_stats = []
+        for name,stat in zip(self.names,stats):
+            t = str(stat) if isinstance(stat, int) else f'{stat:.6f}'
+            t += ' ' * (len(name) - len(t))
+            str_stats.append(t)
+        self.pbar.write('  '.join(str_stats))
 
     def plot_lr(self, show_moms=False):
         iterations = list(range(len(self.lrs)))
@@ -362,8 +372,8 @@ class OneCycleScheduler(Callback):
     def steps(self, *steps_cfg):
         return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
 
-    def on_train_begin(self, epochs, **kwargs):
-        n = len(self.learn.data.train_dl) * epochs
+    def on_train_begin(self, n_epochs, **kwargs):
+        n = len(self.learn.data.train_dl) * n_epochs
         a = n * (1-self.pct_end)
         a1 = int(a * self.pct_start)
         a2 = int(a) - a1
