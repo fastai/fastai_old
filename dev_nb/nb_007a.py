@@ -152,7 +152,7 @@ class TextDataset():
             if len(itos) != int(f.read()) or len(itos) > self.max_vocab + 2: return False
         for tok_file,id_file in zip(self.tok_files[:-1], self.id_files[:-2]):
             if os.path.getmtime(tok_file) > os.path.getmtime(id_file): return False
-            if os.path.getmtime(id_file[-2]) > os.path.getmtime(id_file): return False
+            if os.path.getmtime(self.id_files[-2]) > os.path.getmtime(id_file): return False
             toks,ids = np.load(tok_file),np.load(id_file)
             if len(toks) != len(ids): return False
         return True
