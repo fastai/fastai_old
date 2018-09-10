@@ -170,7 +170,7 @@ class Learner():
         self.create_opt(lr, wd)
         callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
         fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
-            callbacks=self.callbacks+callbacks, pbar=master_bar(range(epochs)))
+            callbacks=self.callbacks+callbacks)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
         self.opt = OptimWrapper.create(self.opt_fn, lr, self.layer_groups, wd=wd, true_wd=self.true_wd)
