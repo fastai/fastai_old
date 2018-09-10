@@ -11,6 +11,32 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 BOS,FLD,UNK,PAD = 'xxbos','xxfld','xxunk','xxpad'
 TOK_UP,TK_REP,TK_WREP = 'xxup','xxrep','xxwrep'
 
+def partition(a, sz):
+    """splits iterables a in equal parts of size sz"""
+    return [a[i:i+sz] for i in range(0, len(a), sz)]
+
+def partition_by_cores(a, n_cpus):
+    return partition(a, len(a)//n_cpus + 1)
+
+def num_cpus():
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return os.cpu_count()
+
+class SpacyTokenizer():
+    "Little wrapper around a spacy tokenizer"
+
+    def __init__(self, lang):
+        self.tok = spacy.load(lang)
+
+    def tokenizer(self, t):
+        return [t.text for t in self.tok.tokenizer(t)]
+
+    def add_special_cases(self, toks):
+        for w in toks:
+            self.tok.tokenizer.add_special_case(w, [{ORTH: w}])
+
 class Tokenizer():
     def __init__(self, tok_fn=SpacyTokenizer, lang:str='en', rules:Collection[Callable[[str],str]]=None,
                  special_cases:Collection[str]=None, n_cpus = None):
