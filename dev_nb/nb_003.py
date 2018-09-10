@@ -14,7 +14,7 @@ class FilesDataset(LabelDataset):
         self.classes = classes
         self.class2idx = {v:k for k,v in enumerate(classes)}
         self.x = np.array(fns)
-        self.y = np.array([self.class2idx[o] for o in labels])
+        self.y = np.array([self.class2idx[o] for o in labels], dtype=np.int64)
 
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
