@@ -53,6 +53,10 @@ Therefore, your developing process will always start with:
 
 The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via 'tools/fastai-nbstripout' which will do all the work for you.
 
+Note: windows users, not using bash emulation, will need to invoke the command as:
+
+    python tools\trust-origin-git-config
+
 If you skip this configuration your commit/PR involving notebooks will not be accepted, since it'll carry in it many JSON bits which we don't want in the git repository. Those unwanted bits create collisions and lead to unnecessarily complicated and time wasting merge activities. So please do not skip this step.
 
 Note: we can't make this happen automatically, since git will ignore a repository-stored `.gitconfig` for security reasons, unless a user will tell git to use it (and thus trust it).
