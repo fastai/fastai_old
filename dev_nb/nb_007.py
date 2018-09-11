@@ -226,6 +226,7 @@ class RNNTrainer(Callback):
     bptt:int
     alpha:float=0.
     beta:float=0.
+    adjust:bool=True
 
     def on_loss_begin(self, last_output, **kwargs):
         #Save the extra outputs for later and only returns the true output.
@@ -234,7 +235,7 @@ class RNNTrainer(Callback):
 
     def on_backward_begin(self, last_loss, last_input, last_output, **kwargs):
         #Adjusts the lr to the bptt selected
-        self.learn.opt.lr *= last_input.size(0) / self.bptt
+        if self.adjust: self.learn.opt.lr *= last_input.size(0) / self.bptt
         #AR and TAR
         if self.alpha != 0.:  last_loss += (self.alpha * self.out[-1].pow(2).mean()).sum()
         if self.beta != 0.:
