@@ -89,7 +89,7 @@ def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
 
 class DataBunch():
     def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, device:torch.device=None, **kwargs):
-        self.device = default_device if self is None else self
+        self.device = default_device if device is None else device
         self.train_dl = DeviceDataLoader(train_dl, self.device, **kwargs)
         self.valid_dl = DeviceDataLoader(valid_dl, self.device, **kwargs)
 
