@@ -16,6 +16,16 @@ from dataclasses import field
 from functools import reduce
 from collections import defaultdict, abc, namedtuple, Iterable
 
+def image2np(image):
+    res = image.cpu().permute(1,2,0).numpy()
+    return res[...,0] if res.shape[2]==1 else res
+
+def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
+    if ax is None: fig,ax = plt.subplots(figsize=figsize)
+    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
+    if hide_axis: ax.axis('off')
+    return ax
+
 def find_classes(folder):
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
@@ -29,12 +39,11 @@ def get_image_files(c):
 def pil2tensor(image):
     arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
-    arr = arr.permute(2,0,1)
-    return arr.float().div_(255)
+    return arr.permute(2,0,1)
 
 def open_image(fn):
     x = PIL.Image.open(fn).convert('RGB')
-    return Image(pil2tensor(x))
+    return Image(pil2tensor(x).float().div_(255))
 
 class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
@@ -56,16 +65,6 @@ class FilesDataset(LabelDataset):
             self.y += [i] * len(fnames)
 
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
-
-def image2np(image):
-    res = image.cpu().permute(1,2,0).numpy()
-    return res[...,0] if res.shape[2]==1 else res
-
-def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
-    if ax is None: fig,ax = plt.subplots(figsize=figsize)
-    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
-    if hide_axis: ax.axis('off')
-    return ax
 
 def logit(x):  return -(1/x-1).log()
 def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()

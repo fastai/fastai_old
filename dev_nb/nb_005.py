@@ -68,9 +68,10 @@ def bn_drop_lin(n_in, n_out, bn=True, p=0., actn=None):
     if actn is not None: layers.append(actn)
     return layers
 
-def create_head(nf, nc, lin_ftrs=None, ps=None):
+def create_head(nf, nc, lin_ftrs=None, ps=0.2):
     lin_ftrs = [nf, 512, nc] if lin_ftrs is None else [nf] + lin_ftrs + [nc]
-    if ps is None: ps = [0.25] * (len(lin_ftrs)-2) + [0.5]
+    ps = listify(ps)
+    if len(ps)==1: ps = [ps[0]/2] * (len(lin_ftrs)-2) + ps
     actns = [nn.ReLU(inplace=True)] * (len(lin_ftrs)-2) + [None]
     layers = []
     for ni,no,p,actn in zip(lin_ftrs[:-1],lin_ftrs[1:],ps,actns):
