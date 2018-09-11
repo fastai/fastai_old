@@ -5,48 +5,15 @@
 
 from nb_005 import *
 
-def pil2tensor(image, as_mask=False):
-    arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
-    arr = arr.view(image.size[1], image.size[0], -1)
-    arr = arr.permute(2,0,1).float()
-    return arr if as_mask else arr.div_(255)
-
-def open_image(fn, as_mask=False):
-    x = PIL.Image.open(fn)
-    if not as_mask: x = x.convert('RGB')
-    return pil2tensor(x, as_mask=as_mask)
-
-def show_xy_image(xim, yim, ax=None, figsize=(3,3), alpha=0.5, hide_axis=True, cmap='RdGy_r'):
-    if not ax: fig,ax = plt.subplots(figsize=figsize)
-    ax1 = show_image(xim, ax=ax, hide_axis=hide_axis, cmap=cmap)
-    show_image(yim, ax=ax1, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
-    if hide_axis: ax.axis('off')
-
-def show_xy_images(x,y,rows,figsize=(9,9)):
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()):
-        show_xy_image(x[i], y[i], ax)
-    plt.tight_layout()
-
-
 class ImageMask(Image):
-    # no lighting changes to masks
-    # ??? should it actually be no logit changes?
-    def lighting(self, func, *args, **kwargs):
-        return self
+    def lighting(self, func, *args, **kwargs): return self
 
     def refresh(self):
-        # always use mode nearest for mask sampling
-        force_nearest = {'mode':'nearest'}
-        self.sample_kwargs = {**self.sample_kwargs, **force_nearest}
-        super().refresh()
-        return self
+        self.sample_kwargs['mode'] = 'nearest'
+        return super().refresh()
 
-
-import nb_002b
-nb_002b.pil2tensor = pil2tensor
-nb_002b.open_image = open_image
-nb_002b.image2np = image2np
+def open_mask(fn):
+    return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 
 def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None,
                mult=32, do_crop=True, padding_mode='reflect',**kwargs):
@@ -65,47 +32,10 @@ def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None,
         if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
         elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
         else: x = tfm(x)
-    return x.px
+    return x.data
 
 import nb_003
 nb_003.apply_tfms = apply_tfms
-
-
-class DatasetTfm(Dataset):
-    def __init__(self, ds:Dataset,tfms:Collection[Callable]=None,
-                 x_class=Image, y_class=None, tfm_y:bool=False, **kwargs):
-        self.ds,self.tfms,self.x_class,self.y_class,self.tfm_y,self.x_kwargs = ds,tfms,x_class,y_class,tfm_y,kwargs
-        self.y_kwargs = {**self.x_kwargs, 'do_resolve':False} # don't reset random vars
-
-    def __len__(self): return len(self.ds)
-
-    def __getitem__(self,idx):
-        x,y = self.ds[idx]
-
-        if self.tfms is not None:
-            if self.x_class: x = self.x_class(x)
-            x = apply_tfms(self.tfms, x, **self.x_kwargs)
-            if self.tfm_y:
-                if self.y_class: y = self.y_class(y)
-                y = apply_tfms(self.tfms, y, **self.y_kwargs)
-        return x,y
-
-    @property
-    def c(self): return self.ds.c
-
-
-DatasetTfmMask = partial(DatasetTfm, y_class=ImageMask)
-
-import nb_002b
-nb_002b.DatasetTfm = DatasetTfm
-
-def transform_datasets(train_ds, valid_ds, tfms, **kwargs):
-    ttds = DatasetTfm(train_ds, tfms[0], **kwargs)
-    vtds = DatasetTfm(valid_ds, tfms[1], **kwargs)
-    return ttds, vtds
-
-import nb_005
-nb_005.transform_datasets = transform_datasets
 
 @dataclass
 class MatchedFilesDataset(Dataset):
@@ -114,7 +44,7 @@ class MatchedFilesDataset(Dataset):
     def __repr__(self): return f'{type(self).__name__} of len {len(self.x_fns)}'
     def __len__(self): return len(self.x_fns)
     def __getitem__(self, i):
-        return open_image(self.x_fns[i]), open_image(self.y_fns[i],as_mask=True)
+        return open_image(self.x_fns[i]), open_mask(self.y_fns[i])
 
 def split_by_idxs(seq, idxs):
     '''A generator that returns sequence pieces, seperated by indexes specified in idxs. '''
