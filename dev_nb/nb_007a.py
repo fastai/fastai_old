@@ -118,9 +118,34 @@ def get_total_length(csv_name, chunksize):
     for df in dfs: l+=len(df)
     return l
 
-def maybe_copy(old_fname, new_fname):
+def maybe_copy(old_fnames, new_fnames):
+    for old_fname,new_fname in zip(old_fnames, new_fnames):
         if not os.path.isfile(new_fname) or os.path.getmtime(new_fname) < os.path.getmtime(old_fname):
             shutil.copyfile(old_fname, new_fname)
+
+class Vocab():
+    "Contains the correspondance between numbers and tokens and numericalizes"
+
+    def __init__(self, path):
+        self.itos = pickle.load(open(path/'itos.pkl', 'rb'))
+        self.stoi = collections.defaultdict(int,{v:k for k,v in enumerate(self.itos)})
+
+    def numericalize(self, t):
+        return [self.stoi[w] for w in t]
+
+    def textify(self, nums):
+        return ' '.join([self.itos[i] for i in nums])
+
+    @classmethod
+    def create(cls, path, tokens, max_vocab, min_freq):
+        freq = Counter(p for o in tokens for p in o)
+        itos = [o for o,c in freq.most_common(max_vocab) if c > min_freq]
+        itos.insert(0, PAD)
+        if UNK in itos: itos.remove(UNK)
+        itos.insert(0, UNK)
+        pickle.dump(itos, open(path/'itos.pkl', 'wb'))
+        with open(path/'numericalize.log','w') as f: f.write(str(len(itos)))
+        return cls(path)
 
 TextMtd = IntEnum('TextMtd', 'CSV TOK IDS')
 
@@ -129,126 +154,113 @@ import shutil
 class TextDataset():
     "Put a train.csv and valid.csv files in a folder and this will take care of the rest."
 
-    def __init__(self, path, tokenizer, max_vocab=30000, chunksize=10000, train_name='train', valid_name='valid',
+    def __init__(self, path, tokenizer, vocab=None, max_vocab=30000, chunksize=10000, name='train',
                  min_freq=2, n_labels=1, create_mtd=TextMtd.CSV):
         self.path,self.tokenizer,self.max_vocab,self.min_freq = Path(path/'tmp'),tokenizer,max_vocab,min_freq
-        self.chunksize,self.train_name,self.valid_name,self.n_labels = chunksize,train_name,valid_name,n_labels
-        self.create_mtd = create_mtd
+        self.chunksize,self.name,self.n_labels,self.create_mtd = chunksize,name,n_labels,create_mtd
+        self.vocab=vocab
         os.makedirs(self.path, exist_ok=True)
         if not self.check_toks(): self.tokenize()
         if not self.check_ids():  self.numericalize()
 
-        self.itos = pickle.load(open(self.path/'itos.pkl', 'rb'))
-        self.train_ids = np.load(self.path/'train_ids.npy')
-        self.valid_ids = np.load(self.path/'valid_ids.npy')
-        self.train_lbl = np.load(self.path/'train_lbl.npy')
-        self.valid_lbl = np.load(self.path/'valid_lbl.npy')
+        if self.vocab is None: self.vocab = Vocab(self.path)
+        self.ids = np.load(self.path/f'{self.name}_ids.npy')
+        self.labels = np.load(self.path/f'{self.name}_lbl.npy')
+
+    def general_check(self, pre_files, post_files):
+        "Checks that post_files exist and were modified after all the prefiles."
+        if not np.all([os.path.isfile(fname) for fname in post_files]): return False
+        for pre_file in pre_files:
+            if os.path.getmtime(pre_file) > os.path.getmtime(post_files[0]): return False
+        return True
 
     def check_ids(self):
         if self.create_mtd >= TextMtd.IDS: return True
-        if not np.all([os.path.isfile(fname) for fname in self.id_files]): return False
-        itos = pickle.load(open(self.path/'itos.pkl', 'rb'))
-        with open(self.path/'numericalize.log') as f:
+        if not self.general_check([self.tok_files[0],self.id_files[1]], self.id_files): return False
+        itos = pickle.load(open(self.id_files[1], 'rb'))
+        with open(self.id_files[2]) as f:
             if len(itos) != int(f.read()) or len(itos) > self.max_vocab + 2: return False
-        for tok_file,id_file in zip(self.tok_files[:-1], self.id_files[:-2]):
-            if os.path.getmtime(tok_file) > os.path.getmtime(id_file): return False
-            if os.path.getmtime(self.id_files[-2]) > os.path.getmtime(id_file): return False
-            toks,ids = np.load(tok_file),np.load(id_file)
-            if len(toks) != len(ids): return False
+        toks,ids = np.load(self.tok_files[0]),np.load(self.id_files[0])
+        if len(toks) != len(ids): return False
         return True
 
     def check_toks(self):
         if self.create_mtd >= TextMtd.TOK: return True
-        if not np.all([os.path.isfile(fname) for fname in self.tok_files]): return False
-        with open(self.path/'tokenize.log') as f:
+        if not self.general_check([self.csv_file], self.tok_files): return False
+        with open(self.tok_files[1]) as f:
             if repr(self.tokenizer) != f.read(): return False
-        for csv_file,tok_file in zip(self.csv_files, self.tok_files[:-1]):
-            if os.path.getmtime(csv_file) > os.path.getmtime(tok_file): return False
         return True
 
     def tokenize(self):
-        print('Tokenizing the texts. This might take a while so you should grab a coffee.')
-        for name in [self.train_name, self.valid_name]:
-            print(f'Tokenizing {name}')
-            curr_len = get_chunk_length(self.path/f'{name}.csv', self.chunksize)
-            dfs = pd.read_csv(self.path/f'{name}.csv', header=None, chunksize=self.chunksize)
-            tokens,labels = [],[]
-            for _ in progress_bar(range(curr_len), leave=False):
-                df = next(dfs)
-                lbls = df.iloc[:,range(self.n_labels)].values.astype(np.int64)
-                texts = f'\n{BOS} {FLD} 1 ' + df[self.n_labels].astype(str)
-                for i in range(self.n_labels+1, len(df.columns)):
-                    texts += f' {FLD} {i-n_lbls} ' + df[i].astype(str)
-                toks = self.tokenizer.process_all(texts)
-                tokens += toks
-                labels += labels
-            np.save(self.path/f'{name}_tok.npy', np.array(tokens))
-            np.save(self.path/f'{name}_lbl.npy', np.array(labels))
-        with open(self.path/'tokenize.log','w') as f: f.write(repr(self.tokenizer))
+        print(f'Tokenizing {self.name}. This might take a while so you should grab a coffee.')
+        curr_len = get_chunk_length(self.csv_file, self.chunksize)
+        dfs = pd.read_csv(self.csv_file, header=None, chunksize=self.chunksize)
+        tokens,labels = [],[]
+        for _ in progress_bar(range(curr_len), leave=False):
+            df = next(dfs)
+            lbls = df.iloc[:,range(self.n_labels)].values.astype(np.int64)
+            texts = f'\n{BOS} {FLD} 1 ' + df[self.n_labels].astype(str)
+            for i in range(self.n_labels+1, len(df.columns)):
+                texts += f' {FLD} {i-n_lbls} ' + df[i].astype(str)
+            toks = self.tokenizer.process_all(texts)
+            tokens += toks
+            labels += labels
+        np.save(self.tok_files[0], np.array(tokens))
+        np.save(self.path/f'{self.name}_lbl.npy', np.array(labels))
+        with open(self.tok_files[1],'w') as f: f.write(repr(self.tokenizer))
 
     def numericalize(self):
-        print('Changing tokens to numbers.')
-        train_tokens = np.load(self.path/f'{self.train_name}_tok.npy')
-        freq = Counter(p for o in train_tokens for p in o)
-        itos = [o for o,c in freq.most_common(self.max_vocab) if c > self.min_freq]
-        itos.insert(0, 'xxpad')
-        itos.insert(0, 'xxunk')
-        stoi = collections.defaultdict(lambda:0, {v:k for k,v in enumerate(itos)})
-        pickle.dump(itos, open(self.path/'itos.pkl', 'wb'))
-        with open(self.path/'numericalize.log','w') as f: f.write(str(len(itos)))
-        for name in [self.train_name, self.valid_name]:
-            toks = np.load(self.path/f'{name}_tok.npy')
-            ids = np.array([([stoi[w] for w in s]) for s in toks])
-            np.save(self.path/f'{name}_ids.npy', ids)
+        print(f'Numericalizing {self.name}.')
+        toks = np.load(self.tok_files[0])
+        if self.vocab is None: self.vocab = Vocab.create(self.path, toks, self.max_vocab, self.min_freq)
+        ids = np.array([self.vocab.numericalize(t) for t in toks])
+        np.save(self.id_files[0], ids)
 
     def clear(self):
-        files = [self.path/f'{name}_ids.npy' for name in [self.train_name,self.valid_name]]
-        files += [self.path/'itos.pkl']
-        files += [self.path/f'{name}_tok.npy' for name in [self.train_name,self.valid_name]]
+        files = [self.path/f'{self.name}_{suff}.npy' for suff in ['ids','tok','lbl']]
+        files.append(self.path/f'{self.name}.csv')
         for file in files:
             if os.path.isfile(file): os.remove(file)
 
     @property
-    def csv_files(self): return [self.path/f'{name}.csv' for name in [self.train_name,self.valid_name]]
+    def csv_file(self): return self.path/f'{self.name}.csv'
     @property
-    def tok_files(self):
-        tok_files = [self.path/f'{name}_tok.npy' for name in [self.train_name,self.valid_name]]
-        return tok_files + [self.path/'tokenize.log']
+    def tok_files(self): return [self.path/f'{self.name}_tok.npy', self.path/'tokenize.log']
     @property
     def id_files(self):
-        id_files = [self.path/f'{name}_ids.npy' for name in [self.train_name,self.valid_name]]
-        return id_files + [self.path/'itos.pkl', self.path/'numericalize.log']
+        return [self.path/f'{self.name}_ids.npy', self.path/'itos.pkl', self.path/'numericalize.log']
 
     @classmethod
-    def from_ids(cls, folder, train_ids='train_tok.npy', valid_ids='valid_tok.npy', itos = 'itos.pkl',
+    def from_ids(cls, folder, train_ids='train_ids.npy', valid_ids='valid_ids.npy', itos = 'itos.pkl',
                  train_lbl='train_lbl.npy', valid_lbl='train_lbl.npy', **kwargs):
-        train_name,valid_name = train_ids[:-8],valid_ids[:-8]
-        maybe_copy(Path(folder)/itos, Path(folder)/'tmp'/'itos.pkl')
-        for ids, name in zip([train_ids,valid_ids], [train_name,valid_name]):
-            maybe_copy(Path(folder)/ids, Path(folder)/'tmp'/f'{name}_ids.npy')
-        for lbl, name in zip([train_lbl,valid_lbl], [train_name,valid_name]):
-            maybe_copy(Path(folder)/lbl, Path(folder)/'tmp'/f'{name}_lbl.npy')
-        return cls(folder, None, train_name=train_name, valid_name=valid_name, create_mtd=TextMtd.IDS, **kwargs)
+        orig = [Path(folder/file) for file in [train_ids, valid_ids, train_lbl, valid_lbl, itos]]
+        dest = ['train_ids.npy', 'valid_ids.npy', 'train_lbl.npy', 'validl_lbl.npy', 'itos.pkl']
+        dest = [Path(folder)/'tmp'/file for file in dest]
+        maybe_copy(orig, dest)
+        return (cls(folder, None, name='train', create_mtd=TextMtd.IDS, **kwargs),
+                cls(folder, None, name='valid', create_mtd=TextMtd.IDS, **kwargs))
 
     @classmethod
     def from_tokens(cls, folder, train_tok='train_tok.npy', valid_tok='valid_tok.npy',
-                    train_lbl='train_lbl.npy', valid_lbl='train_lbl.npy', **kwargs):
-        train_name,valid_name = train_tok[:-8],valid_tok[:-8]
-        for tok, name in zip([train_tok,valid_tok], [train_name,valid_name]):
-            maybe_copy(Path(folder)/tok, Path(folder)/'tmp'/f'{name}_tok.npy')
-        for lbl, name in zip([train_lbl,valid_lbl], [train_name,valid_name]):
-            maybe_copy(Path(folder)/lbl, Path(folder)/'tmp'/f'{name}_lbl.npy')
-        return cls(folder, None, train_name=train_name, valid_name=valid_name, create_mtd=TextMtd.TOK, **kwargs)
+                 train_lbl='train_lbl.npy', valid_lbl='train_lbl.npy', **kwargs):
+        orig = [Path(folder/file) for file in [train_tok, valid_tok, train_lbl, valid_lbl]]
+        dest = ['train_tok.npy', 'valid_tok.npy', 'train_tok.npy', 'validl_tok.npy']
+        dest = [Path(folder)/'tmp'/file for file in dest]
+        maybe_copy(orig, dest)
+        train_ds = cls(folder, None, name='train', create_mtd=TextMtd.TOK, **kwargs)
+        return (train_ds, cls(folder, None, name='valid', vocab=train_ds.vocab, create_mtd=TextMtd.TOK, **kwargs))
 
     @classmethod
     def from_csv(cls, folder, tokenizer, train_csv='train.csv', valid_csv='valid.csv', **kwargs):
-        train_name,valid_name = train_csv[:-4],valid_csv[:-4]
-        for csv, name in zip([train_csv,valid_csv], [train_name,valid_name]):
-            maybe_copy(Path(folder)/csv, Path(folder)/'tmp'/f'{name}.csv')
-        return cls(folder, tokenizer, train_name=train_name, valid_name=valid_name, **kwargs)
+        orig = [Path(folder)/file for file in [train_csv, valid_csv]]
+        dest = [Path(folder)/'tmp'/file for file in ['train.csv', 'valid.csv']]
+        maybe_copy(orig, dest)
+        train_ds = cls(folder, tokenizer, name='train', **kwargs)
+        return (train_ds, cls(folder, tokenizer, name='valid', vocab=train_ds.vocab, **kwargs))
 
     @classmethod
-    def from_folder(cls, folder, tokenizer, classes=None, train_name='train', valid_name='valid', **kwargs):
+    def from_folder(cls, folder, tokenizer, classes=None, train_name='train', valid_name='valid',
+                    shuffle=True, **kwargs):
         path = Path(folder)/'tmp'
         os.makedirs(path, exist_ok=True)
         if classes is None: classes = [cls.name for cls in find_classes(Path(folder/train_name))]
@@ -259,11 +271,13 @@ class TextDataset():
                     texts.append(fname.open('r', encoding='utf8').read())
                     labels.append(idx)
             texts,labels = np.array(texts),np.array(labels)
-            idx = np.random.permutation(len(texts))
-            texts,labels = texts[idx],labels[idx]
+            if shuffle:
+                idx = np.random.permutation(len(texts))
+                texts,labels = texts[idx],labels[idx]
             df = pd.DataFrame({'text':texts, 'labels':labels}, columns=['labels','text'])
             if os.path.isfile(path/f'{name}.csv'):
                 if get_total_length(path/f'{name}.csv', 10000) != len(df):
                     df.to_csv(path/f'{name}.csv', index=False, header=False)
             else: df.to_csv(path/f'{name}.csv', index=False, header=False)
-        return cls(folder, tokenizer, train_name=train_name, valid_name=valid_name, **kwargs)
+        train_ds = cls(folder, tokenizer, name='train', **kwargs)
+        return (train_ds, cls(folder, tokenizer, name='valid', vocab=train_ds.vocab, **kwargs))

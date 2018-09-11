@@ -42,9 +42,9 @@ class DataBunch():
     def __init__(self, train_dl, valid_dl, device=None, dl_tfms=None):
         self.device = default_device if device is None else device
         if not isinstance(train_dl, DeviceDataLoader):
-            train_dl = DeviceDataLoader(train_dl, self.device, progress_func=tqdm, tfms=dl_tfms)
+            train_dl = DeviceDataLoader(train_dl, self.device, tfms=dl_tfms)
         if not isinstance(valid_dl, DeviceDataLoader):
-            valid_dl = DeviceDataLoader(valid_dl, self.device, progress_func=tqdm, tfms=dl_tfms)
+            valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=dl_tfms)
         self.train_dl,self.valid_dl = train_dl,valid_dl
 
     @classmethod
