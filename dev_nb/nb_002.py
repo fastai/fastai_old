@@ -103,14 +103,16 @@ class Transform():
         self.func=func
         self.params = copy(func.__annotations__)
         self.def_args = get_default_args(func)
+        setattr(Image, func.__name__,
+                lambda x, *args, **kwargs: self.calc(x, *args, **kwargs))
 
     def __call__(self, *args, p=1., **kwargs):
         if args: return self.calc(*args, **kwargs)
         else: return RandTransform(self, kwargs=kwargs, p=p)
 
-    def calc(self, x, *args, **kwargs):
-        if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
-        else:          return self.func(x, *args, **kwargs)
+    def calc(tfm, x, *args, **kwargs):
+        if tfm._wrap: return getattr(x, tfm._wrap)(tfm.func, *args, **kwargs)
+        else:          return tfm.func(x, *args, **kwargs)
 
     @property
     def name(self): return self.__class__.__name__
@@ -321,6 +323,8 @@ class Image():
 
     @property
     def data(self): return self.px
+
+    def to(self, device): return self.data.to(device)
 
 class TfmAffine(Transform): order,_wrap = 5,'affine'
 class TfmPixel(Transform): order,_wrap = 10,'pixel'
