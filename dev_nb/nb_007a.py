@@ -204,7 +204,7 @@ class TextDataset():
                 texts += f' {FLD} {i-n_lbls} ' + df[i].astype(str)
             toks = self.tokenizer.process_all(texts)
             tokens += toks
-            labels += labels
+            labels += list(np.squeeze(lbls))
         np.save(self.tok_files[0], np.array(tokens))
         np.save(self.path/f'{self.name}_lbl.npy', np.array(labels))
         with open(self.tok_files[1],'w') as f: f.write(repr(self.tokenizer))
