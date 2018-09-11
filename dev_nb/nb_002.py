@@ -26,6 +26,12 @@ def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha
     if hide_axis: ax.axis('off')
     return ax
 
+class Image():
+    def __init__(self, px): self.px = px
+    def show(self, ax=None, **kwargs): return show_image(self.px, ax=ax, **kwargs)
+    @property
+    def data(self): return self.px
+
 def find_classes(folder):
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
