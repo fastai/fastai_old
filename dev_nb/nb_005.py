@@ -92,11 +92,12 @@ def _set_mom(m, mom):
 def set_mom(m, mom): m.apply(lambda x: _set_mom(x, mom))
 
 class ConvLearner(Learner):
-    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=None, **kwargs):
+    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=None, custom_head=None, **kwargs):
         body = create_body(arch(pretrained), cut)
         nf = num_features(body) * 2
-        head = create_head(nf, data.c, lin_ftrs, ps)
+        head = custom_head or create_head(nf, data.c, lin_ftrs, ps)
         model = nn.Sequential(body, head)
         super().__init__(data, model, **kwargs)
         self.split([model[1]])
+        if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)

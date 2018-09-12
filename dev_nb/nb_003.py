@@ -99,7 +99,7 @@ def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None,
             if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
             elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
             else: x = tfm(x)
-    return x.data
+    return x
 
 import nb_002
 nb_002.apply_tfms = apply_tfms
