@@ -169,6 +169,8 @@ class TextDataset():
         self.ids = np.load(self.path/f'{self.name}_ids.npy')
         self.labels = np.load(self.path/f'{self.name}_lbl.npy')
 
+    def __get_item__(idx): return self.ids[idx], self.labels[idx]
+
     def general_check(self, pre_files, post_files):
         "Checks that post_files exist and were modified after all the prefiles."
         if not np.all([os.path.isfile(fname) for fname in post_files]): return False

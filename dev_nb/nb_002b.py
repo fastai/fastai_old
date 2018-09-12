@@ -28,8 +28,9 @@ class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
     tfms: List[Callable]=None
+    collate_fn: Callable=data_collate
     def __post_init__(self):
-        self.dl.collate_fn=data_collate
+        self.dl.collate_fn=self.collate_fn
         self.tfms = listify(self.tfms)
 
     def __len__(self): return len(self.dl)
@@ -47,9 +48,9 @@ class DeviceDataLoader():
         return iter(self.gen)
 
     @classmethod
-    def create(cls, dataset, bs=1, shuffle=False, device=default_device, tfms=tfms, **kwargs):
+    def create(cls, dataset, bs=1, shuffle=False, device=default_device, tfms=tfms, collate_fn=data_collate, **kwargs):
         return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, **kwargs),
-                   device=device, tfms=tfms)
+                   device=device, tfms=tfms, collate_fn=collate_fn)
 
 @dataclass
 class DataBunch():
