@@ -95,7 +95,7 @@ def deal_caps(t):
     res = []
     for s in re.findall(r'\w+|\W+', t):
         res += ([TOK_UP,s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
-    return ' '.join(res)
+    return ''.join(res)
 
 def fixup(x):
     re1 = re.compile(r'  +')
@@ -105,7 +105,7 @@ def fixup(x):
         ' @-@ ','-').replace('\\', ' \\ ')
     return re1.sub(' ', html.unescape(x))
 
-rules = [sub_br, spec_add_spaces, rm_useless_spaces, replace_rep, replace_wrep, deal_caps, fixup]
+rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces, sub_br]
 
 def get_chunk_length(csv_name, chunksize):
     dfs = pd.read_csv(csv_name, header=None, chunksize=chunksize)
