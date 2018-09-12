@@ -28,7 +28,11 @@ First, thanks a lot for wanting to help!
 
 * Please read [Contributing to the documentation]() *link to be added*
 
-## Validate any notebooks you're contributing to
+## How to contribute to jupyter notebooks
+
+* Please read the following sections if you're contributing to `*.ipynb` notebooks.
+
+### Validate any notebooks you're contributing to
 
 * When you are done working on a notebook improvement, if you were using a text editor to make  changed, please, make sure to validate that notebook's format, by simply loading it in the jupyter notebook.
 
@@ -38,8 +42,20 @@ Alternatively, you could use a CLI JSON validation tool, e.g. [jsonlint](https:/
 
 but it's second best, since you may have a valid JSON, but invalid notebook format, as the latter has extra requirements on which fields are valid and which are not.
 
+### Autogenerate nb_*.py files
 
-## Git: a mandatory notebook strip out
+* When you finish working on a notebook, make sure to run:
+
+    tools/build
+
+If you're on windows and don't have bash¸ please run this instead:
+
+    python tools\build
+
+This will convert any modified `dev_nb/*.ipynb` to `nb_*.py`. Do not modify any of the `nb_*.py` manually, since your changes will be overwritten by the autogenerator.
+
+
+### Git: a mandatory notebook strip out
 
 Currently we only store `source` code cells under git (and a few extra fields for documentation notebooks). If you would like to commit or submit a PR, you need to confirm to that standard.
 
