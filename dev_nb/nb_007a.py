@@ -250,7 +250,8 @@ class TextDataset():
         dest = [Path(folder)/'tmp'/file for file in dest]
         maybe_copy(orig, dest)
         train_ds = cls(folder, None, name='train', create_mtd=TextMtd.TOK, **kwargs)
-        return (train_ds, cls(folder, None, name='valid', vocab=train_ds.vocab, create_mtd=TextMtd.TOK, **kwargs))
+        vocab = kwargs.pop('vocab') if 'vocab' in kwargs else train_ds.vocab
+        return (train_ds, cls(folder, None, name='valid', vocab=vocab, create_mtd=TextMtd.TOK, **kwargs))
 
     @classmethod
     def from_csv(cls, folder, tokenizer, train_csv='train.csv', valid_csv='valid.csv', **kwargs):
@@ -258,7 +259,8 @@ class TextDataset():
         dest = [Path(folder)/'tmp'/file for file in ['train.csv', 'valid.csv']]
         maybe_copy(orig, dest)
         train_ds = cls(folder, tokenizer, name='train', **kwargs)
-        return (train_ds, cls(folder, tokenizer, name='valid', vocab=train_ds.vocab, **kwargs))
+        vocab = kwargs.pop('vocab') if 'vocab' in kwargs else train_ds.vocab
+        return (train_ds, cls(folder, tokenizer, name='valid', vocab=vocab, **kwargs))
 
     @classmethod
     def from_folder(cls, folder, tokenizer, classes=None, train_name='train', valid_name='valid',
