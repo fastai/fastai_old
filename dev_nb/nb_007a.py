@@ -94,7 +94,7 @@ def replace_wrep(t):
 def deal_caps(t):
     res = []
     for s in re.findall(r'\w+|\W+', t):
-        res += ([TOK_UP,s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
+        res += ([TOK_UP + ' ',s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
     return ''.join(res)
 
 def fixup(x):
