@@ -16,28 +16,6 @@ class ImageMask(Image):
 def open_mask(fn):
     return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 
-def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None,
-               mult=32, do_crop=True, padding_mode='reflect',**kwargs):
-    if not tfms: return x
-    if not xtra: xtra={}
-    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-    if do_resolve: resolve_tfms(tfms)
-    x.set_sample(padding_mode=padding_mode, **kwargs)
-    if size:
-        crop_target = get_crop_target(size, mult=mult)
-        target = get_resize_target(x, crop_target, do_crop=do_crop)
-        x.resize(target)
-
-    size_tfms = [o for o in tfms if isinstance(o.tfm,TfmCrop)]
-    for tfm in tfms:
-        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
-        elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
-        else: x = tfm(x)
-    return x.data
-
-import nb_003
-nb_003.apply_tfms = apply_tfms
-
 @dataclass
 class MatchedFilesDataset(Dataset):
     x_fns:List[Path]; y_fns:List[Path]
@@ -47,17 +25,7 @@ class MatchedFilesDataset(Dataset):
     def __getitem__(self, i):
         return open_image(self.x_fns[i]), open_mask(self.y_fns[i])
 
-def split_by_idxs(seq, idxs):
-    '''A generator that returns sequence pieces, seperated by indexes specified in idxs. '''
-    last = 0
-    for idx in idxs:
-        if not (-len(seq) <= idx < len(seq)):
-            raise KeyError(f'Idx {idx} is out-of-bounds')
-        yield seq[last:idx]
-        last = idx
-    yield seq[last:]
-
-def split_by_idx(idxs, *a):
+def split_arrs_by_idx(idxs, *a):
     """
     Split each array passed as *a, to a pair of arrays like this (elements selected by idxs,  the remaining elements)
     This can be used to split multiple arrays containing training data to validation and training set.
@@ -71,9 +39,6 @@ def split_by_idx(idxs, *a):
     mask[np.array(idxs)] = True
     return [(o[mask],o[~mask]) for o in a]
 
-def normalize(x, mean,std):   return (x-mean[...,None,None]) / std[...,None,None]
-def denormalize(x, mean,std): return x*std[...,None,None] + mean[...,None,None]
-
 def normalize_batch(b, mean, std, do_y=False):
     x,y = b
     x = normalize(x,mean,std)
@@ -84,97 +49,3 @@ def normalize_funcs(mean, std, do_y=False, device=None):
     if device is None: device=default_device
     return (partial(normalize_batch, mean=mean.to(device),std=std.to(device), do_y=do_y),
             partial(denormalize,     mean=mean,           std=std))
-
-
-
-from torchvision.models import resnet34
-
-model_meta = {
-    resnet34:[8,6]
-}
-
-f = resnet34
-cut,lr_cut = model_meta[f]
-
-def cut_model(m, cut):
-    return list(m.children())[:cut] if cut else m
-
-def get_base():
-    layers = cut_model(f(True), cut)
-    return nn.Sequential(*layers)
-
-def dice(pred, targs):
-    pred = (pred>0).float()
-    return 2. * (pred*targs).sum() / (pred+targs).sum()
-
-def accuracy(out, yb):
-    preds = torch.max(out, dim=1)[1]
-    return (preds==yb).float().mean()
-
-USE_GPU = torch.cuda.is_available()
-def to_gpu(x, *args, **kwargs):
-    '''puts pytorch variable to gpu, if cuda is available and USE_GPU is set to true. '''
-    return x.cuda(*args, **kwargs) if USE_GPU else x
-
-class SaveFeatures():
-    features=None
-    def __init__(self, m): self.hook = m.register_forward_hook(self.hook_fn)
-    def hook_fn(self, module, input, output): self.features = output
-    def remove(self): self.hook.remove()
-
-class UnetBlock(nn.Module):
-    def __init__(self, up_in, x_in, n_out):
-        super().__init__()
-        up_out = x_out = n_out//2
-        self.x_conv  = nn.Conv2d(x_in,  x_out,  1)
-        self.tr_conv = nn.ConvTranspose2d(up_in, up_out, 2, stride=2)
-        self.bn = nn.BatchNorm2d(n_out)
-
-    def forward(self, up_p, x_p):
-        up_p = self.tr_conv(up_p)
-        x_p = self.x_conv(x_p)
-        cat_p = torch.cat([up_p,x_p], dim=1)
-        return self.bn(F.relu(cat_p))
-
-class Unet34(nn.Module):
-    def __init__(self, rn):
-        super().__init__()
-        self.rn = rn
-        self.sfs = [SaveFeatures(rn[i]) for i in [2,4,5,6]]
-        self.up1 = UnetBlock(512,256,256)
-        self.up2 = UnetBlock(256,128,256)
-        self.up3 = UnetBlock(256,64,256)
-        self.up4 = UnetBlock(256,64,256)
-        self.up5 = UnetBlock(256,3,16)
-        self.up6 = nn.ConvTranspose2d(16, 1, 1)
-
-    def forward(self,x):
-        inp = x
-        x = F.relu(self.rn(x))
-        x = self.up1(x, self.sfs[3].features)
-        x = self.up2(x, self.sfs[2].features)
-        x = self.up3(x, self.sfs[1].features)
-        x = self.up4(x, self.sfs[0].features)
-        x = self.up5(x, inp)
-        x = self.up6(x)
-        return x #[:,0]
-
-    def close(self):
-        for sf in self.sfs: sf.remove()
-
-
-class UnetModel():
-    def __init__(self,model,name='unet'):
-        self.model,self.name = model,name
-
-    def get_layer_groups(self, precompute):
-        lgs = list(split_by_idxs(children(self.model.rn), [lr_cut]))
-        return lgs + [children(self.model)[1:]]
-
-class UnetModel():
-    def __init__(self,model,name='unet'):
-        self.model,self.name = model,name
-
-    def get_layer_groups(self, precompute):
-        lgs = list(split_by_idxs(children(self.model.rn), [lr_cut]))
-        return lgs + [children(self.model)[1:]]
