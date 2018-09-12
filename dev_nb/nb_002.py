@@ -16,6 +16,9 @@ from dataclasses import field
 from functools import reduce
 from collections import defaultdict, abc, namedtuple, Iterable
 
+import abc
+from abc import abstractmethod, abstractproperty
+
 def image2np(image):
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
@@ -69,11 +72,112 @@ class FilesDataset(LabelDataset):
             fnames = get_image_files(folder/cls)
             self.x += fnames
             self.y += [i] * len(fnames)
+        self.y = torch.tensor(self.y)
 
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
 def logit(x):  return -(1/x-1).log()
 def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
+
+class ItemBase():
+    @property
+    @abstractmethod
+    def data(self): pass
+
+class ImageBase(ItemBase):
+    def lighting(self, func, *args, **kwargs): return self
+    def pixel(self, func, *args, **kwargs): return self
+    def coord(self, func, *args, **kwargs): return self
+    def affine(self, func, *args, **kwargs): return self
+
+    def set_sample(self, **kwargs):
+        self.sample_kwargs = kwargs
+        return self
+
+    def clone(self): return self.__class__(self.data.clone())
+
+class Image(ImageBase):
+    def __init__(self, px):
+        self._px = px
+        self._logit_px=None
+        self._flow=None
+        self._affine_mat=None
+        self.sample_kwargs = {}
+
+    @property
+    def shape(self): return self._px.shape
+
+    def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
+
+    def refresh(self):
+        if self._logit_px is not None:
+            self._px = self._logit_px.sigmoid_()
+            self._logit_px = None
+        if self._affine_mat is not None or self._flow is not None:
+            self._px = grid_sample(self._px, self.flow, **self.sample_kwargs)
+            self.sample_kwargs = {}
+            self._flow = None
+        return self
+
+    @property
+    def px(self):
+        self.refresh()
+        return self._px
+    @px.setter
+    def px(self,v): self._px=v
+
+    @property
+    def flow(self):
+        if self._flow is None:
+            self._flow = affine_grid(self.shape)
+        if self._affine_mat is not None:
+            self._flow = affine_mult(self._flow,self._affine_mat)
+            self._affine_mat = None
+        return self._flow
+    @flow.setter
+    def flow(self,v): self._flow=v
+
+    def lighting(self, func, *args, **kwargs):
+        self.logit_px = func(self.logit_px, *args, **kwargs)
+        return self
+
+    def pixel(self, func, *args, **kwargs):
+        self.px = func(self.px, *args, **kwargs)
+        return self
+
+    def coord(self, func, *args, **kwargs):
+        self.flow = func(self.flow, self.shape, *args, **kwargs)
+        return self
+
+    def affine(self, func, *args, **kwargs):
+        m = func(*args, **kwargs)
+        self.affine_mat = self.affine_mat @ self._px.new(m)
+        return self
+
+    def resize(self, size):
+        assert self._flow is None
+        if isinstance(size, int): size=(self.shape[0], size, size)
+        self.flow = affine_grid(size)
+        return self
+
+    @property
+    def affine_mat(self):
+        if self._affine_mat is None: self._affine_mat = self._px.new(torch.eye(3))
+        return self._affine_mat
+    @affine_mat.setter
+    def affine_mat(self,v): self._affine_mat=v
+
+    @property
+    def logit_px(self):
+        if self._logit_px is None: self._logit_px = logit_(self.px)
+        return self._logit_px
+    @logit_px.setter
+    def logit_px(self,v): self._logit_px=v
+
+    def show(self, ax=None, **kwargs): show_image(self.px, ax=ax, **kwargs)
+
+    @property
+    def data(self): return self.px
 
 def uniform(low, high, size=None):
     return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
@@ -170,12 +274,12 @@ def resolve_tfms(tfms):
     for f in listify(tfms): f.resolve()
 
 def apply_tfms(tfms, x, do_resolve=True):
-    if tfms:
-        tfms = listify(tfms)
-        if do_resolve: resolve_tfms(tfms)
-        x = x.clone()
-        for tfm in tfms: x = tfm(x)
-    return x.data
+    if not tfms: return x
+    tfms = listify(tfms)
+    if do_resolve: resolve_tfms(tfms)
+    x = x.clone()
+    for tfm in tfms: x = tfm(x)
+    return x
 
 class DatasetTfm(Dataset):
     def __init__(self, ds:Dataset, tfms:Collection[Callable]=None, **kwargs):
@@ -192,6 +296,32 @@ class DatasetTfm(Dataset):
 
 import nb_001b
 nb_001b.DatasetTfm = DatasetTfm
+
+def to_data(b):
+    if is_listy(b): return [to_data(o) for o in b]
+    return b.data if isinstance(b,ItemBase) else b
+
+def data_collate(batch):
+    return torch.utils.data.dataloader.default_collate(to_data(batch))
+
+@dataclass
+class DeviceDataLoader():
+    dl: DataLoader
+    device: torch.device
+    def __post_init__(self): self.dl.collate_fn=data_collate
+
+    def __len__(self): return len(self.dl)
+    def proc_batch(self,b): return to_device(b, self.device)
+
+    def __iter__(self):
+        self.gen = map(self.proc_batch, self.dl)
+        return iter(self.gen)
+
+    @classmethod
+    def create(cls, *args, device=default_device, **kwargs):
+        return cls(DataLoader(*args, **kwargs), device=device)
+
+nb_001b.DeviceDataLoader = DeviceDataLoader
 
 def show_image_batch(dl, classes, rows=None, figsize=(12,15)):
     x,y = next(iter(dl))
@@ -242,96 +372,6 @@ def affine_mult(c,m):
     c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
     return c.view(size)
 
-class Image():
-    def __init__(self, px):
-        self._px = px
-        self._logit_px=None
-        self._flow=None
-        self._affine_mat=None
-        self.sample_kwargs = {}
-
-    @property
-    def shape(self): return self._px.shape
-
-    def __repr__(self): return f'{self.__class__.__name__} ({self.px.shape})'
-
-    def refresh(self):
-        if self._logit_px is not None:
-            self._px = self._logit_px.sigmoid_()
-            self._logit_px = None
-        if self._affine_mat is not None or self._flow is not None:
-            self._px = grid_sample(self._px, self.flow, **self.sample_kwargs)
-            self.sample_kwargs = {}
-            self._flow = None
-        return self
-
-    @property
-    def px(self):
-        self.refresh()
-        return self._px
-    @px.setter
-    def px(self,v): self._px=v
-
-    @property
-    def flow(self):
-        if self._flow is None:
-            self._flow = affine_grid(self.shape)
-        if self._affine_mat is not None:
-            self._flow = affine_mult(self._flow,self._affine_mat)
-            self._affine_mat = None
-        return self._flow
-    @flow.setter
-    def flow(self,v): self._flow=v
-
-    def lighting(self, func, *args, **kwargs):
-        self.logit_px = func(self.logit_px, *args, **kwargs)
-        return self
-
-    def pixel(self, func, *args, **kwargs):
-        self.px = func(self.px, *args, **kwargs)
-        return self
-
-    def coord(self, func, *args, **kwargs):
-        self.flow = func(self.flow, self.shape, *args, **kwargs)
-        return self
-
-    def affine(self, func, *args, **kwargs):
-        m = func(*args, **kwargs)
-        self.affine_mat = self.affine_mat @ self._px.new(m)
-        return self
-
-    def set_sample(self, **kwargs):
-        self.sample_kwargs = kwargs
-        return self
-
-    def resize(self, size):
-        assert self._flow is None
-        if isinstance(size, int): size=(self.shape[0], size, size)
-        self.flow = affine_grid(size)
-        return self
-
-    @property
-    def affine_mat(self):
-        if self._affine_mat is None: self._affine_mat = self._px.new(torch.eye(3))
-        return self._affine_mat
-    @affine_mat.setter
-    def affine_mat(self,v): self._affine_mat=v
-
-    @property
-    def logit_px(self):
-        if self._logit_px is None: self._logit_px = logit_(self.px)
-        return self._logit_px
-    @logit_px.setter
-    def logit_px(self,v): self._logit_px=v
-
-    def show(self, ax=None, **kwargs): show_image(self.px, ax=ax, **kwargs)
-    def clone(self): return self.__class__(self.px.clone())
-
-    @property
-    def data(self): return self.px
-
-    def to(self, device): return self.data.to(device)
-
 class TfmAffine(Transform): order,_wrap = 5,'affine'
 class TfmPixel(Transform): order,_wrap = 10,'pixel'
 
@@ -364,17 +404,17 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
         return get_zoom_mat(1, 1/scale, 0., row_c)
 
 def apply_tfms(tfms, x, do_resolve=True, xtra=None, size=None, **kwargs):
-    if tfms or size:
-        if not xtra: xtra={}
-        tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-        if do_resolve: resolve_tfms(tfms)
-        x = x.clone()
-        if kwargs: x.set_sample(**kwargs)
-        if size: x.resize(size)
-        for tfm in tfms:
-            if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
-            else:               x = tfm(x)
-    return x.data
+    if not (tfms or size): return x
+    if not xtra: xtra={}
+    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
+    if do_resolve: resolve_tfms(tfms)
+    x = x.clone()
+    if kwargs: x.set_sample(**kwargs)
+    if size: x.resize(size)
+    for tfm in tfms:
+        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
+        else:               x = tfm(x)
+    return x
 
 class TfmCoord(Transform): order,_wrap = 4,'coord'
 

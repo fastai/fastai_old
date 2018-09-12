@@ -4,7 +4,7 @@
         #################################################
 
 from nb_003 import *
-from torch import Tensor
+from torch import Tensor,tensor
 from fast_progress import master_bar,progress_bar
 
 Floats = Union[float, Collection[float]]

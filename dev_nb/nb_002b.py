@@ -27,34 +27,45 @@ class DeviceDataLoader():
     dl: DataLoader
     device: torch.device
     tfms: List[Callable]=None
+    def __post_init__(self):
+        self.dl.collate_fn=data_collate
+        self.tfms = listify(self.tfms)
 
     def __len__(self): return len(self.dl)
 
+    def add_tfm(self,tfm):    self.tfms.append(tfm)
+    def remove_tfm(self,tfm): self.tfms.remove(tfm)
+
     def proc_batch(self,b):
-        b = to_device(self.device,b)
-        return b if self.tfms is None else self.tfms(b)
+        b = to_device(b, self.device)
+        for f in listify(self.tfms): b = f(b)
+        return b
 
     def __iter__(self):
         self.gen = map(self.proc_batch, self.dl)
         return iter(self.gen)
 
     @classmethod
-    def create(cls, *args, device=default_device, tfms=tfms, **kwargs):
-        return cls(DataLoader(*args, **kwargs), device=device, tfms=tfms)
+    def create(cls, dataset, bs=1, shuffle=False, device=default_device, tfms=tfms, **kwargs):
+        return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, **kwargs),
+                   device=device, tfms=tfms)
 
+@dataclass
 class DataBunch():
-    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, device:torch.device=None, tfms=None):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
-        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
+    train_dl:DataLoader
+    valid_dl:DataLoader
+    device:torch.device=None
+    def __post_init__(self):
+        if self.device is None: self.device=default_device
 
     @classmethod
-    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, num_workers=4,
-               tfms=None, device=None, **kwargs):
-        if train_tfm or not isinstance(train_ds, DatasetTfm): train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
-        if valid_tfm or not isinstance(valid_ds, DatasetTfm): valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
-        return cls(DataLoader(train_ds, bs, shuffle=True, num_workers=num_workers),
-                   DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers), device=device, tfms=tfms)
+    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, device=None, tfms=None,
+               num_workers=4, **kwargs):
+        if train_tfm: train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
+        if valid_tfm: valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
+        return cls(DeviceDataLoader.create(train_ds, bs,   shuffle=True,  device=device, tfms=tfms, num_workers=num_workers),
+                   DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, device=device, tfms=tfms, num_workers=num_workers),
+                   device=device)
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
