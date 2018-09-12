@@ -1,3 +1,6 @@
+
+# use tools/build to autogenerate all relevant files automatically
+
 import json, fire, re, os.path
 
 def is_export(cell):
