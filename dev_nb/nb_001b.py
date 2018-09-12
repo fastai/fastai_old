@@ -7,7 +7,7 @@
 import pickle, gzip, torch, math, numpy as np, torch.nn.functional as F
 from pathlib import Path
 from IPython.core.debugger import set_trace
-from torch import nn, optim
+from torch import nn, optim, tensor
 
 from torch.utils.data import TensorDataset, Dataset, DataLoader
 from dataclasses import dataclass

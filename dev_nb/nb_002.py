@@ -59,6 +59,7 @@ class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
     @property
     def c(self): return self.y.shape[-1] if len(self.y.shape)>1 else 1
+    def __repr__(self): return f'{type(self).__name__} of len {len(self.x)}'
 
 class LabelDataset(DatasetBase):
     @property
@@ -73,7 +74,7 @@ class FilesDataset(LabelDataset):
             fnames = get_image_files(folder/cls)
             self.x += fnames
             self.y += [i] * len(fnames)
-        self.y = torch.tensor(self.y)
+        self.y = tensor(self.y)
 
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
@@ -339,7 +340,7 @@ def show_images(x,y,rows, classes, figsize=(9,9)):
 def grid_sample_nearest(input, coords, padding_mode='zeros'):
     if padding_mode=='border': coords.clamp(-1,1)
     bs,ch,h,w = input.size()
-    sz = torch.tensor([w,h]).float()[None,None]
+    sz = tensor([w,h]).float()[None,None]
     coords.add_(1).mul_(sz/2)
     coords = coords[0].round_().long()
     if padding_mode=='zeros':
@@ -360,9 +361,9 @@ def affine_grid(size):
     size = ((1,)+size)
     N, C, H, W = size
     grid = FloatTensor(N, H, W, 2)
-    linear_points = torch.linspace(-1, 1, W) if W > 1 else torch.Tensor([-1])
+    linear_points = torch.linspace(-1, 1, W) if W > 1 else tensor([-1])
     grid[:, :, :, 0] = torch.ger(torch.ones(H), linear_points).expand_as(grid[:, :, :, 0])
-    linear_points = torch.linspace(-1, 1, H) if H > 1 else torch.Tensor([-1])
+    linear_points = torch.linspace(-1, 1, H) if H > 1 else tensor([-1])
     grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
     return grid
 
