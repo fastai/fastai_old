@@ -16,28 +16,18 @@ class ImageMask(Image):
 def open_mask(fn):
     return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 
-@dataclass
-class MatchedFilesDataset(Dataset):
-    x_fns:List[Path]; y_fns:List[Path]
-    def __post_init__(self): assert len(self.x_fns)==len(self.y_fns)
-    def __repr__(self): return f'{type(self).__name__} of len {len(self.x_fns)}'
-    def __len__(self): return len(self.x_fns)
-    def __getitem__(self, i):
-        return open_image(self.x_fns[i]), open_mask(self.y_fns[i])
+class MatchedFilesDataset(DatasetBase):
+    def __init__(self, x:Collection[Path], y:Collection[Path]):
+        assert len(x)==len(y)
+        self.x,self.y = np.array(x),np.array(y)
 
-def split_arrs_by_idx(idxs, *a):
-    """
-    Split each array passed as *a, to a pair of arrays like this (elements selected by idxs,  the remaining elements)
-    This can be used to split multiple arrays containing training data to validation and training set.
-    :param idxs [int]: list of indexes selected
-    :param a list: list of np.array, each array should have same amount of elements in the first dimension
-    :return: list of tuples, each containing a split of corresponding array from *a.
-            First element of each tuple is an array composed from elements selected by idxs,
-            second element is an array of remaining elements.
-    """
+    def __getitem__(self, i):
+        return open_image(self.x[i]), open_mask(self.y[i])
+
+def split_arrs(idxs, *a):
     mask = np.zeros(len(a[0]),dtype=bool)
     mask[np.array(idxs)] = True
-    return [(o[mask],o[~mask]) for o in a]
+    return [(o[mask],o[~mask]) for o in map(np.array, a)]
 
 def normalize_batch(b, mean, std, do_y=False):
     x,y = b
@@ -49,3 +39,9 @@ def normalize_funcs(mean, std, do_y=False, device=None):
     if device is None: device=default_device
     return (partial(normalize_batch, mean=mean.to(device),std=std.to(device), do_y=do_y),
             partial(denormalize,     mean=mean,           std=std))
+
+def pred_batch(learn):
+    x,y = next(iter(learn.data.valid_dl))
+    return x,learn.model(x).detach()
+
+Learner.pred_batch = pred_batch
