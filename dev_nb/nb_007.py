@@ -39,26 +39,6 @@ class LanguageModelLoader():
         seq_len = min(seq_len, len(self.data) - 1 - i)
         return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
 
-class DataBunch():
-    def __init__(self, train_dl, valid_dl, device=None, dl_tfms=None):
-        self.device = default_device if device is None else device
-        if not isinstance(train_dl, DeviceDataLoader):
-            train_dl = DeviceDataLoader(train_dl, self.device, tfms=dl_tfms)
-        if not isinstance(valid_dl, DeviceDataLoader):
-            valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=dl_tfms)
-        self.train_dl,self.valid_dl = train_dl,valid_dl
-
-    @classmethod
-    def create(cls, train_ds, valid_ds, train_tfm=None, valid_tfm=None, bs=64, dl_tfms=None, **kwargs):
-        train_dl = DeviceDataLoader.create(DatasetTfm(train_ds, train_tfm), bs,   shuffle=True,  tfms=dl_tfms, **kwargs)
-        valid_dl = DeviceDataLoader.create(DatasetTfm(valid_ds, valid_tfm), bs*2, shuffle=False, tfms=dl_tfms, **kwargs)
-        return cls(train_dl, valid_dl, **kwargs)
-
-    @property
-    def train_ds(self): return self.train_dl.dl.dataset
-    @property
-    def valid_ds(self): return self.valid_dl.dl.dataset
-
 def dropout_mask(x, sz, p):
     "Returns a dropout mask of the same type as x, size sz, with probability p to cancel an element."
     return x.new(*sz).bernoulli_(1-p).div_(1-p)
