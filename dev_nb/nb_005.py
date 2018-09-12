@@ -5,6 +5,7 @@
         # file to edit: 005_dogs_cats.ipynb
 
 from nb_004b import *
+import torchvision.models as tvm
 
 def uniform_int(low, high, size=None):
     return random.randint(low,high) if size is None else torch.randint(low,high,size)
@@ -36,6 +37,34 @@ def transform_datasets(train_ds, valid_ds, tfms, **kwargs):
             DatasetTfm(valid_ds, tfms[1], **kwargs),
             DatasetTfm(valid_ds, tfms[0], **kwargs))
 
+imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
+
+class DataBunch():
+    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, augm_dl:DataLoader=None,
+                 device:torch.device=None, tfms=None):
+        self.device = default_device if device is None else device
+        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
+        if augm_dl: self.augm_dl = DeviceDataLoader(augm_dl,  self.device, tfms=tfms)
+
+    @classmethod
+    def create(cls, train_ds, valid_ds, augm_ds=None, bs=64, train_tfm=None, valid_tfm=None, num_workers=4,
+               tfms=None, device=None, **kwargs):
+        if train_tfm or not isinstance(train_ds, DatasetTfm): train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
+        if valid_tfm or not isinstance(valid_ds, DatasetTfm): valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
+        if not augm_ds: augm_ds = DatasetTfm(valid_ds, train_tfm, **kwargs)
+        return cls(DataLoader(train_ds, bs,   shuffle=True,  num_workers=num_workers),
+                   DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers),
+                   DataLoader(augm_ds,  bs*2, shuffle=False, num_workers=num_workers),
+                   device=device, tfms=tfms)
+
+    @property
+    def train_ds(self): return self.train_dl.dl.dataset
+    @property
+    def valid_ds(self): return self.valid_dl.dl.dataset
+    @property
+    def c(self): return self.train_ds.c
+
 def train_epoch(model, dl, opt):
     "Simple training of `model` for 1 epoch of `dl` using `opt`; mainly for quick tests"
     model.train()
@@ -53,10 +82,8 @@ class AdaptiveConcatPool2d(nn.Module):
     def forward(self, x): return torch.cat([self.mp(x), self.ap(x)], 1)
 
 def create_body(model, cut=None, body_fn=None):
-    layers = (list(model.children())[:-cut] if cut
-              else [body_fn(model)] if body_fn else [model])
-    layers += [AdaptiveConcatPool2d(), Flatten()]
-    return nn.Sequential(*layers)
+    return (nn.Sequential(*list(model.children())[:-cut]) if cut
+            else body_fn(model) if body_fn else model)
 
 def num_features(m):
     for l in reversed(flatten_model(m)):
@@ -74,7 +101,7 @@ def create_head(nf, nc, lin_ftrs=None, ps=0.2):
     ps = listify(ps)
     if len(ps)==1: ps = [ps[0]/2] * (len(lin_ftrs)-2) + ps
     actns = [nn.ReLU(inplace=True)] * (len(lin_ftrs)-2) + [None]
-    layers = []
+    layers = [AdaptiveConcatPool2d(), Flatten()]
     for ni,no,p,actn in zip(lin_ftrs[:-1],lin_ftrs[1:],ps,actns):
         layers += bn_drop_lin(ni,no,True,p,actn)
     return nn.Sequential(*layers)
