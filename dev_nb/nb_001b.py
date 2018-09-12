@@ -96,6 +96,19 @@ class DeviceDataLoader():
     @classmethod
     def create(cls, *args, device=default_device, **kwargs): return cls(DataLoader(*args, **kwargs), device=device)
 
+def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
+    for epoch in range(epochs):
+        model.train()
+        for xb,yb in train_dl: loss,_ = loss_batch(model, xb, yb, loss_fn, opt)
+
+        model.eval()
+        with torch.no_grad():
+            losses,nums = zip(*[loss_batch(model, xb, yb, loss_fn)
+                                for xb,yb in valid_dl])
+        val_loss = np.sum(np.multiply(losses,nums)) / np.sum(nums)
+
+        print(epoch, val_loss)
+
 @dataclass
 class DataBunch():
     train_dl:DataLoader

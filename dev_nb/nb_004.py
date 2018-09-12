@@ -176,10 +176,12 @@ class CallbackHandler():
 
 def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
     if cb_handler is None: cb_handler = CallbackHandler([])
-    out = model(xb)
+    if not is_listy(xb): xb = [xb]
+    if not is_listy(yb): yb = [yb]
+    out = model(*xb)
     out = cb_handler.on_loss_begin(out)
-    loss = loss_fn(out, yb)
-    mets = [f(out,yb).item() for f in metrics] if metrics is not None else []
+    loss = loss_fn(out, *yb)
+    mets = [f(out,*yb).item() for f in metrics] if metrics is not None else []
 
     if opt is not None:
         loss = cb_handler.on_backward_begin(loss)
@@ -189,7 +191,7 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
         cb_handler.on_step_end()
         opt.zero_grad()
 
-    return (loss.item(),) + tuple(mets) + (len(xb),)
+    return (loss.item(),) + tuple(mets) + (len(xb[0]),)
 
 def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
     cb_handler = CallbackHandler(callbacks)
