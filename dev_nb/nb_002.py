@@ -293,8 +293,7 @@ class DatasetTfm(Dataset):
         x,y = self.ds[idx]
         return apply_tfms(self.tfms, x, **self.kwargs), y
 
-    @property
-    def c(self): return self.ds.c
+    def __getattr__(self,k): return getattr(self.ds, k)
 
 import nb_001b
 nb_001b.DatasetTfm = DatasetTfm
@@ -313,6 +312,7 @@ class DeviceDataLoader():
     def __post_init__(self): self.dl.collate_fn=data_collate
 
     def __len__(self): return len(self.dl)
+    def __getattr__(self,k): return getattr(self.dl, k)
     def proc_batch(self,b): return to_device(b, self.device)
 
     def __iter__(self):
