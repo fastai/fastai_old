@@ -120,7 +120,7 @@ def _set_mom(m, mom):
 def set_mom(m, mom): m.apply(lambda x: _set_mom(x, mom))
 
 class ConvLearner(Learner):
-    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=None, custom_head=None, **kwargs):
+    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.2, custom_head=None, **kwargs):
         body = create_body(arch(pretrained), cut)
         nf = num_features(body) * 2
         head = custom_head or create_head(nf, data.c, lin_ftrs, ps)
@@ -131,23 +131,53 @@ class ConvLearner(Learner):
         apply_init(model[1], nn.init.kaiming_normal_)
 
 class HookCallback(LearnerCallback):
+    def __init__(self, learn, modules=None, do_remove=True):
+        super().__init__(learn)
+        self.modules,self.do_remove = modules,do_remove
+        self.hooks = []
+
     def on_train_begin(self, **kwargs):
         self.hooks = []
-        for name,module in learn.model.named_modules():
-            if list(module.children()) == []:
-                func = self.hook(name,module)
-                self.hooks.append(module.register_forward_hook(func))
+        modules = self.modules
+        if not modules:
+            modules = [m for m in flatten_model(self.learn.model)
+                       if hasattr(m, 'weight')]
+        for module in modules:
+            func = self.hook(module)
+            self.hooks.append(module.register_forward_hook(func))
 
-    def on_train_end(self, **kwargs):
-        if not self.hooks: return
+    def remove(self):
         for hook in self.hooks: hook.remove()
         self.hooks=[]
 
+    def on_train_end(self, **kwargs):
+        if self.do_remove: self.remove()
+
+    def __del__(self): self.remove()
+
 class ActivationsCallback(HookCallback):
-    def hook(self, name, module):
-        def _hook(m,i,o): self.outputs[name]=o.detach()
+    def hook(self, module):
+        def _hook(m,i,o): self.outputs[module]=o.detach()
         return _hook
 
     def on_train_begin(self, **kwargs):
         super().on_train_begin(**kwargs)
         self.outputs = {}
+
+class ActivationStats(ActivationsCallback):
+    def on_train_begin(self, **kwargs):
+        super().on_train_begin(**kwargs)
+        self.means,self.stds = [],[]
+
+    def on_batch_end(self, **kwargs):
+        means,stds = zip(*[(value.mean().item(),value.std().item())
+                           for key, value in self.outputs.items()])
+        self.means.append(means)
+        self.stds.append (stds )
+
+    def on_train_end(self, **kwargs):
+        means,stds = {},{}
+        for (i,(k,v)) in enumerate(self.outputs.items()):
+            means[k] = [o[i] for o in self.means]
+            stds[k]  = [o[i] for o in self.stds ]
+        self.means,self.stds = means,stds
