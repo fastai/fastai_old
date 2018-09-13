@@ -65,11 +65,11 @@ class DataBunch():
     @property
     def c(self): return self.train_ds.c
 
-def train_epoch(model, dl, opt):
-    "Simple training of `model` for 1 epoch of `dl` using `opt`; mainly for quick tests"
+def train_epoch(model, dl, opt, loss_func):
+    "Simple training of `model` for 1 epoch of `dl` using optim `opt` and loss function `loss_func`"
     model.train()
     for xb,yb in dl:
-        loss = F.cross_entropy(model(xb), yb)
+        loss = loss_func(model(xb), yb)
         loss.backward()
         opt.step()
         opt.zero_grad()
@@ -129,3 +129,25 @@ class ConvLearner(Learner):
         self.split([model[1]])
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
+
+class HookCallback(LearnerCallback):
+    def on_train_begin(self, **kwargs):
+        self.hooks = []
+        for name,module in learn.model.named_modules():
+            if list(module.children()) == []:
+                func = self.hook(name,module)
+                self.hooks.append(module.register_forward_hook(func))
+
+    def on_train_end(self, **kwargs):
+        if not self.hooks: return
+        for hook in self.hooks: hook.remove()
+        self.hooks=[]
+
+class ActivationsCallback(HookCallback):
+    def hook(self, name, module):
+        def _hook(m,i,o): self.outputs[name]=o.detach()
+        return _hook
+
+    def on_train_begin(self, **kwargs):
+        super().on_train_begin(**kwargs)
+        self.outputs = {}

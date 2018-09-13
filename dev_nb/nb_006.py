@@ -98,14 +98,11 @@ class StdUpsample(nn.Module):
     def forward(self, x):
         return self.bn(F.relu(self.conv(x)))
 
-flatten_channel = Lambda(lambda x: x[:,])
-
 def std_upsample_head(*nfs):
     return nn.Sequential(
         nn.ReLU(),
         *(StdUpsample(nfs[i],nfs[i+1]) for i in range(4)),
-        nn.ConvTranspose2d(nfs[-1], 1, 2, stride=2),
-        flatten_channel
+        nn.ConvTranspose2d(nfs[-1], 1, 2, stride=2)
     )
 
 def dice(pred, targs):
