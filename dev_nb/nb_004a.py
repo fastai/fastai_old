@@ -170,7 +170,7 @@ class Learner():
         if wd is None: wd = self.wd
         self.create_opt(lr, wd)
         callbacks = [cb(self) for cb in self.callback_fns] + listify(callbacks)
-        fit(epochs, self.model, self.loss_fn, self.opt, self.data, metrics=self.metrics,
+        fit(epochs, self.model, self.loss_fn, opt=self.opt, data=self.data, metrics=self.metrics,
             callbacks=self.callbacks+callbacks)
 
     def create_opt(self, lr:Floats, wd:Floats=0.):
@@ -196,7 +196,7 @@ class Learner():
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
-                  div_factor:float=25., pct_start:float=0.5, wd:float=3e-2, **kwargs):
+                  div_factor:float=25., pct_start:float=0.5, wd:float=None, **kwargs):
     "Fits a model following the 1cycle policy"
     max_lr = learn.lr_range(max_lr)
     cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
