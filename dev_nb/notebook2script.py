@@ -2,6 +2,7 @@
 # use tools/build to autogenerate all relevant files automatically
 
 import json, fire, re, os.path
+from pathlib import Path
 
 def is_export(cell):
     if cell['cell_type'] != 'code': return False
@@ -16,7 +17,8 @@ def get_py_fname(fname):
     return f'nb_{number}.py'
 
 def notebook2script(fname):
-    fname_out = get_py_fname(fname)
+    fname = Path(fname)
+    fname_out = get_py_fname(fname.name)
     main_dic = json.load(open(fname,'r'))
     cells = main_dic['cells']
     code_cells = [c for c in cells if is_export(c)]
