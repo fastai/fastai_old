@@ -7,6 +7,7 @@
 from nb_003 import *
 from torch import Tensor,tensor
 from fast_progress import master_bar,progress_bar
+import re
 
 Floats = Union[float, Collection[float]]
 Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
@@ -149,7 +150,7 @@ class CallbackHandler():
         return self.state_dict['last_output']
 
     def on_backward_begin(self, loss):
-        self.smoothener.add_value(loss.item())
+        self.smoothener.add_value(loss.detach())
         self.state_dict['last_loss'], self.state_dict['smooth_loss'] = loss, self.smoothener.smooth
         for cb in self.callbacks:
             a = cb.on_backward_begin(**self.state_dict)
@@ -174,14 +175,15 @@ class CallbackHandler():
 
     def on_train_end(self, exception): self('train_end', exception=exception)
 
-def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
+def loss_batch(model, xb, yb, loss_fn=None, opt=None, cb_handler=None, metrics=None):
     if cb_handler is None: cb_handler = CallbackHandler([])
     if not is_listy(xb): xb = [xb]
     if not is_listy(yb): yb = [yb]
     out = model(*xb)
     out = cb_handler.on_loss_begin(out)
+    if not loss_fn: return out.detach(),yb[0].detach()
     loss = loss_fn(out, *yb)
-    mets = [f(out,*yb).item() for f in metrics] if metrics is not None else []
+    mets = [f(out,*yb).detach() for f in metrics] if metrics is not None else []
 
     if opt is not None:
         loss = cb_handler.on_backward_begin(loss)
@@ -191,7 +193,13 @@ def loss_batch(model, xb, yb, loss_fn, opt=None, cb_handler=None, metrics=None):
         cb_handler.on_step_end()
         opt.zero_grad()
 
-    return (loss.item(),) + tuple(mets) + (len(xb[0]),)
+    return (loss.detach(),) + tuple(mets) + (xb[0].shape[0],)
+
+def validate(model, dl, loss_fn=None, metrics=None, cb_handler=None, pbar=None):
+    model.eval()
+    with torch.no_grad():
+        return zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
+                       for xb,yb in progress_bar(dl, parent=pbar)])
 
 def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
     cb_handler = CallbackHandler(callbacks)
@@ -210,11 +218,11 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
                 if cb_handler.on_batch_end(loss): break
 
             if hasattr(data,'valid_dl') and data.valid_dl is not None:
-                model.eval()
-                with torch.no_grad():
-                    *val_metrics,nums = zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
-                                    for xb,yb in progress_bar(data.valid_dl, parent=pbar)])
-                val_metrics = [np.sum(np.multiply(val,nums)) / np.sum(nums) for val in val_metrics]
+                *val_metrics,nums = validate(model, data.valid_dl, loss_fn=loss_fn,
+                                             cb_handler=cb_handler, metrics=metrics,pbar=pbar)
+                nums = np.array(nums, dtype=np.float32)
+                val_metrics = [(torch.stack(val).cpu().numpy() * nums).sum() / nums.sum()
+                               for val in val_metrics]
 
             else: val_metrics=None
             if cb_handler.on_epoch_end(val_metrics): break
@@ -223,6 +231,12 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
         raise e
     finally: cb_handler.on_train_end(exception)
 
+_camel_re1 = re.compile('(.)([A-Z][a-z]+)')
+_camel_re2 = re.compile('([a-z0-9])([A-Z])')
+def camel2snake(name):
+    s1 = re.sub(_camel_re1, r'\1_\2', name)
+    return re.sub(_camel_re2, r'\1_\2', s1).lower()
+
 @dataclass
 class LearnerCallback(Callback):
     learn: Learner
@@ -230,7 +244,7 @@ class LearnerCallback(Callback):
         if self.cb_name: setattr(self.learn, self.cb_name, self)
 
     @property
-    def cb_name(self): return self.__class__.__name__.lower()
+    def cb_name(self): return camel2snake(self.__class__.__name__)
 
 class Recorder(LearnerCallback):
     def __init__(self, learn):
@@ -355,16 +369,16 @@ def annealing_poly(degree): return functools.partial(do_annealing_poly, degree=d
 def is_tuple(x): return isinstance(x, tuple)
 
 class Stepper():
-    def __init__(self, vals, n_iter, ft=None):
+    def __init__(self, vals, n_iter, func=None):
         self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
         self.n_iter = n_iter
-        if ft is None: self.ft = annealing_linear if is_tuple(vals) else annealing_no
-        else:          self.ft = ft
+        if func is None: self.func = annealing_linear if is_tuple(vals) else annealing_no
+        else:          self.func = func
         self.n = 0
 
     def step(self):
         self.n += 1
-        return self.ft(self.start, self.end, self.n/self.n_iter)
+        return self.func(self.start, self.end, self.n/self.n_iter)
 
     @property
     def is_done(self):  return self.n >= self.n_iter
@@ -376,23 +390,20 @@ class OneCycleScheduler(Callback):
     moms:Floats=(0.95,0.85)
     div_factor:float=25.
     pct_start:float=0.5
-    pct_end:float=0.3
     def __post_init__(self): self.moms=tuple(listify(self.moms,2))
 
     def steps(self, *steps_cfg):
-        return [Stepper(step, n_iter) for step,n_iter in zip(steps_cfg, self.phases)]
+        return [Stepper(step, n_iter, func=func)
+                for (step,(n_iter,func)) in zip(steps_cfg, self.phases)]
 
     def on_train_begin(self, n_epochs, **kwargs):
         n = len(self.learn.data.train_dl) * n_epochs
-        a = n * (1-self.pct_end)
-        a1 = int(a * self.pct_start)
-        a2 = int(a) - a1
-        self.phases = (a1, a2, n-a1-a2)
-        self.lr_scheds = self.steps(
-            (self.lr_max/self.div_factor, self.lr_max),
-            (self.lr_max, self.lr_max/self.div_factor),
-            (self.lr_max/self.div_factor, self.lr_max/(self.div_factor*100)))
-        self.mom_scheds = self.steps(self.moms, (self.moms[1], self.moms[0]), self.moms[0])
+        a1 = int(n * self.pct_start)
+        a2 = n-a1
+        self.phases = ((a1, annealing_linear), (a2, annealing_cos))
+        low_lr = self.lr_max/self.div_factor
+        self.lr_scheds = self.steps((low_lr, self.lr_max), (self.lr_max, low_lr/1e4))
+        self.mom_scheds = self.steps(self.moms, (self.moms[1], self.moms[0]))
         self.opt = self.learn.opt
         self.opt.lr,self.opt.mom = self.lr_scheds[0].start,self.mom_scheds[0].start
         self.idx_s = 0
