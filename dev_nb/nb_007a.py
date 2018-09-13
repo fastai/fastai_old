@@ -10,7 +10,7 @@ from spacy.symbols import ORTH
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 BOS,FLD,UNK,PAD = 'xxbos','xxfld','xxunk','xxpad'
-TOK_UP,TK_REP,TK_WREP = 'xxup','xxrep','xxwrep'
+TK_UP,TK_REP,TK_WREP = 'xxup','xxrep','xxwrep'
 
 def partition(a, sz):
     """splits iterables a in equal parts of size sz"""
@@ -94,7 +94,7 @@ def replace_wrep(t):
 def deal_caps(t):
     res = []
     for s in re.findall(r'\w+|\W+', t):
-        res += ([TOK_UP + ' ',s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
+        res += ([f' {TK_UP} ',s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
     return ''.join(res)
 
 def fixup(x):
