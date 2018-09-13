@@ -224,12 +224,19 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
     finally: cb_handler.on_train_end(exception)
 
 @dataclass
-class Recorder(Callback):
+class LearnerCallback(Callback):
     learn: Learner
     def __post_init__(self):
+        if self.cb_name: setattr(self.learn, self.cb_name, self)
+
+    @property
+    def cb_name(self): return self.__class__.__name__.lower()
+
+class Recorder(LearnerCallback):
+    def __init__(self, learn):
+        super().__init__(learn)
         self.opt = self.learn.opt
         self.train_dl = self.learn.data.train_dl
-        self.learn.recorder = self
 
     def on_train_begin(self, pbar, metrics, **kwargs):
         self.pbar = pbar
@@ -407,9 +414,10 @@ def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,flo
                              pct_start=pct_start, pct_end=pct_end)]
     learn.fit(cyc_len, max_lr, wd=wd, callbacks=cbs)
 
-class LRFinder(Callback):
+class LRFinder(LearnerCallback):
     def __init__(self, learn, start_lr=1e-5, end_lr=10, num_it=200):
-        self.learn,self.data = learn,learn.data
+        super().__init__(learn)
+        self.data = learn.data
         self.sched = Stepper((start_lr, end_lr), num_it, annealing_exp)
         #To avoid validating if the train_dl has less than num_it batches, we put aside the valid_dl and remove it
         #during the call to fit.
@@ -441,10 +449,7 @@ def lr_find(learn, start_lr=1e-5, end_lr=10, num_it=100, **kwargs):
     a = int(np.ceil(num_it/len(learn.data.train_dl)))
     learn.fit(a, start_lr, callbacks=[cb], **kwargs)
 
-@dataclass
-class ShowGraph(Callback):
-    learn:Learner
-
+class ShowGraph(LearnerCallback):
     def on_epoch_end(self, n_epochs, last_metrics, **kwargs):
         if last_metrics is not None:
             rec = learn.recorder
