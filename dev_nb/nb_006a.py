@@ -5,3 +5,4 @@
         # file to edit: /data1/jhoward/git/fastai_v1/dev_nb/006a_unet.ipynb
 
 from nb_006 import *
+import gc
