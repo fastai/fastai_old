@@ -53,6 +53,18 @@ def ResizeBatch(*size): return Lambda(lambda x: x.view((-1,)+size))
 def Flatten(): return Lambda(lambda x: x.view((x.size(0), -1)))
 def PoolFlatten(): return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
+def conv2d(ni, nf, ks=3, stride=1, padding=None):
+    if padding is None and stride==1: padding = ks//2
+    return nn.Conv2d(ni, nf, kernel_size=ks, stride=stride, padding=padding)
+
+def conv2d_relu(ni, nf, ks=3, stride=1, padding=None, bn=False):
+    layers = [conv2d(ni, nf, ks=ks, stride=stride, padding=padding), nn.ReLU()]
+    if bn: layers.append(nn.BatchNorm2d(nf))
+    return nn.Sequential(*layers)
+
+def conv2d_trans(ni, nf, ks=2, stride=2, padding=0):
+    return nn.ConvTranspose2d(ni, nf, kernel_size=ks, stride=stride, padding=padding)
+
 @dataclass
 class DatasetTfm(Dataset):
     ds: Dataset
@@ -74,10 +86,14 @@ def simple_cnn(actns, kernel_szs, strides):
     layers.append(PoolFlatten())
     return nn.Sequential(*layers)
 
-default_device = torch.device('cuda')
+def ifnone(a,b):
+    "`a` if its not None, otherwise `b`"
+    return b if a is None else a
+
+default_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 def to_device(b, device):
-    if device is None: device=default_device
+    device = ifnone(device, default_device)
     if is_listy(b): return [to_device(o, device) for o in b]
     return b.to(device)
 
