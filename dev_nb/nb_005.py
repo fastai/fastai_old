@@ -134,50 +134,26 @@ class HookCallback(LearnerCallback):
     def __init__(self, learn, modules=None, do_remove=True):
         super().__init__(learn)
         self.modules,self.do_remove = modules,do_remove
-        self.hooks = []
 
     def on_train_begin(self, **kwargs):
-        self.hooks = []
-        modules = self.modules
-        if not modules:
-            modules = [m for m in flatten_model(self.learn.model)
-                       if hasattr(m, 'weight')]
-        for module in modules:
-            func = self.hook(module)
-            self.hooks.append(module.register_forward_hook(func))
-
-    def remove(self):
-        for hook in self.hooks: hook.remove()
-        self.hooks=[]
+        if not self.modules:
+            self.modules = [m for m in flatten_model(self.learn.model)
+                            if hasattr(m, 'weight')]
+        self.hooks = Hooks(self.modules, self.hook)
 
     def on_train_end(self, **kwargs):
         if self.do_remove: self.remove()
 
+    def remove(self): self.hooks.remove
     def __del__(self): self.remove()
 
-class ActivationsCallback(HookCallback):
-    def hook(self, module):
-        def _hook(m,i,o): self.outputs[module]=o.detach()
-        return _hook
-
+class ActivationStats(HookCallback):
     def on_train_begin(self, **kwargs):
         super().on_train_begin(**kwargs)
-        self.outputs = {}
+        self.stats = []
 
-class ActivationStats(ActivationsCallback):
-    def on_train_begin(self, **kwargs):
-        super().on_train_begin(**kwargs)
-        self.means,self.stds = [],[]
+    def hook(self, m,i,o): return o.mean().item(),o.std().item()
+    def on_batch_end(self, **kwargs): self.stats.append(self.hooks.stored)
+    def on_train_end(self, **kwargs): self.stats = tensor(self.stats).permute(2,1,0)
 
-    def on_batch_end(self, **kwargs):
-        means,stds = zip(*[(value.mean().item(),value.std().item())
-                           for key, value in self.outputs.items()])
-        self.means.append(means)
-        self.stds.append (stds )
-
-    def on_train_end(self, **kwargs):
-        means,stds = {},{}
-        for (i,(k,v)) in enumerate(self.outputs.items()):
-            means[k] = [o[i] for o in self.means]
-            stds[k]  = [o[i] for o in self.stds ]
-        self.means,self.stds = means,stds
+def idx_dict(a): return {v:k for k,v in enumerate(a)}
