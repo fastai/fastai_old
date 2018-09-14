@@ -48,8 +48,7 @@ class DatasetTfm(Dataset):
         if self.tfm_y: y = apply_tfms(self.tfms, y, **self.y_kwargs)
         return x, y
 
-    @property
-    def c(self): return self.ds.c
+    def __getattr__(self,k): return getattr(self.ds, k)
 
 import nb_002b,nb_005
 nb_002b.DatasetTfm = DatasetTfm
