@@ -191,7 +191,7 @@ class Learner():
         self.freeze_to(-1)
 
     def unfreeze(self): self.freeze_to(0)
-
+    def __del__(self): del(self.model, self.data)
     def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
 
