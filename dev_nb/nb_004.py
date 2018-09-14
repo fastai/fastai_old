@@ -193,7 +193,7 @@ def loss_batch(model, xb, yb, loss_fn=None, opt=None, cb_handler=None, metrics=N
         cb_handler.on_step_end()
         opt.zero_grad()
 
-    return (loss.detach(),) + tuple(mets) + (xb[0].shape[0],)
+    return (loss.detach(),) + tuple(mets) + (yb[0].shape[0],)
 
 def validate(model, dl, loss_fn=None, metrics=None, cb_handler=None, pbar=None):
     model.eval()

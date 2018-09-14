@@ -27,7 +27,7 @@ def loss_batch(model, xb, yb, loss_fn, opt=None):
         opt.step()
         opt.zero_grad()
 
-    return loss.item(), len(xb)
+    return loss.item(), len(yb)
 
 def fit(epochs, model, loss_fn, opt, train_dl, valid_dl):
     for epoch in range(epochs):
@@ -117,7 +117,7 @@ class DataBunch():
 
     @classmethod
     def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, device=None, **kwargs):
-        return cls(DeviceDataLoader.create(DatasetTfm(train_ds,train_tfm), bs, shuffle=True, device=device,**kwargs),
+        return cls(DeviceDataLoader.create(DatasetTfm(train_ds, train_tfm), bs,   shuffle=True,  device=device, **kwargs),
                    DeviceDataLoader.create(DatasetTfm(valid_ds, valid_tfm), bs*2, shuffle=False, device=device, **kwargs),
                    device=device)
 
