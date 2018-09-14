@@ -100,7 +100,11 @@ class OptimWrapper():
         if is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
         return val
 
-flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if len(list(l.children())) else [l]
+def children(m): return list(m.children())
+def num_children(m): return len(children(m))
+def range_children(m): return range(num_children(m))
+
+flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if num_children(l) else [l]
 def first_layer(m): return flatten_model(m)[0]
 
 def split_model_idx(model, idxs):
