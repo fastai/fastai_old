@@ -107,17 +107,19 @@ def create_head(nf, nc, lin_ftrs=None, ps=0.2):
     return nn.Sequential(*layers)
 
 def cond_init(m, init_fn):
-    if not isinstance(m, bn_types):
+    if (not isinstance(m, bn_types)) and requires_grad(m):
         if hasattr(m, 'weight'): init_fn(m.weight)
         if hasattr(m, 'bias') and hasattr(m.bias, 'data'): m.bias.data.fill_(0.)
 
-def apply_init(m, init_fn):
-    m.apply(lambda x: cond_init(x, init_fn))
+def apply_leaf(m, f):
+    c = children(m)
+    if isinstance(m, nn.Module): f(m)
+    for l in c: apply_leaf(l,f)
 
-def _set_mom(m, mom):
-    if isinstance(m, bn_types): m.momentum=mom
+def apply_init(m, init_fn): apply_leaf(m, partial(cond_init, init_fn=init_fn))
 
-def set_mom(m, mom): m.apply(lambda x: _set_mom(x, mom))
+def _init(learn, init): apply_init(learn.model, init)
+Learner.init = _init
 
 class ConvLearner(Learner):
     def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.2, custom_head=None, **kwargs):
@@ -129,6 +131,39 @@ class ConvLearner(Learner):
         self.split([model[1]])
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
+
+class Hook():
+    def __init__(self, m, hook_func, is_forward=True):
+        self.hook_func,self.stored = hook_func,None
+        f = m.register_forward_hook if is_forward else m.register_backward_hook
+        self.hook = f(self.hook_fn)
+        self.removed = False
+
+    def hook_fn(self, module, input, output):
+        input  = (o.detach() for o in input ) if is_listy(input ) else input.detach()
+        output = (o.detach() for o in output) if is_listy(output) else output.detach()
+        self.stored = self.hook_func(module, input, output)
+
+    def remove(self):
+        if not self.removed:
+            self.hook.remove()
+            self.removed=True
+
+class Hooks():
+    def __init__(self, ms, hook_func, is_forward=True):
+        self.hooks = [Hook(m, hook_func, is_forward) for m in ms]
+
+    def __getitem__(self,i): return self.hooks[i]
+    def __len__(self): return len(self.hooks)
+    def __iter__(self): return iter(self.hooks)
+    @property
+    def stored(self): return [o.stored for o in self]
+
+    def remove(self):
+        for h in self.hooks: h.remove()
+
+def hook_output (module):  return Hook (module,  lambda m,i,o: o)
+def hook_outputs(modules): return Hooks(modules, lambda m,i,o: o)
 
 class HookCallback(LearnerCallback):
     def __init__(self, learn, modules=None, do_remove=True):
@@ -157,3 +192,6 @@ class ActivationStats(HookCallback):
     def on_train_end(self, **kwargs): self.stats = tensor(self.stats).permute(2,1,0)
 
 def idx_dict(a): return {v:k for k,v in enumerate(a)}
+
+def get_preds(model, dl, pbar=None):
+    return [torch.cat(o).cpu() for o in validate(model, dl, pbar=pbar)]
