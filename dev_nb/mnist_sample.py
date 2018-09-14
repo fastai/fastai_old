@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn,optim,tensor
-from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
 
 
@@ -48,5 +47,5 @@ class WrappedDataLoader():
 
     def __iter__(self):
         batches = iter(self.dl)
-        for x,y in batches: yield(self.func(x), y)
+        for b in batches: yield(self.func(*b))
 
