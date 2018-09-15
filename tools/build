@@ -9,7 +9,7 @@ from pathlib import Path
 from pdb import set_trace
 
 if Path.cwd().name != 'dev_nb': os.chdir('dev_nb')
-path = Path.cwd()
+path = Path('.')
 sys.path.append('.')
 import notebook2script
 
