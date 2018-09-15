@@ -318,7 +318,7 @@ class Recorder(LearnerCallback):
             ax.plot(val_iter, values)
 
 def accuracy(out, yb):
-    preds = torch.max(out, dim=1)[1]
+    preds = torch.argmax(out, dim=1)
     return (preds==yb).float().mean()
 
 AdamW = partial(optim.Adam, betas=(0.9,0.99))
