@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+# run specific files:
+# tools/sync-outputs-version -v dev_nb/001b_fit.ipynb
+#
+# run all files:
+# tools/sync-outputs-version -v
+
+# Since we don't store outputs for code notebooks to make the
+# development process easier, we would like to store a copy of such
+# notebooks with their outputs under dev_nb/run/, which would be updated
+# occasionally.
+#
+# they will have a disclaimer that they are potentially outdated
+# copies.
+#
+# it's difficult to derive automatically when we have a fully executed
+# copy of dev_nb/foo.ipynb that can be committed. So we will need to
+# work out the logic here. The starting criteria is having the last
+# code cell with `outputs`.
+#
+# also need to support black/white lists to never copy some notebooks
+#
+# Maybe:
+#
+# run the notebooks:
+# jupyter nbconvert --execute --to notebook --inplace XXX.ipynb
+
+import sys, io, os, os.path, argparse, json
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', '--verbose', action="store_true", help="enable verbose trace")
+parser.add_argument('files', nargs='*', help='Specific files to process')
+args = parser.parse_args()
+
+def trace(msg):
+    if not args.verbose: return
+    print(msg)
+
+def add_disclaimer(s, fname):
+    s['cells'].insert(0, {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [ f"<span style='color:green'>**note**: This version of the notebook with outputs has been made available for your convenience. Chances are that it's not up to date. For the latest version always check the original `dev_nb/{fname}` notebook.\n\nAlso please do not attempt to modify or submit PRs for this version of the notebooks - always use the original instead.</span>" ]
+    })
+
+def check(file_in, file_out, fname):
+    with io.open(file_in, 'r', encoding='utf-8') as f: s = json.load(f)
+
+    # current logic for knowing when the original is suitable for
+    # being committed with its outputs is to check the last code cell
+    # - this is probably insufficient of a proof that the notebook is
+    # eligible to be shared, so use with care.
+    #
+    # XXX: but we don't always have outputs from running a code cell,
+    # so perhaps checking execution_count to be non-null instead?
+    is_complete = 0
+    for c in reversed(s['cells']):
+        if c["cell_type"] == "code":
+
+            # skip over empty code cells
+            if not len(c["source"]): continue
+
+            if len(c["outputs"]):
+                is_complete += 1
+                trace("  + last code cell with code has outputs")
+                break
+            else:
+                trace("  - last code cell with code has no outputs")
+                #print("skipping: incomplete run")
+                return 0
+
+    # perhaps another good check is to see that all execution_count
+    # are in a sequence? which would indicate that the developer
+    # didn't go back to re-run something earlier in the notebook,
+    # making it inconsistent?
+    last_exec_cnt = 0
+    for c in s['cells']:
+        if c["cell_type"] == "code":
+
+            # skip over empty code cells
+            if not len(c["source"]): continue
+
+            cur_exec_cnt = c["execution_count"]
+            #print(cur_exec_cnt)
+            if cur_exec_cnt == None:
+                trace("  - found a cell with execution_count == null")
+                #print("skipping: incomplete run")
+                return 0
+
+            if last_exec_cnt == 0:
+                last_exec_cnt = cur_exec_cnt
+            elif last_exec_cnt+1 != cur_exec_cnt:
+                trace("  - non-contiguous execution_count")
+                #print("  - skipping: non-contiguous run")
+                return 0
+            last_exec_cnt = cur_exec_cnt
+
+    trace("  + execution_count appear to be contiguous")
+
+    add_disclaimer(s, fname)
+
+    print(f"=> {fname} appears to be run to a completion, OK to copy")
+
+    x = json.dumps(s, sort_keys=True, indent=1, ensure_ascii=False)
+    with io.open(file_out, 'w', encoding='utf-8') as f:
+      f.write(x)
+      f.write("\n")
+
+    return is_complete
+
+
+
+if Path.cwd().name != 'dev_nb': os.chdir('dev_nb')
+sys.path.append('.')
+
+path_in  = Path.cwd()
+path_out = path_in/"run"
+
+# handle optional dev_nb/ prefix in explicit filenames
+if args.files: args.files = [ Path(Path(f).name) for f in args.files ]
+
+files = args.files if args.files else sorted(path_in.glob('0*ipynb'))
+
+success_cnt = 0
+for file_in in files:
+    fname = file_in.name
+    trace(f"Checking {fname}:")
+
+    file_out = path_out.joinpath(fname)
+
+    # skip unmodified notebooks
+    if file_out.exists():
+        in_mod  = os.path.getmtime(str(file_in))
+        out_mod = os.path.getmtime(str(file_out))
+        if in_mod < out_mod:
+            trace("  - is not modified")
+            continue
+
+    success_cnt += check(str(file_in), str(file_out), fname)
+
+if success_cnt: print(f"Copied to dev_nb/run/ {success_cnt} notebook(s)")
+print('All is up-to-date')
