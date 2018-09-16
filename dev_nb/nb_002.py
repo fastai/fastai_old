@@ -24,17 +24,12 @@ def image2np(image):
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
-def show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
+def show_image(img, ax=None, figsize=(3,3), hide_axis=True, title=None, cmap='binary', alpha=None):
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
+    if title: ax.set_title(title)
     return ax
-
-class Image():
-    def __init__(self, px): self.px = px
-    def show(self, ax=None, **kwargs): return show_image(self.px, ax=ax, **kwargs)
-    @property
-    def data(self): return self.px
 
 def find_classes(folder):
     classes = [d for d in folder.iterdir()
