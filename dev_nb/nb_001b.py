@@ -7,13 +7,14 @@
 import pickle, gzip, torch, math, numpy as np, torch.nn.functional as F
 from pathlib import Path
 from IPython.core.debugger import set_trace
-from torch import nn, optim, tensor
-
-from torch.utils.data import TensorDataset, Dataset, DataLoader
 from dataclasses import dataclass
 from typing import Any, Collection, Callable
 from functools import partial, reduce
 from numbers import Number
+
+from numpy import array
+from torch import nn, optim, tensor
+from torch.utils.data import TensorDataset, Dataset, DataLoader
 
 def is_listy(x)->bool: return isinstance(x, (tuple,list))
 
@@ -54,7 +55,7 @@ def Flatten(): return Lambda(lambda x: x.view((x.size(0), -1)))
 def PoolFlatten(): return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
 def conv2d(ni, nf, ks=3, stride=1, padding=None):
-    if padding is None and stride==1: padding = ks//2
+    if padding is None: padding = ks//2
     return nn.Conv2d(ni, nf, kernel_size=ks, stride=stride, padding=padding)
 
 def conv2d_relu(ni, nf, ks=3, stride=1, padding=None, bn=False):
@@ -77,11 +78,8 @@ class DatasetTfm(Dataset):
         if self.tfm is not None: x = self.tfm(x)
         return x,y
 
-def conv2_relu(nif, nof, ks, stride):
-    return nn.Sequential(nn.Conv2d(nif, nof, ks, stride, padding=ks//2), nn.ReLU())
-
 def simple_cnn(actns, kernel_szs, strides):
-    layers = [conv2_relu(actns[i], actns[i+1], kernel_szs[i], stride=strides[i])
+    layers = [conv2d_relu(actns[i], actns[i+1], kernel_szs[i], stride=strides[i])
         for i in range(len(strides))]
     layers.append(PoolFlatten())
     return nn.Sequential(*layers)
