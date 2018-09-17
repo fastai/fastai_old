@@ -1,35 +1,39 @@
 #!/usr/bin/env python
 
-# run specific files:
+# Copy specified notebooks to dev_nb/run if they have been executed completely:
 # tools/sync-outputs-version -v dev_nb/001b_fit.ipynb
 #
-# run all files:
+# same for all notebooks under dev_nb/
 # tools/sync-outputs-version -v
+#
+# execute one or more notebooks and copy on success:
+# tools/sync-outputs-version -e -v dev_nb/001a_nn_basics.ipynb dev_nb/001b_fit.ipynb
+#
+# drop -v if you want quiet
 
 # Since we don't store outputs for code notebooks to make the
 # development process easier, we would like to store a copy of such
 # notebooks with their outputs under dev_nb/run/, which would be updated
 # occasionally.
 #
-# they will have a disclaimer that they are potentially outdated
-# copies.
+# This script checks whether the notebook is suitable to be shown to
+# users, by making sure it has been executed fully. i.e. the notebook
+# needs to be run from the beginning to the end to fit the bill.
 #
-# it's difficult to derive automatically when we have a fully executed
-# copy of dev_nb/foo.ipynb that can be committed. So we will need to
-# work out the logic here. The starting criteria is having the last
-# code cell with `outputs`.
-#
-# also need to support black/white lists to never copy some notebooks
 #
 # Maybe:
 #
 # run the notebooks:
 # jupyter nbconvert --execute --to notebook --inplace XXX.ipynb
 
-import sys, io, os, os.path, argparse, json
+# list of notebooks to never copy over
+blacklist = ["099_skip_me.ipynb"]
+
+import sys, io, os, os.path, argparse, json, datetime, subprocess, time
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-e', '--execute', action="store_true", help="execute notebooks and copy on success")
 parser.add_argument('-v', '--verbose', action="store_true", help="enable verbose trace")
 parser.add_argument('files', nargs='*', help='Specific files to process')
 args = parser.parse_args()
@@ -39,78 +43,73 @@ def trace(msg):
     print(msg)
 
 def add_disclaimer(s, fname):
-    s['cells'].insert(0, {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [ f"<span style='color:green'>**note**: This version of the notebook with outputs has been made available for your convenience. Chances are that it's not up to date. For the latest version always check the original `dev_nb/{fname}` notebook.\n\nAlso please do not attempt to modify or submit PRs for this version of the notebooks - always use the original instead.</span>" ]
-    })
+    date = datetime.datetime.today().strftime('%Y-%m-%d')
+    text = f"""<span style='color:green'>**note**: This version of the notebook with outputs preserved has been made available for your convenience. </span>
 
-def check(file_in, file_out, fname):
+<span style='color:green'>Chances are that it's not up to date. For the latest version always check the original `dev_nb/{fname}` notebook.</span>
+
+<span style='color:green'>Also please do not attempt to modify or submit PRs for this version of the notebooks - always use the original instead.</span>
+
+<span style='color:green'>Generated on {date}.</span>
+"""
+    cell = { "cell_type": "markdown", "metadata": {}, "source": [text]}
+    # add the disclaimer on both ends
+    s['cells'].insert(0, cell)
+    s['cells'].append(cell)
+
+def check_nb(file_in, file_out, fname):
+    """ if nb appears to be executed fully push a disclaimer cell and return 1, return 0 otherwise """
     with io.open(file_in, 'r', encoding='utf-8') as f: s = json.load(f)
 
-    # current logic for knowing when the original is suitable for
-    # being committed with its outputs is to check the last code cell
-    # - this is probably insufficient of a proof that the notebook is
-    # eligible to be shared, so use with care.
+    # 1. check that all execution_count values are in a sequence, to
+    # ensure that the developer didn't go back to re-run something
+    # earlier in the notebook, making it inconsistent.
     #
-    # XXX: but we don't always have outputs from running a code cell,
-    # so perhaps checking execution_count to be non-null instead?
-    is_complete = 0
-    for c in reversed(s['cells']):
-        if c["cell_type"] == "code":
-
-            # skip over empty code cells
-            if not len(c["source"]): continue
-
-            if len(c["outputs"]):
-                is_complete += 1
-                trace("  + last code cell with code has outputs")
-                break
-            else:
-                trace("  - last code cell with code has no outputs")
-                #print("skipping: incomplete run")
-                return 0
-
-    # perhaps another good check is to see that all execution_count
-    # are in a sequence? which would indicate that the developer
-    # didn't go back to re-run something earlier in the notebook,
-    # making it inconsistent?
+    # 2. check that all code cell with code have been executed
     last_exec_cnt = 0
     for c in s['cells']:
         if c["cell_type"] == "code":
 
-            # skip over empty code cells
-            if not len(c["source"]): continue
+            # skip over unexecuted code cells with no code in them
+            if not c["execution_count"] and not len(c["source"]): continue
 
             cur_exec_cnt = c["execution_count"]
             #print(cur_exec_cnt)
             if cur_exec_cnt == None:
-                trace("  - found a cell with execution_count == null")
-                #print("skipping: incomplete run")
+                trace("  - found a code cell that wasn't executed")
                 return 0
 
-            if last_exec_cnt == 0:
-                last_exec_cnt = cur_exec_cnt
-            elif last_exec_cnt+1 != cur_exec_cnt:
+            if last_exec_cnt and last_exec_cnt+1 != cur_exec_cnt:
                 trace("  - non-contiguous execution_count")
-                #print("  - skipping: non-contiguous run")
                 return 0
             last_exec_cnt = cur_exec_cnt
 
-    trace("  + execution_count appear to be contiguous")
+    trace("  + execution_count appears to be contiguous, all cells were executed")
 
     add_disclaimer(s, fname)
-
-    print(f"=> {fname} appears to be run to a completion, OK to copy")
 
     x = json.dumps(s, sort_keys=True, indent=1, ensure_ascii=False)
     with io.open(file_out, 'w', encoding='utf-8') as f:
       f.write(x)
       f.write("\n")
 
-    return is_complete
+    return 1
 
+def execute_nb(file_in):
+    fname = file_in.name
+    print(f"Executing: {fname}")
 
+    cmd = f"jupyter nbconvert --execute --to notebook --inplace {file_in}"
+    #print(f"Executing: {cmd}")
+    start = time.time()
+    result = subprocess.run(cmd.split(), shell=False, check=False, stderr=subprocess.PIPE)
+    end = time.time()
+    if result.returncode == 0:
+        print(f"  + {fname} successfully executed in {round(end-start, 2)} seconds")
+    else:
+        print(f"  - Failed to execute f{fname}")
+        #trace(f"Error: {result.stderr.decode('utf-8')}")
+        return 0
 
 if Path.cwd().name != 'dev_nb': os.chdir('dev_nb')
 sys.path.append('.')
@@ -118,27 +117,46 @@ sys.path.append('.')
 path_in  = Path.cwd()
 path_out = path_in/"run"
 
+# since it can take really long to run all notebooks, chances are that
+# noone will want to run them all by default
+if args.execute and not args.files:
+    print("When using -e/--execute pass the *.ipynb files explicitly", file=sys.stderr)
+    sys.exit(1)
+
 # handle optional dev_nb/ prefix in explicit filenames
 if args.files: args.files = [ Path(Path(f).name) for f in args.files ]
 
 files = args.files if args.files else sorted(path_in.glob('0*ipynb'))
 
-success_cnt = 0
+# execute
+if args.execute:
+    print("Executing notebooks, may take a long time!")
+    for file_in in files: execute_nb(file_in)
+    print("\n")
+
+# check
+is_nb_fit = 0
+fit_nbs = []
 for file_in in files:
     fname = file_in.name
     trace(f"Checking {fname}:")
-
     file_out = path_out.joinpath(fname)
+
+    # skip blacklisted notebooks
+    if fname in blacklist: trace("  - blacklisted"); continue
 
     # skip unmodified notebooks
     if file_out.exists():
         in_mod  = os.path.getmtime(str(file_in))
         out_mod = os.path.getmtime(str(file_out))
-        if in_mod < out_mod:
-            trace("  - is not modified")
-            continue
+        if in_mod < out_mod: trace("  - is not modified"); continue
 
-    success_cnt += check(str(file_in), str(file_out), fname)
+    is_nb_fit = check_nb(str(file_in), str(file_out), fname)
+    if is_nb_fit: fit_nbs.append(fname)
 
-if success_cnt: print(f"Copied to dev_nb/run/ {success_cnt} notebook(s)")
-print('All is up-to-date')
+if fit_nbs:
+    print(f"Copied to dev_nb/run/ {len(fit_nbs)} notebook(s):")
+    print(*map(lambda s: f"  {s}", fit_nbs), sep="\n")
+else:
+    print("No notebooks were copied to dev_nb/run/.")
+    if not args.verbose: print("Re-run with -v for diagnostics.")
