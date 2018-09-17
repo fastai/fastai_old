@@ -21,6 +21,12 @@ def convert_weights(wgts, stoi_wgts, itos_new):
     wgts['1.decoder.bias'] = new_b
     return wgts
 
+def lm_split(model):
+    "Splits a RNN model in groups."
+    groups = [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
+    groups.append(nn.Sequential(model[0].encoder, model[0].encoder_dp, model[1]))
+    return groups
+
 def save_encoder(learn, name):
     torch.save(learn.model[0].state_dict(), learn.path/f'{name}.pth')
 
@@ -113,6 +119,13 @@ def get_rnn_classifier(bptt, max_seq, n_class, vocab_sz, emb_sz, n_hid, n_layers
     rnn_enc = MultiBatchRNNCore(bptt, max_seq, vocab_sz, emb_sz, n_hid, n_layers, pad_token=pad_token, bidir=bidir,
                       qrnn=qrnn, hidden_p=hidden_p, input_p=input_p, embed_p=embed_p, weight_p=weight_p)
     return SequentialRNN(rnn_enc, PoolingLinearClassifier(layers, drops))
+
+def rnn_classifier_split(model):
+    "Splits a RNN model in groups."
+    groups = [nn.Sequential(model[0].encoder, model[0].encoder_dp)]
+    groups += [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
+    groups.append(model[1])
+    return groups
 
 def load_encoder(learn, name):
     learn.model[0].load_state_dict(torch.load(learn.path/f'{name}.pth'))

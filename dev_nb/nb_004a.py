@@ -181,8 +181,8 @@ class Learner():
         self.opt = OptimWrapper.create(self.opt_fn, lr, self.layer_groups, wd=wd, true_wd=self.true_wd)
 
     def split(self, split_on):
-        if isinstance(split_on,Callable): split_on = split_on(self.model)
-        self.layer_groups = split_model(self.model, split_on)
+        if isinstance(split_on,Callable): self.layer_groups = split_on(self.model)
+        else: self.layer_groups = split_model(self.model, split_on)
 
     def freeze_to(self, n):
         for g in self.layer_groups[:n]:
