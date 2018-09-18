@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # Copy specified notebooks to dev_nb/snapshot if they have been executed completely:
-# tools/sync-outputs-version -v dev_nb/001b_fit.ipynb
+# tools/take-snapshot -v dev_nb/001b_fit.ipynb
 #
 # same for all notebooks under dev_nb/
-# tools/sync-outputs-version -v
+# tools/take-snapshot -v
 #
 # execute one or more notebooks and copy on success:
-# tools/sync-outputs-version -e -v dev_nb/001a_nn_basics.ipynb dev_nb/001b_fit.ipynb
+# tools/take-snapshot -e -v dev_nb/001a_nn_basics.ipynb dev_nb/001b_fit.ipynb
 #
 # drop -v if you want quiet
 
@@ -19,12 +19,6 @@
 # This script checks whether the notebook is suitable to be shown to
 # users, by making sure it has been executed fully. i.e. the notebook
 # needs to be run from the beginning to the end to fit the bill.
-#
-#
-# Maybe:
-#
-# run the notebooks:
-# jupyter nbconvert --execute --to notebook --inplace XXX.ipynb
 
 # list of notebooks to never copy over
 blacklist = ["099_skip_me.ipynb"]
