@@ -13,10 +13,10 @@ from torch import tensor, Tensor, FloatTensor, LongTensor, ByteTensor, DoubleTen
 from operator import itemgetter, attrgetter
 from numpy import cos, sin, tan, tanh, log, exp
 from dataclasses import field
-
 from functools import reduce
 from collections import defaultdict, abc, namedtuple, Iterable
 
+import mimetypes
 import abc
 from abc import abstractmethod, abstractproperty
 
@@ -37,9 +37,12 @@ def find_classes(folder):
     assert(len(classes)>0)
     return sorted(classes, key=lambda d: d.name)
 
-def get_image_files(c):
+image_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('image/'))
+
+def get_image_files(c, check_ext=True):
     return [o for o in list(c.iterdir())
-            if not o.name.startswith('.') and not o.is_dir()]
+            if not o.name.startswith('.') and not o.is_dir()
+           and (not check_ext or (o.suffix in image_extensions))]
 
 def pil2tensor(image):
     arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
@@ -50,15 +53,19 @@ def open_image(fn):
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
+def arrays_split(mask, *arrs):
+    mask = array(mask)
+    return list(zip(*[(a[mask],a[~mask]) for a in map(np.array, arrs)]))
+
 def random_split(valid_pct, *arrs):
-    is_test = np.random.uniform(size=(len(arrs[0]),)) < valid_pct
-    return list(zip(*[(a[~is_test],a[is_test]) for a in map(np.array, arrs)]))
+    is_train = np.random.uniform(size=(len(arrs[0]),)) > valid_pct
+    return arrays_split(is_train, *arrs)
 
 class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
     @property
     def c(self): return self.y.shape[-1] if len(self.y.shape)>1 else 1
-    def __repr__(self): return f'{type(self).__name__} of len {len(self.x)}'
+    def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
 
 class LabelDataset(DatasetBase):
     @property
@@ -74,22 +81,22 @@ class FilesDataset(LabelDataset):
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
     @staticmethod
-    def _folder_files(folder, label):
-        fnames = get_image_files(folder)
+    def _folder_files(folder, label, check_ext=True):
+        fnames = get_image_files(folder, check_ext=check_ext)
         return fnames,[label]*len(fnames)
 
     @classmethod
-    def from_single_folder(cls, folder, classes):
-        fns,labels = cls._folder_files(folder, classes[0])
+    def from_single_folder(cls, folder, classes, check_ext=True):
+        fns,labels = cls._folder_files(folder, classes[0], check_ext=check_ext)
         return cls(fns, labels, classes=classes)
 
     @classmethod
-    def from_folder(cls, folder, classes=None, valid_pct=0.):
+    def from_folder(cls, folder, classes=None, valid_pct=0., check_ext=True):
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
 
         fns,labels = [],[]
         for cl in classes:
-            f,l = cls._folder_files(folder/cl, cl)
+            f,l = cls._folder_files(folder/cl, cl, check_ext=check_ext)
             fns+=f; labels+=l
 
         if valid_pct==0.: return cls(fns, labels, classes=classes)
@@ -99,6 +106,9 @@ def logit(x):  return -(1/x-1).log()
 def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
 
 class ItemBase():
+    @property
+    @abstractmethod
+    def device(self): pass
     @property
     @abstractmethod
     def data(self): pass
@@ -125,6 +135,10 @@ class Image(ImageBase):
 
     @property
     def shape(self): return self._px.shape
+    @property
+    def size(self): return self.shape[-2:]
+    @property
+    def device(self): return self._px.device
 
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
@@ -169,8 +183,8 @@ class Image(ImageBase):
         return self
 
     def affine(self, func, *args, **kwargs):
-        m = func(*args, **kwargs)
-        self.affine_mat = self.affine_mat @ self._px.new(m)
+        m = tensor(func(*args, **kwargs)).to(self.device)
+        self.affine_mat = self.affine_mat @ m
         return self
 
     def resize(self, size):
@@ -181,7 +195,8 @@ class Image(ImageBase):
 
     @property
     def affine_mat(self):
-        if self._affine_mat is None: self._affine_mat = self._px.new(torch.eye(3))
+        if self._affine_mat is None:
+            self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
     @affine_mat.setter
     def affine_mat(self,v): self._affine_mat=v
