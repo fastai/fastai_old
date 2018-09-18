@@ -4,7 +4,7 @@
         #################################################
         # file to edit: dev_nb/005b_planet.ipynb
 
-from nb_005 import *
+from nb_005a import *
 import pandas as pd
 import csv
 from collections import OrderedDict
