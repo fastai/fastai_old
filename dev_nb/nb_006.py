@@ -99,6 +99,7 @@ def std_upsample_head(c, *nfs):
     )
 
 def dice(input, targs):
+    "dice coefficient metric for binary target"
     n = targs.shape[0]
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
@@ -111,3 +112,9 @@ def accuracy(input, targs):
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
     return (input==targs).float().mean()
+
+class CrossEntropyFlat(nn.CrossEntropyLoss):
+    "Same as `nn.CrossEntropyLoss`, but flattens input and target"
+    def forward(self, input, target):
+        n,c,*_ = input.shape
+        return super().forward(input.view(n, c, -1), target.view(n, -1))
