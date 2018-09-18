@@ -208,6 +208,7 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
 
     exception=False
     try:
+        set_trace()
         for epoch in pbar:
             model.train()
             cb_handler.on_epoch_begin()
@@ -227,6 +228,7 @@ def fit(epochs, model, loss_fn, opt, data, callbacks=None, metrics=None):
             else: val_metrics=None
             if cb_handler.on_epoch_end(val_metrics): break
     except Exception as e:
+        set_trace()
         exception = e
         raise e
     finally: cb_handler.on_train_end(exception)
