@@ -106,11 +106,11 @@ def dice(input, targs):
     union = (input+targs).sum().float()
     return 2. * intersect / union
 
-def accuracy(input, yb):
+def accuracy(input, targs):
     n = targs.shape[0]
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
-    return (i==yb).float().mean()
+    return (input==targs).float().mean()
 
 class CrossEntropyFlat(nn.CrossEntropyLoss):
     def forward(self, input, target):
