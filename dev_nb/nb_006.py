@@ -111,8 +111,3 @@ def accuracy(input, targs):
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
     return (input==targs).float().mean()
-
-class CrossEntropyFlat(nn.CrossEntropyLoss):
-    def forward(self, input, target):
-        n,c,*_ = input.shape
-        return super().forward(input.view(n, c, -1), target.view(n, -1))
