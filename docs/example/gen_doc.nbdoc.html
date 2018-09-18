@@ -11861,10 +11861,9 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=create_anchor></a><strong>create_anchor</strong></p>
-<p>Arguments:</p>
+<p><a id=create_anchor></a><strong>create_anchor</strong>(<em>name</em>)</p>
 <ul>
-<li><strong>name</strong>: the name of the anchor</li>
+<li><em>name</em>: the name of the anchor</li>
 </ul>
 
 </div>
@@ -11898,11 +11897,10 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=get_class_toc></a><strong>get_class_toc</strong></p>
-<p>Arguments:</p>
+<p><a id=get_class_toc></a><strong>get_class_toc</strong>(<em>mod_name</em>, <em>cls_name</em>)</p>
 <ul>
-<li><strong>mod_name</strong>: the name of the module containing the class</li>
-<li><strong>cls_name</strong>: the name of the class</li>
+<li><em>mod_name</em>: the name of the module containing the class</li>
+<li><em>cls_name</em>: the name of the class</li>
 </ul>
 
 </div>
@@ -11924,7 +11922,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_class_toc</span><span class="p">(</span><span class="s1">&#39;torch.nn&#39;</span><span class="p">,</span><span class="s1">&#39;Module&#39;</span><span class="p">)</span>
@@ -11967,9 +11965,11 @@ div#notebook {
 <li><a href="#Module.state_dict">Module.state_dict</a></li>
 <li><a href="#Module._load_from_state_dict">Module._load_from_state_dict</a></li>
 <li><a href="#Module.load_state_dict">Module.load_state_dict</a></li>
+<li><a href="#Module._named_members">Module._named_members</a></li>
 <li><a href="#Module.parameters">Module.parameters</a></li>
 <li><a href="#Module.named_parameters">Module.named_parameters</a></li>
-<li><a href="#Module._all_buffers">Module._all_buffers</a></li>
+<li><a href="#Module.buffers">Module.buffers</a></li>
+<li><a href="#Module.named_buffers">Module.named_buffers</a></li>
 <li><a href="#Module.children">Module.children</a></li>
 <li><a href="#Module.named_children">Module.named_children</a></li>
 <li><a href="#Module.modules">Module.modules</a></li>
@@ -12002,10 +12002,9 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=get_fn_link></a><strong>get_fn_link</strong></p>
-<p>Arguments:</p>
+<p><a id=get_fn_link></a><strong>get_fn_link</strong>(<em>ft</em>)</p>
 <ul>
-<li><strong>ft</strong>: the name of a function</li>
+<li><em>ft</em>: the name of a function</li>
 </ul>
 
 </div>
@@ -12027,7 +12026,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">gen_doc.gen_notebooks</span> <span class="k">import</span> <span class="n">create_module_page</span>
@@ -12044,7 +12043,7 @@ div#notebook {
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[13]:</div>
+<div class="prompt output_prompt">Out[20]:</div>
 
 
 
@@ -12079,7 +12078,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc_from_name</span><span class="p">(</span><span class="s1">&#39;gen_doc.nbdoc&#39;</span><span class="p">,</span><span class="s1">&#39;get_module_toc&#39;</span><span class="p">,</span> <span class="n">arg_comments</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;mod_name&#39;</span><span class="p">:</span><span class="s1">&#39;the name of the module&#39;</span><span class="p">})</span>
@@ -12100,10 +12099,9 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=get_module_toc></a><strong>get_module_toc</strong></p>
-<p>Arguments:</p>
+<p><a id=get_module_toc></a><strong>get_module_toc</strong>(<em>mod_name</em>)</p>
 <ul>
-<li><strong>mod_name</strong>: the name of the module</li>
+<li><em>mod_name</em>: the name of the module</li>
 </ul>
 
 </div>
@@ -12125,7 +12123,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc_from_name</span><span class="p">(</span><span class="s1">&#39;gen_doc.nbdoc&#39;</span><span class="p">,</span><span class="s1">&#39;show_doc&#39;</span><span class="p">,</span>
@@ -12151,14 +12149,13 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=show_doc></a><strong>show_doc</strong></p>
-<p>Arguments:</p>
+<p><a id=show_doc></a><strong>show_doc</strong>(<em>elt</em>, <em>doc_string</em>=True, <em>full_name</em>=None, <em>arg_comments</em>={}, <em>alt_doc_string</em>=)</p>
 <ul>
-<li><strong>elt</strong>: the python function or class instance you want the doc of</li>
-<li><strong>doc_string</strong>: decides if you show the doc string or not, <em>default True</em></li>
-<li><strong>full_name</strong>: the full name of the function, <em>default None</em></li>
-<li><strong>arg_comments</strong>: a dictionnary adding comments for each argument, <em>default {}</em></li>
-<li><strong>alt_doc_string</strong>: an additional text to display after the doc string (or in replacement if doc_string is False), <em>default </em></li>
+<li><em>elt</em>: the python function or class instance you want the doc of</li>
+<li><em>doc_string</em>: decides if you show the doc string or not</li>
+<li><em>full_name</em>: the full name of the function</li>
+<li><em>arg_comments</em>: a dictionnary adding comments for each argument</li>
+<li><em>alt_doc_string</em>: an additional text to display after the doc string (or in replacement if doc_string is False)</li>
 </ul>
 
 </div>
@@ -12180,7 +12177,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">create_module_page</span><span class="p">)</span>
@@ -12201,13 +12198,8 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=create_module_page></a><strong>create_module_page</strong></p>
-<p>Arguments:</p>
-<ul>
-<li><strong>mod_name</strong></li>
-<li><strong>dest_path</strong></li>
-</ul>
-<p>Creates the documentation notebook of a given module.</p>
+<p><a id=create_module_page></a><strong>create_module_page</strong>(<em>mod_name</em>, <em>dest_path</em>)</p>
+<p>Creates the documentation notebook of a given module</p>
 
 </div>
 
@@ -12229,14 +12221,13 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=show_doc_from_name></a><strong>show_doc_from_name</strong></p>
-<p>Arguments:</p>
+<p><a id=show_doc_from_name></a><strong>show_doc_from_name</strong>(<em>mod_name</em>, <em>ft_name</em>, <em>doc_string</em>=True, <em>arg_comments</em>={}, <em>alt_doc_string</em>=)</p>
 <ul>
-<li><strong>mod_name</strong>: the name of the module</li>
-<li><strong>ft_name</strong>: the name of the function</li>
-<li><strong>doc_string</strong>: decides if you show the doc string or not, <em>default True</em></li>
-<li><strong>arg_comments</strong>: a dictionnary adding comments for each argument, <em>default {}</em></li>
-<li><strong>alt_doc_string</strong>: an additional text to display after the doc string (or in replacement if doc_string is False), <em>default </em></li>
+<li><em>mod_name</em>: the name of the module</li>
+<li><em>ft_name</em>: the name of the function</li>
+<li><em>doc_string</em>: decides if you show the doc string or not</li>
+<li><em>arg_comments</em>: a dictionnary adding comments for each argument</li>
+<li><em>alt_doc_string</em>: an additional text to display after the doc string (or in replacement if doc_string is False)</li>
 </ul>
 
 </div>
@@ -12269,10 +12260,9 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=show_video></a><strong>show_video</strong></p>
-<p>Arguments:</p>
+<p><a id=show_video></a><strong>show_video</strong>(<em>url</em>)</p>
 <ul>
-<li><strong>url</strong>: the url of the video</li>
+<li><em>url</em>: the url of the video</li>
 </ul>
 
 </div>
@@ -12304,11 +12294,10 @@ div#notebook {
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<p><a id=show_video_from_youtube></a><strong>show_video_from_youtube</strong></p>
-<p>Arguments:</p>
+<p><a id=show_video_from_youtube></a><strong>show_video_from_youtube</strong>(<em>code</em>, <em>start</em>=0)</p>
 <ul>
-<li><strong>code</strong>: the youtube code of the video</li>
-<li><strong>start</strong>: the start time in seconds, <em>default 0</em></li>
+<li><em>code</em>: the youtube code of the video</li>
+<li><em>start</em>: the start time in seconds</li>
 </ul>
 
 </div>
@@ -12330,7 +12319,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[24]:</div>
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_video_from_youtube</span><span class="p">(</span><span class="s1">&#39;IPBSB1HLNLo&#39;</span><span class="p">)</span>
