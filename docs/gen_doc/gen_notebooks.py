@@ -91,7 +91,7 @@ def create_module_page(mod_name, dest_path):
     mod = importlib.import_module(mod_name)
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
     ft_names.sort(key = str.lower)
-    cells = [get_code_cell('from nbdoc import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
+    cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
     for ft_name in ft_names:
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
