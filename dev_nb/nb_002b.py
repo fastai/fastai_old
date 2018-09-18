@@ -23,6 +23,12 @@ def normalize_funcs(mean, std, do_y=False, device=None):
     return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
             partial(denormalize,     mean=mean,           std=std))
 
+def transform_datasets(train_ds, valid_ds, test_ds=None, tfms=None, **kwargs):
+    res = [DatasetTfm(train_ds, tfms[0],  **kwargs),
+           DatasetTfm(valid_ds, tfms[1],  **kwargs)]
+    if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
+    return res
+
 @dataclass
 class DeviceDataLoader():
     dl: DataLoader
@@ -34,6 +40,7 @@ class DeviceDataLoader():
         self.tfms = listify(self.tfms)
 
     def __len__(self): return len(self.dl)
+    def __getattr__(self,k): return getattr(self.dl, k)
 
     def add_tfm(self,tfm):    self.tfms.append(tfm)
     def remove_tfm(self,tfm): self.tfms.remove(tfm)
@@ -52,29 +59,41 @@ class DeviceDataLoader():
         return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, **kwargs),
                    device=device, tfms=tfms, collate_fn=collate_fn)
 
-@dataclass
 class DataBunch():
-    train_dl:DataLoader
-    valid_dl:DataLoader
-    device:torch.device=None
-    def __post_init__(self):
-        if self.device is None: self.device=default_device
+    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, test_dl:DataLoader=None,
+                 device:torch.device=None, tfms=None, path='.'):
+        self.device = default_device if device is None else device
+        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
+        self.test_dl  = DeviceDataLoader(test_dl,  self.device, tfms=tfms) if test_dl else None
+        self.path = Path(path)
 
     @classmethod
-    def create(cls, train_ds, valid_ds, bs=64, train_tfm=None, valid_tfm=None, device=None, tfms=None,
-               num_workers=4, **kwargs):
-        if train_tfm: train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
-        if valid_tfm: valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
-        return cls(DeviceDataLoader.create(train_ds, bs,   shuffle=True,  device=device, tfms=tfms, num_workers=num_workers),
-                   DeviceDataLoader.create(valid_ds, bs*2, shuffle=False, device=device, tfms=tfms, num_workers=num_workers),
-                   device=device)
+    def create(cls, train_ds, valid_ds, test_ds=None,
+               path='.', bs=64, ds_tfms=None, num_workers=4,
+               tfms=None, device=None, size=None, **kwargs):
+        datasets = [train_ds,valid_ds]
+        if test_ds is not None: datasets.append(test_ds)
+        if ds_tfms: datasets = transform_datasets(*datasets, tfms=ds_tfms, size=size, **kwargs)
+        dls = [DataLoader(*o, num_workers=num_workers) for o in
+               zip(datasets, (bs,bs*2,bs*2), (True,False,False))]
+        return cls(*dls, path=path, device=device, tfms=tfms)
+
+    def __getattr__(self,k): return getattr(self.train_ds, k)
+    def holdout(self, is_test=False): return self.test_dl if is_test else self.valid_dl
 
     @property
     def train_ds(self): return self.train_dl.dl.dataset
     @property
     def valid_ds(self): return self.valid_dl.dl.dataset
-    @property
-    def c(self): return self.train_ds.c
+
+def data_from_imagefolder(path, train='train', valid='valid', test=None, **kwargs):
+    path=Path(path)
+    train_ds = FilesDataset.from_folder(path/train)
+    datasets = [train_ds, FilesDataset.from_folder(path/valid, classes=train_ds.classes)]
+    if test: datasets.append(FilesDataset.from_single_folder(
+        path/test,classes=train_ds.classes))
+    return DataBunch.create(*datasets, path=path, **kwargs)
 
 def conv_layer(ni, nf, ks=3, stride=1):
     return nn.Sequential(

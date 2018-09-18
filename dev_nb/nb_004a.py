@@ -150,13 +150,14 @@ class Learner():
     true_wd:bool=True
     wd:Floats=3e-2
     train_bn:bool=True
-    path:str = 'models'
+    path:str = None
+    model_dir:str = 'models'
     callback_fns:Collection[Callable]=None
     callbacks:Collection[Callback]=field(default_factory=list)
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self):
-        self.path = Path(self.path)
-        self.path.mkdir(parents=True, exist_ok=True)
+        self.path = Path(ifnone(self.path, self.data.path))
+        (self.path/self.model_dir).mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
         self.metrics=listify(self.metrics)
         if not self.layer_groups: self.layer_groups = [self.model]
@@ -196,8 +197,8 @@ class Learner():
 
     def unfreeze(self): self.freeze_to(0)
     def __del__(self): del(self.model, self.data)
-    def save(self, name): torch.save(self.model.state_dict(), self.path/f'{name}.pth')
-    def load(self, name): self.model.load_state_dict(torch.load(self.path/f'{name}.pth'))
+    def save(self, name): torch.save(self.model.state_dict(), self.path/self.model_dir/f'{name}.pth')
+    def load(self, name): self.model.load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
                   div_factor:float=25., pct_start:float=0.5, wd:float=None, **kwargs):

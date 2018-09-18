@@ -183,7 +183,7 @@ def loss_batch(model, xb, yb, loss_fn=None, opt=None, cb_handler=None, metrics=N
     out = cb_handler.on_loss_begin(out)
     if not loss_fn: return out.detach(),yb[0].detach()
     loss = loss_fn(out, *yb)
-    mets = [f(out,*yb).detach() for f in metrics] if metrics is not None else []
+    mets = [f(out,*yb).detach().cpu() for f in metrics] if metrics is not None else []
 
     if opt is not None:
         loss = cb_handler.on_backward_begin(loss)
@@ -193,7 +193,7 @@ def loss_batch(model, xb, yb, loss_fn=None, opt=None, cb_handler=None, metrics=N
         cb_handler.on_step_end()
         opt.zero_grad()
 
-    return (loss.detach(),) + tuple(mets) + (yb[0].shape[0],)
+    return (loss.detach().cpu(),) + tuple(mets) + (yb[0].shape[0],)
 
 def validate(model, dl, loss_fn=None, metrics=None, cb_handler=None, pbar=None):
     model.eval()

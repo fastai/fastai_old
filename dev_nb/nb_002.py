@@ -50,6 +50,10 @@ def open_image(fn):
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
+def random_split(valid_pct, *arrs):
+    is_test = np.random.uniform(size=(len(arrs[0]),)) < valid_pct
+    return list(zip(*[(a[~is_test],a[is_test]) for a in map(np.array, arrs)]))
+
 class DatasetBase(Dataset):
     def __len__(self): return len(self.x)
     @property
@@ -61,17 +65,35 @@ class LabelDataset(DatasetBase):
     def c(self): return len(self.classes)
 
 class FilesDataset(LabelDataset):
-    def __init__(self, folder, classes=None):
-        self.x,self.y = [],[]
-        if classes is None: classes = [cls.name for cls in find_classes(folder)]
-        self.classes = classes
-        for i, cls in enumerate(classes):
-            fnames = get_image_files(folder/cls)
-            self.x += fnames
-            self.y += [i] * len(fnames)
-        self.y = tensor(self.y)
+    def __init__(self, fns, labels, classes=None):
+        self.classes = ifnone(classes, list(set(labels)))
+        self.class2idx = {v:k for k,v in enumerate(self.classes)}
+        self.x = np.array(fns)
+        self.y = np.array([self.class2idx[o] for o in labels], dtype=np.int64)
 
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
+
+    @staticmethod
+    def _folder_files(folder, label):
+        fnames = get_image_files(folder)
+        return fnames,[label]*len(fnames)
+
+    @classmethod
+    def from_single_folder(cls, folder, classes):
+        fns,labels = cls._folder_files(folder, classes[0])
+        return cls(fns, labels, classes=classes)
+
+    @classmethod
+    def from_folder(cls, folder, classes=None, valid_pct=0.):
+        if classes is None: classes = [cls.name for cls in find_classes(folder)]
+
+        fns,labels = [],[]
+        for cl in classes:
+            f,l = cls._folder_files(folder/cl, cl)
+            fns+=f; labels+=l
+
+        if valid_pct==0.: return cls(fns, labels, classes=classes)
+        return [cls(*a, classes=classes) for a in random_split(valid_pct, fns, labels)]
 
 def logit(x):  return -(1/x-1).log()
 def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
@@ -213,9 +235,9 @@ class Transform():
         setattr(Image, func.__name__,
                 lambda x, *args, **kwargs: self.calc(x, *args, **kwargs))
 
-    def __call__(self, *args, p=1., **kwargs):
+    def __call__(self, *args, p=1., is_random=True, **kwargs):
         if args: return self.calc(*args, **kwargs)
-        else: return RandTransform(self, kwargs=kwargs, p=p)
+        else: return RandTransform(self, kwargs=kwargs, is_random=is_random, p=p)
 
     def calc(tfm, x, *args, **kwargs):
         if tfm._wrap: return getattr(x, tfm._wrap)(tfm.func, *args, **kwargs)
@@ -235,8 +257,13 @@ class RandTransform():
     p:int=1.0
     resolved:dict = field(default_factory=dict)
     do_run:bool = True
+    is_random:bool = True
 
     def resolve(self):
+        if not self.is_random:
+            self.resolved = {**self.tfm.def_args, **self.kwargs}
+            return
+
         self.resolved = {}
         # for each param passed to tfm...
         for k,v in self.kwargs.items():
