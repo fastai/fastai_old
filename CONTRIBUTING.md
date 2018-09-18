@@ -67,7 +67,7 @@ Therefore, your developing process will always start with:
     cd fastai_v1
     tools/trust-origin-git-config
 
-The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via 'tools/fastai-nbstripout' which will do all the work for you.
+The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
 
 Note: windows users, not using bash emulation, will need to invoke the command as:
 
