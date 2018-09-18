@@ -107,12 +107,3 @@ def std_upsample_head(*nfs):
 def dice(pred, targs):
     pred = (pred>0).float()
     return 2. * (pred*targs).sum() / (pred+targs).sum()
-
-def accuracy_thresh(out, yb, thresh=0.5):
-    return ((out>thresh)==yb.byte()).float().mean()
-
-def pred_batch(learn):
-    x,y = next(iter(learn.data.valid_dl))
-    return x,learn.model(x).detach()
-
-Learner.pred_batch = pred_batch

@@ -19,7 +19,7 @@ def dihedral(x, k:partial(uniform_int,0,8)):
     if k&4: x = x.transpose(1,2)
     return x.contiguous()
 
-def get_transforms(do_flip=False, flip_vert=False, max_rotate=0., max_zoom=1., max_lighting=0., max_warp=0.,
+def get_transforms(do_flip=True, flip_vert=False, max_rotate=10., max_zoom=1.1, max_lighting=0.2, max_warp=0.2,
                    p_affine=0.75, p_lighting=0.5, xtra_tfms=None):
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
@@ -32,38 +32,7 @@ def get_transforms(do_flip=False, flip_vert=False, max_rotate=0., max_zoom=1., m
     #       train                   , valid
     return (res + listify(xtra_tfms), [crop_pad()])
 
-def transform_datasets(train_ds, valid_ds, tfms, **kwargs):
-    return (DatasetTfm(train_ds, tfms[0], **kwargs),
-            DatasetTfm(valid_ds, tfms[1], **kwargs),
-            DatasetTfm(valid_ds, tfms[0], **kwargs))
-
 imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
-
-class DataBunch():
-    def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, augm_dl:DataLoader=None,
-                 device:torch.device=None, tfms=None):
-        self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
-        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
-        if augm_dl: self.augm_dl = DeviceDataLoader(augm_dl,  self.device, tfms=tfms)
-
-    @classmethod
-    def create(cls, train_ds, valid_ds, augm_ds=None, bs=64, train_tfm=None, valid_tfm=None, num_workers=4,
-               tfms=None, device=None, **kwargs):
-        if train_tfm or not isinstance(train_ds, DatasetTfm): train_ds = DatasetTfm(train_ds,train_tfm, **kwargs)
-        if valid_tfm or not isinstance(valid_ds, DatasetTfm): valid_ds = DatasetTfm(valid_ds,valid_tfm, **kwargs)
-        if not augm_ds: augm_ds = DatasetTfm(valid_ds, train_tfm, **kwargs)
-        return cls(DataLoader(train_ds, bs,   shuffle=True,  num_workers=num_workers),
-                   DataLoader(valid_ds, bs*2, shuffle=False, num_workers=num_workers),
-                   DataLoader(augm_ds,  bs*2, shuffle=False, num_workers=num_workers),
-                   device=device, tfms=tfms)
-
-    @property
-    def train_ds(self): return self.train_dl.dl.dataset
-    @property
-    def valid_ds(self): return self.valid_dl.dl.dataset
-    @property
-    def c(self): return self.train_ds.c
 
 def train_epoch(model, dl, opt, loss_func):
     "Simple training of `model` for 1 epoch of `dl` using optim `opt` and loss function `loss_func`"
@@ -122,7 +91,7 @@ def _init(learn, init): apply_init(learn.model, init)
 Learner.init = _init
 
 class ConvLearner(Learner):
-    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.2, custom_head=None, **kwargs):
+    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.5, custom_head=None, **kwargs):
         body = create_body(arch(pretrained), cut)
         nf = num_features(body) * 2
         head = custom_head or create_head(nf, data.c, lin_ftrs, ps)
@@ -132,66 +101,50 @@ class ConvLearner(Learner):
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
 
-class Hook():
-    def __init__(self, m, hook_func, is_forward=True):
-        self.hook_func,self.stored = hook_func,None
-        f = m.register_forward_hook if is_forward else m.register_backward_hook
-        self.hook = f(self.hook_fn)
-        self.removed = False
-
-    def hook_fn(self, module, input, output):
-        input  = (o.detach() for o in input ) if is_listy(input ) else input.detach()
-        output = (o.detach() for o in output) if is_listy(output) else output.detach()
-        self.stored = self.hook_func(module, input, output)
-
-    def remove(self):
-        if not self.removed:
-            self.hook.remove()
-            self.removed=True
-
-class Hooks():
-    def __init__(self, ms, hook_func, is_forward=True):
-        self.hooks = [Hook(m, hook_func, is_forward) for m in ms]
-
-    def __getitem__(self,i): return self.hooks[i]
-    def __len__(self): return len(self.hooks)
-    def __iter__(self): return iter(self.hooks)
-    @property
-    def stored(self): return [o.stored for o in self]
-
-    def remove(self):
-        for h in self.hooks: h.remove()
-
-def hook_output (module):  return Hook (module,  lambda m,i,o: o)
-def hook_outputs(modules): return Hooks(modules, lambda m,i,o: o)
-
-class HookCallback(LearnerCallback):
-    def __init__(self, learn, modules=None, do_remove=True):
-        super().__init__(learn)
-        self.modules,self.do_remove = modules,do_remove
-
-    def on_train_begin(self, **kwargs):
-        if not self.modules:
-            self.modules = [m for m in flatten_model(self.learn.model)
-                            if hasattr(m, 'weight')]
-        self.hooks = Hooks(self.modules, self.hook)
-
-    def on_train_end(self, **kwargs):
-        if self.do_remove: self.remove()
-
-    def remove(self): self.hooks.remove
-    def __del__(self): self.remove()
-
-class ActivationStats(HookCallback):
-    def on_train_begin(self, **kwargs):
-        super().on_train_begin(**kwargs)
-        self.stats = []
-
-    def hook(self, m,i,o): return o.mean().item(),o.std().item()
-    def on_batch_end(self, **kwargs): self.stats.append(self.hooks.stored)
-    def on_train_end(self, **kwargs): self.stats = tensor(self.stats).permute(2,1,0)
-
-def idx_dict(a): return {v:k for k,v in enumerate(a)}
+def pred_batch(learn, is_valid=True):
+    x,y = next(iter(learn.data.valid_dl if is_valid else learn.data.train_dl))
+    return x,learn.model(x).detach()
+Learner.pred_batch = pred_batch
 
 def get_preds(model, dl, pbar=None):
     return [torch.cat(o).cpu() for o in validate(model, dl, pbar=pbar)]
+
+def _learn_get_preds(learn, is_test=False):
+    return get_preds(learn.model, learn.data.holdout(is_test))
+Learner.get_preds = _learn_get_preds
+
+def show_image_batch(dl, classes, rows=None, figsize=(12,15), denorm=None):
+    x,y = next(iter(dl))
+    if rows is None: rows = int(math.sqrt(len(x)))
+    x = x[:rows*rows].cpu()
+    if denorm: x = denorm(x)
+    show_images(x,y[:rows*rows].cpu(),rows, classes)
+
+def _tta_only(learn, is_test=False, scale=1.25):
+    dl = learn.data.holdout(is_test)
+    ds = dl.dataset
+    old = ds.tfms
+    augm_tfm = [o for o in learn.data.train_ds.tfms if o.tfm not in
+               (crop_pad, flip_lr, dihedral, zoom)]
+    try:
+        pbar = master_bar(range(8))
+        for i in pbar:
+            row = 1 if i&1 else 0
+            col = 1 if i&2 else 0
+            flip = i&4
+            d = {'row_pct':row, 'col_pct':col, 'is_random':False}
+            tfm = [*augm_tfm, zoom(scale=scale, **d), crop_pad(**d)]
+            if flip: tfm.append(flip_lr(p=1.))
+            ds.tfms = tfm
+            yield get_preds(learn.model, dl, pbar=pbar)[0]
+    finally: ds.tfms = old
+
+Learner.tta_only = _tta_only
+
+def _TTA(learn, beta=0.5, scale=1.35, is_test=False):
+    preds,y = learn.get_preds(is_test)
+    all_preds = list(learn.tta_only(scale=scale, is_test=is_test))
+    avg_preds = torch.stack(all_preds).mean(0)
+    return preds*beta + avg_preds*(1-beta), y
+
+Learner.TTA = _TTA

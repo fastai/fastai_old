@@ -9,32 +9,6 @@ from nb_002c import *
 
 import operator
 
-def random_split(test_pct, *arrs):
-    is_test = np.random.uniform(size=(len(arrs[0]),)) < test_pct
-    return list(zip(*[(a[~is_test],a[is_test]) for a in map(np.array, arrs)]))
-
-class FilesDataset(LabelDataset):
-    def __init__(self, fns, labels, classes=None):
-        self.classes = ifnone(classes, list(set(labels)))
-        self.class2idx = {v:k for k,v in enumerate(self.classes)}
-        self.x = np.array(fns)
-        self.y = np.array([self.class2idx[o] for o in labels], dtype=np.int64)
-
-    def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
-
-    @classmethod
-    def from_folder(cls, folder, classes=None, test_pct=0.):
-        if classes is None: classes = [cls.name for cls in find_classes(folder)]
-
-        fns,labels = [],[]
-        for cl in classes:
-            fnames = get_image_files(folder/cl)
-            fns += fnames
-            labels += [cl] * len(fnames)
-
-        if test_pct==0.: return cls(fns, labels, classes=classes)
-        return [cls(*a, classes=classes) for a in random_split(test_pct, fns, labels)]
-
 def affine_mult(c,m):
     if m is None: return c
     size = c.size()
