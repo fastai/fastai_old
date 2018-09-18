@@ -8,17 +8,22 @@ import pickle, gzip, torch, math, numpy as np, torch.nn.functional as F
 from pathlib import Path
 from IPython.core.debugger import set_trace
 from dataclasses import dataclass
-from typing import Any, Collection, Callable
+from typing import Any, Collection, Callable, NewType
 from functools import partial, reduce
 from numbers import Number
 
 from numpy import array
-from torch import nn, optim, tensor
+from torch import nn, optim, tensor, Tensor
 from torch.utils.data import TensorDataset, Dataset, DataLoader
 
-def is_listy(x)->bool: return isinstance(x, (tuple,list))
+Rank0Tensor = NewType('OneEltTensor', Tensor)
+LossFunction = Callable[[Tensor, Tensor], Rank0Tensor]
 
-def loss_batch(model, xb, yb, loss_fn, opt=None):
+def is_listy(x:Any)->bool: return isinstance(x, (tuple,list))
+
+def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor,
+               loss_fn:LossFunction, opt:optim.Optimizer=None):
+    if opt: set_trace()
     if not is_listy(xb): xb = [xb]
     if not is_listy(yb): yb = [yb]
     loss = loss_fn(model(*xb), *yb)
