@@ -4,7 +4,7 @@
         #################################################
         # file to edit: dev_nb/006_carvana.ipynb
 
-from nb_005 import *
+from nb_005b import *
 
 class ImageMask(Image):
     def lighting(self, func, *args, **kwargs): return self
@@ -13,8 +13,7 @@ class ImageMask(Image):
         self.sample_kwargs['mode'] = 'nearest'
         return super().refresh()
 
-def open_mask(fn):
-    return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
+def open_mask(fn): return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
 
 # Same as `show_image`, but renamed with _ prefix
 def _show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
@@ -62,11 +61,6 @@ class MatchedFilesDataset(DatasetBase):
     def __getitem__(self, i):
         return open_image(self.x[i]), open_mask(self.y[i])
 
-def split_arrs(idxs, *a):
-    mask = np.zeros(len(a[0]),dtype=bool)
-    mask[np.array(idxs)] = True
-    return [(o[mask],o[~mask]) for o in map(np.array, a)]
-
 def normalize_batch(b, mean, std, do_y=False):
     x,y = b
     x = normalize(x,mean,std)
@@ -97,13 +91,28 @@ class StdUpsample(nn.Module):
     def forward(self, x):
         return self.bn(F.relu(self.conv(x)))
 
-def std_upsample_head(*nfs):
+def std_upsample_head(c, *nfs):
     return nn.Sequential(
         nn.ReLU(),
         *(StdUpsample(nfs[i],nfs[i+1]) for i in range(4)),
-        conv2d_trans(nfs[-1], 1)
+        conv2d_trans(nfs[-1], c)
     )
 
-def dice(pred, targs):
-    pred = (pred>0).float()
-    return 2. * (pred*targs).sum() / (pred+targs).sum()
+def dice(input, targs):
+    n = targs.shape[0]
+    input = input.argmax(dim=1).view(n,-1)
+    targs = targs.view(n,-1)
+    intersect = (input*targs).sum().float()
+    union = (input+targs).sum().float()
+    return 2. * intersect / union
+
+def accuracy(input, yb):
+    n = targs.shape[0]
+    input = input.argmax(dim=1).view(n,-1)
+    targs = targs.view(n,-1)
+    return (i==yb).float().mean()
+
+class CrossEntropyFlat(nn.CrossEntropyLoss):
+    def forward(self, input, target):
+        n,c,*_ = input.shape
+        return super().forward(input.view(n, c, -1), target.view(n, -1))

@@ -103,7 +103,7 @@ class ConvLearner(Learner):
 
 def pred_batch(learn, is_valid=True):
     x,y = next(iter(learn.data.valid_dl if is_valid else learn.data.train_dl))
-    return x,learn.model(x).detach()
+    return x,y,learn.model(x).detach()
 Learner.pred_batch = pred_batch
 
 def get_preds(model, dl, pbar=None):
@@ -145,6 +145,7 @@ def _TTA(learn, beta=0.5, scale=1.35, is_test=False):
     preds,y = learn.get_preds(is_test)
     all_preds = list(learn.tta_only(scale=scale, is_test=is_test))
     avg_preds = torch.stack(all_preds).mean(0)
-    return preds*beta + avg_preds*(1-beta), y
+    if beta is None: return preds,avg_preds,y
+    else:            return preds*beta + avg_preds*(1-beta), y
 
 Learner.TTA = _TTA

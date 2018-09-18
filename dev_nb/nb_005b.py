@@ -22,5 +22,6 @@ def fbeta(y_pred, y_true, thresh=0.5, beta=2, eps=1e-9, sigmoid=True):
     res = (prec*rec)/(prec*beta2+rec+eps)*(1+beta2)
     return res.mean()
 
-def accuracy_thresh(out, yb, thresh=0.5):
-    return ((out>thresh)==yb.byte()).float().mean()
+def accuracy_thresh(y_pred, y_true, thresh=0.5, sigmoid=True):
+    if sigmoid: y_pred = y_pred.sigmoid()
+    return ((y_pred>thresh)==y_true.byte()).float().mean()
