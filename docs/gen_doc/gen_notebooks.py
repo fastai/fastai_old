@@ -137,7 +137,7 @@ def read_nb_content(nb, mod_name):
     doc_fns = {}
     for i, cell in enumerate(nb['cells']):
         if cell['cell_type'] == 'code':
-            match = re.match(r"(.*)show_doc_from_name\('([^']*)','([^']*)'\)", cell['source'])
+            match = re.match(r"(.*)show_doc_from_name\('([^']*)',\s*'([^']*)'", cell['source'])
             if match is not None and match.groups()[1] == mod_name:
                 doc_fns[match.groups()[2]] = i
     return doc_fns

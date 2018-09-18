@@ -31,7 +31,7 @@ def format_ft_def(elt, full_name, ignore_first=False) -> str:
 def is_fastai_class(t):
     if not inspect.getmodule(t): return False
     base_module = inspect.getmodule(t).__name__.split('.')[0]
-    return base_module in ['fastai_v1', 'gen_doc', 'dev_nb', '__main__'] # (AS) DO NOT CHECK THIS IN
+    return base_module in ['fastai_v1', 'gen_doc', 'dev_nb']
 
 def wrap_class(t):
     if hasattr(t, '__name__'): return t.__name__
