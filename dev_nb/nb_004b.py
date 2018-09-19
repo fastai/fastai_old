@@ -115,3 +115,12 @@ class MixedPrecision(Callback):
         self.learn.model.zero_grad()
         #Update the params from master to model.
         master2model(self.model_params, self.master_params, self.flat_master)
+
+def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False):
+    "Transforms the learner in FP16 precision"
+    learn.model = model2half(learn.model)
+    learn.mp_cb = MixedPrecision(learn, loss_scale=loss_scale, flat_master=flat_master)
+    learn.callbacks.append(learn.mp_cb)
+    return learn
+
+Learner.to_fp16 = to_fp16
