@@ -247,55 +247,128 @@ class TextDataset():
         return [self.path/f'{self.name}_ids.npy', self.path/'itos.pkl', self.path/'numericalize.log']
 
     @classmethod
-    def from_ids(cls, folder, train_ids='train_ids.npy', valid_ids='valid_ids.npy', itos = 'itos.pkl',
-                 train_lbl='train_lbl.npy', valid_lbl='train_lbl.npy', **kwargs):
-        orig = [Path(folder/file) for file in [train_ids, valid_ids, train_lbl, valid_lbl, itos]]
-        dest = ['train_ids.npy', 'valid_ids.npy', 'train_lbl.npy', 'validl_lbl.npy', 'itos.pkl']
-        dest = [Path(folder)/'tmp'/file for file in dest]
+    def from_ids(cls, folder, name, id_suff='_ids', lbl_suff='_lbl', itos='itos.pkl', **kwargs):
+        orig = [Path(folder/file) for file in [f'{name}{id_suff}.npy', f'{name}{lbl_suff}.npy', itos]]
+        dest = [Path(folder)/'tmp'/file for file in [f'{name}_ids.npy', f'{name}_lbl.npy', 'itos.pkl']]
         maybe_copy(orig, dest)
-        return (cls(folder, None, name='train', create_mtd=TextMtd.IDS, **kwargs),
-                cls(folder, None, name='valid', create_mtd=TextMtd.IDS, **kwargs))
+        return cls(folder, None, name=name, create_mtd=TextMtd.IDS, **kwargs)
 
     @classmethod
-    def from_tokens(cls, folder, train_tok='train_tok.npy', valid_tok='valid_tok.npy',
-                 train_lbl='train_lbl.npy', valid_lbl='train_lbl.npy', **kwargs):
-        orig = [Path(folder/file) for file in [train_tok, valid_tok, train_lbl, valid_lbl]]
-        dest = ['train_tok.npy', 'valid_tok.npy', 'train_tok.npy', 'validl_tok.npy']
-        dest = [Path(folder)/'tmp'/file for file in dest]
+    def from_tokens(cls, folder, name, tok_suff='_tok', lbl_suff='_lbl', **kwargs):
+        orig = [Path(folder/file) for file in [f'{name}{tok_suff}.npy', f'{name}{lbl_suff}.npy']]
+        dest = [Path(folder)/'tmp'/file for file in [f'{name}_tok.npy', f'{name}_lbl.npy']]
         maybe_copy(orig, dest)
-        train_ds = cls(folder, None, name='train', create_mtd=TextMtd.TOK, **kwargs)
-        vocab = kwargs.pop('vocab') if 'vocab' in kwargs else train_ds.vocab
-        return (train_ds, cls(folder, None, name='valid', vocab=vocab, create_mtd=TextMtd.TOK, **kwargs))
+        return cls(folder, None, name=name, create_mtd=TextMtd.TOK, **kwargs)
 
     @classmethod
-    def from_csv(cls, folder, tokenizer, train_csv='train.csv', valid_csv='valid.csv', **kwargs):
-        orig = [Path(folder)/file for file in [train_csv, valid_csv]]
-        dest = [Path(folder)/'tmp'/file for file in ['train.csv', 'valid.csv']]
+    def from_csv(cls, folder, tokenizer, name, **kwargs):
+        orig = [Path(folder)/f'{name}.csv']
+        dest = [Path(folder)/'tmp'/f'{name}.csv']
         maybe_copy(orig, dest)
-        train_ds = cls(folder, tokenizer, name='train', **kwargs)
-        vocab = kwargs.pop('vocab') if 'vocab' in kwargs else train_ds.vocab
-        return (train_ds, cls(folder, tokenizer, name='valid', vocab=vocab, **kwargs))
+        return cls(folder, tokenizer, name=name, **kwargs)
 
     @classmethod
-    def from_folder(cls, folder, tokenizer, classes=None, train_name='train', valid_name='valid',
-                    shuffle=True, **kwargs):
+    def from_folder(cls, folder, tokenizer, name, classes=None, shuffle=True, **kwargs):
         path = Path(folder)/'tmp'
         os.makedirs(path, exist_ok=True)
-        if classes is None: classes = [cls.name for cls in find_classes(Path(folder/train_name))]
-        for name in [train_name, valid_name]:
-            texts,labels = [],[]
-            for idx,label in enumerate(classes):
-                for fname in (Path(folder)/name/label).glob('*.*'):
-                    texts.append(fname.open('r', encoding='utf8').read())
-                    labels.append(idx)
-            texts,labels = np.array(texts),np.array(labels)
-            if shuffle:
-                idx = np.random.permutation(len(texts))
-                texts,labels = texts[idx],labels[idx]
-            df = pd.DataFrame({'text':texts, 'labels':labels}, columns=['labels','text'])
-            if os.path.isfile(path/f'{name}.csv'):
-                if get_total_length(path/f'{name}.csv', 10000) != len(df):
-                    df.to_csv(path/f'{name}.csv', index=False, header=False)
-            else: df.to_csv(path/f'{name}.csv', index=False, header=False)
-        train_ds = cls(folder, tokenizer, name='train', **kwargs)
-        return (train_ds, cls(folder, tokenizer, name='valid', vocab=train_ds.vocab, **kwargs))
+        if classes is None: classes = [cls.name for cls in find_classes(Path(folder)/name)]
+        texts,labels = [],[]
+        for idx,label in enumerate(classes):
+            for fname in (Path(folder)/name/label).glob('*.*'):
+                texts.append(fname.open('r', encoding='utf8').read())
+                labels.append(idx)
+        texts,labels = np.array(texts),np.array(labels)
+        if shuffle:
+            idx = np.random.permutation(len(texts))
+            texts,labels = texts[idx],labels[idx]
+        df = pd.DataFrame({'text':texts, 'labels':labels}, columns=['labels','text'])
+        if os.path.isfile(path/f'{name}.csv'):
+            if get_total_length(path/f'{name}.csv', 10000) != len(df):
+                df.to_csv(path/f'{name}.csv', index=False, header=False)
+        else: df.to_csv(path/f'{name}.csv', index=False, header=False)
+        txt_ds = cls(folder, tokenizer, name=name, **kwargs)
+        txt_ds.classes = classes
+        return txt_ds
+
+def extract_kwargs(names, kwargs):
+    new_kwargs = {}
+    for arg_name in names:
+        if arg_name in kwargs:
+            arg_val = kwargs.pop(arg_name)
+            new_kwargs[arg_name] = arg_val
+    return new_kwargs, kwargs
+
+class LanguageModelLoader():
+    "Creates a dataloader with bptt slightly changing."
+    def __init__(self, dataset, bs=64, bptt=70, backwards=False):
+        self.dataset,self.bs,self.bptt,self.backwards = dataset,bs,bptt,backwards
+        self.data = self.batchify(np.concatenate(dataset.ids))
+        self.first,self.i,self.iter = True,0,0
+        self.n = len(self.data)
+
+    def __iter__(self):
+        self.i,self.iter = 0,0
+        while self.i < self.n-1 and self.iter<len(self):
+            if self.first and self.i == 0: self.first,seq_len = False,self.bptt + 25
+            else:
+                bptt = self.bptt if np.random.random() < 0.95 else self.bptt / 2.
+                seq_len = max(5, int(np.random.normal(bptt, 5)))
+            res = self.get_batch(self.i, seq_len)
+            self.i += seq_len
+            self.iter += 1
+            yield res
+
+    def __len__(self): return (self.n-1) // self.bptt
+
+    def batchify(self, data):
+        nb = data.shape[0] // self.bs
+        data = np.array(data[:nb*self.bs]).reshape(self.bs, -1).T
+        if self.backwards: data=data[::-1]
+        return LongTensor(data)
+
+    def get_batch(self, i, seq_len):
+        seq_len = min(seq_len, len(self.data) - 1 - i)
+        return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
+
+def data_from_textids(path, train='train', valid='valid', test=None, lm=False, itos='itos.pkl', **kwargs):
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'id_suff', 'lbl_suff'], kwargs)
+    train_ds = TextDataset.from_ids(path, train, itos=itos, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_ids(path, valid, itos=itos, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_ids(path, test, itos=itos, **txt_kwargs))
+    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)
+
+def data_from_texttokens(path, train='train', valid='valid', test=None, lm=False, vocab=None, **kwargs):
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'tok_suff', 'lbl_suff'], kwargs)
+    train_ds = TextDataset.from_tokens(path, train, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_tokens(path, valid, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_tokens(path, test, vocab=train_ds.vocab, **txt_kwargs))
+    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)
+
+def data_from_textcsv(path, tokenizer, train='train', valid='valid', test=None, lm=False, vocab=None, **kwargs):
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
+    train_ds = TextDataset.from_csv(path, tokenizer, train, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_csv(path, tokenizer, valid, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_csv(path, tokenizer, test, vocab=train_ds.vocab, **txt_kwargs))
+    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)
+
+def data_from_textfolder(path, tokenizer, train='train', valid='valid', test=None, shuffle=True,
+                         lm=False, vocab=None, **kwargs):
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
+    train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_folder(path, tokenizer, valid, classes=train_ds.classes,
+                                        shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_folder(path, tokenizer, test, classes=train_ds.classes,
+                                        shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs))
+    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)

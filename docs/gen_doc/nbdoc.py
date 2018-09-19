@@ -1,66 +1,103 @@
-import inspect,importlib,enum
+import inspect,importlib,enum,re
 from IPython.core.display import display, Markdown, HTML
+from .docstrings import *
 
-__all__ = ['create_anchor', 'get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name', 
+__all__ = ['create_anchor', 'get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name',
            'show_video', 'show_video_from_youtube']
-
-def parse_args(elt, ignore_first=False, arg_comments={}):
-    parsed = ""
-    args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = get_arg_spec(elt)
-    if ignore_first: args = args[1:]
-    if 'return' in annotations: parsed+= f" (-> {annotations['return']})"
-    if len(args) != 0:
-        parsed += '\n\nArguments:\n'
-        diff = len(args) - len(defaults) if defaults is not None else len(args)
-        for i,arg in enumerate(args):
-            parsed += f'- **{arg}**'
-            if arg in annotations: parsed += f' ({annotations[arg]})'
-            if arg in arg_comments: parsed += f': {arg_comments[arg]}'
-            if i-diff >= 0: parsed += f', *default {defaults[i-diff]}*'
-            parsed += '\n'
-    return parsed
 
 def is_enum(cls):
     return cls == enum.Enum or cls == enum.EnumMeta
+
+def link_type(argtype):
+    arg_name = wrap_class(argtype)
+    if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
+    return arg_name
+
+def format_ft_def(elt, full_name, ignore_first=False) -> str:
+    args, defaults, formatted_types = get_arg_spec(elt)
+    if ignore_first: args = args[1:]
+
+    parsedargs = ''
+    diff = len(args) - len(defaults) if defaults is not None else len(args)
+    for i,arg in enumerate(args):
+        parsedargs += f'<em>{arg}</em>'
+        if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
+        if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
+        if i+1 < len(args): parsedargs += ', '
+    parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
+
+    return f'**{full_name}**({parsedargs}){parsedreturn}'
+
+def is_fastai_class(t):
+    if not inspect.getmodule(t): return False
+    base_module = inspect.getmodule(t).__name__.split('.')[0]
+    return base_module in ['fastai_v1', 'gen_doc', 'dev_nb']
 
 def wrap_class(t):
     if hasattr(t, '__name__'): return t.__name__
     else: return str(t)
 
 def get_arg_spec(elt):
-    a = inspect.getfullargspec(elt)
-    b= {k:wrap_class(v) for k,v in a[6].items()}
-    return (*a[0:6], b)
+    args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(elt)
+    formatted_types = {k:link_type(v) for k,v in annotations.items()}
+    return (args, defaults, formatted_types)
 
-def get_ft_doc(elt, full_name, arg_comments={}):
-    doc = f'**{full_name}**' + parse_args(elt, False, arg_comments)
+def get_ft_doc(elt, full_name:str):
+    """calls `format_ft_def` for `full_name`"""
+    doc = format_ft_def(elt, full_name)
     return doc
 
-def get_enum_doc(elt, full_name, arg_comments={}):
-    doc = f'**{full_name}** (enumerator class)\n\nValues:\n'
-    for val in elt.__members__.keys():
-        doc += f'- **{val}**'
-        if val in arg_comments: doc += f': arg_comments[val]'
-        doc +='\n'
+def get_enum_doc(elt, full_name):
+    vals = ', '.join(elt.__members__.keys())
+    doc = f'**{full_name}**:Enum = [{vals}]'
     return doc
 
-def get_cls_doc(elt, full_name, arg_comments={}):
+def get_cls_doc(elt, full_name):
     parent_class = inspect.getclasstree([elt])[-1][0][1][0]
-    doc = f'**{full_name}**'
-    if parent_class != object: doc += f'(subclass of {parent_class})'
-    doc += parse_args(elt, True, arg_comments)
+    doc = f'<em>class</em> ' + format_ft_def(elt, full_name, ignore_first=True)
+    if parent_class != object: doc += f'\n\nSubclass of **{link_type(parent_class)}**'
     return doc
 
 def show_doc(elt, doc_string=True, full_name=None, arg_comments={}, alt_doc_string=''):
     if full_name is None: full_name = elt.__name__
     if inspect.isclass(elt):
-        if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name, arg_comments)
-        else:                      doc = get_cls_doc(elt, full_name, arg_comments) 
-    elif inspect.isfunction(elt):  doc = get_ft_doc(elt, full_name, arg_comments)
+        if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name)
+        else:                      doc = get_cls_doc(elt, full_name)
+    elif inspect.isfunction(elt):  doc = get_ft_doc(elt, full_name)
     link = f'<a id={full_name}></a>'
-    if doc_string and inspect.getdoc(elt) is not None: doc += '\n' + inspect.getdoc(elt)
-    if len(alt_doc_string) != 0: doc += '\n\n' + alt_doc_string
+
+    if is_fastai_class(elt): doc += get_source_link(elt)
+    if doc_string and (inspect.getdoc(elt) or arg_comments):
+        doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string)
     display(Markdown(link + doc))
+
+def format_docstring(elt, arg_comments={}, alt_doc_string=''):
+    parsed = ""
+    doc = parse_docstring(inspect.getdoc(elt))
+    description = alt_doc_string or doc['long_description'] or doc['short_description']
+    if description: parsed += f'\n\n{link_docstring(elt, description)}'
+
+    resolved_comments = {**doc.get('comments', {}), **arg_comments} # arg_comments takes priority
+    args = inspect.getfullargspec(elt).args if not is_enum(elt.__class__) else elt.__members__.keys()
+    if resolved_comments: parsed += '\n'
+    for a in args:
+        if a in resolved_comments: parsed += f'\n- *{a}*: {resolved_comments[a]}'
+
+    return_comment = arg_comments.get('return') or doc.get('return')
+    if return_comment: parsed += f'\n\n*return*: {return_comment}'
+    return parsed
+
+import re
+BT_REGEX = re.compile("`([^`]*)`")
+def link_docstring(elt, description):
+    for m in BT_REGEX.finditer(description):
+        if m.group(1) in elt.__globals__:
+            link_elt = elt.__globals__[m.group(1)]
+            if is_fastai_class(link_elt):
+                link = f'[{m.group(0)}]({get_fn_link(link_elt)})'
+                description = description.replace(m.group(0), link)
+    return description
+
 
 def import_mod(mod_name):
     splits = str.split(mod_name, '.')
@@ -148,6 +185,12 @@ def get_fn_link(ft):
     elif hasattr(ft,'__class__'):
         name = ft.__class__.__name__
     return f'{ft.__module__}.ipynb#{name}'
+
+def get_source_link(ft):
+    lineno = inspect.getsourcelines(ft)[1]
+    modstr = str(ft.__module__).replace('.', '/')
+    link = f"{modstr}.py#L{lineno}"
+    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def create_anchor(name):
     display(Markdown(f'<a id={name}></a>'))

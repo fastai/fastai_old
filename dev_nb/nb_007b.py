@@ -28,7 +28,7 @@ def lm_split(model):
     return groups
 
 def save_encoder(learn, name):
-    torch.save(learn.model[0].state_dict(), learn.path/f'{name}.pth')
+    torch.save(learn.model[0].state_dict(), learn.path/learn.model_dir/f'{name}.pth')
 
 from torch.utils.data import Sampler, BatchSampler
 
@@ -128,4 +128,4 @@ def rnn_classifier_split(model):
     return groups
 
 def load_encoder(learn, name):
-    learn.model[0].load_state_dict(torch.load(learn.path/f'{name}.pth'))
+    learn.model[0].load_state_dict(torch.load(learn.path/learn.model_dir/f'{name}.pth'))
