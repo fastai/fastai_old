@@ -419,7 +419,7 @@ def one_cycle_scheduler(lr_max, **kwargs):
     return partial(OneCycleScheduler, lr_max=lr_max, **kwargs)
 
 def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
-                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.3, wd:float=0.):
+                  div_factor:float=10., pct_start:float=0.5, pct_end:float=0.3, wd:float=None):
     "Fits a model following the 1cycle policy"
     cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
                              pct_start=pct_start, pct_end=pct_end)]
