@@ -55,6 +55,7 @@ def get_inner_fts(elt):
         if ft_name[:2] == '__': continue
         ft = getattr(elt, ft_name)
         if inspect.isfunction(ft): fts.append(f'{elt.__name__}.{ft_name}')
+        if inspect.ismethod(ft): fts.append(f'{elt.__name__}.{ft_name}')
         if inspect.isclass(ft): fts += [f'{elt.__name__}.{n}' for n in get_inner_fts(ft)]
     return fts
 
@@ -173,7 +174,7 @@ def read_nb_types(cells):
     doc_fns = {}
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            match = re.match(r"^(\w*)\s*=\s*", cell['source'])
+            match = re.match(r"^`?(\w*)\s*=\s*", cell['source'])
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
 
