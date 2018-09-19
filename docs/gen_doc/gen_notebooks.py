@@ -70,8 +70,8 @@ def get_global_vars(mod):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
             key,lineno = node.targets[0].id,node.targets[0].lineno-1
             codestr = flines[lineno]
-            if re.match(f"^{key} = .*", codestr): # only top level assignment
-                d[key] = codestr+get_source_link(mod, lineno)
+            if re.match(f"^{key}\s*=\s*.*", codestr): # only top level assignment
+                d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
 
 def get_source_link(mod, lineno):
@@ -85,7 +85,6 @@ def get_ft_names(mod):
     "Returns all the functions of module `mod`"
     # If the module has an attribute __all__, it picks those.
     # Otherwise, it returns all the functions defined inside a module.
-
     fn_names = []
     for elt_name in dir(mod):
         elt = getattr(mod,elt_name)
@@ -116,7 +115,9 @@ def create_module_page(mod_name, dest_path):
     ft_names.sort(key = str.lower)
     cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
 
-    for k,v in get_globals(mod).items(): cells.append(get_md_cell(v))
+    gvars = get_global_vars(mod)
+    if gvars: cells.append(get_md_cell('### Global Variable Definitions:'))
+    for k,v in gvars.items(): cells.append(get_md_cell(v))
 
     for ft_name in ft_names:
         if not hasattr(mod, ft_name):
