@@ -9,11 +9,11 @@ from collections import Counter
 
 class LanguageModelLoader():
     "Creates a dataloader with bptt slightly changing."
-    def __init__(self, nums, bs, bptt, backwards=False):
+    def __init__(self, nums, bs=64, bptt=70, backwards=False):
         self.bs,self.bptt,self.backwards = bs,bptt,backwards
-        self.data = self.batchify(nums)
+        self.ds = self.batchify(nums)
         self.first,self.i,self.iter = True,0,0
-        self.n = len(self.data)
+        self.n = len(self.ds)
 
     def __iter__(self):
         self.i,self.iter = 0,0
@@ -36,8 +36,8 @@ class LanguageModelLoader():
         return LongTensor(data)
 
     def get_batch(self, i, seq_len):
-        seq_len = min(seq_len, len(self.data) - 1 - i)
-        return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
+        seq_len = min(seq_len, len(self.ds) - 1 - i)
+        return self.ds[i:i+seq_len], self.ds[i+1:i+1+seq_len].contiguous().view(-1)
 
 def dropout_mask(x, sz, p):
     "Returns a dropout mask of the same type as x, size sz, with probability p to cancel an element."
