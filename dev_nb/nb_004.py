@@ -331,7 +331,7 @@ class Learner():
     loss_fn:Callable=F.cross_entropy
     metrics:Collection[Callable]=None
     true_wd:bool=True
-    wd:Floats=3e-3
+    wd:Floats=1e-2
     path:str = 'models'
     callback_fns:Collection[Callable]=None
     callbacks:Collection[Callback]=field(default_factory=list)
