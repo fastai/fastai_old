@@ -20,7 +20,7 @@ def dihedral(x, k:partial(uniform_int,0,8)):
     return x.contiguous()
 
 def get_transforms(do_flip=True, flip_vert=False, max_rotate=10., max_zoom=1.1, max_lighting=0.2, max_warp=0.2,
-                   p_affine=0.75, p_lighting=0.5, xtra_tfms=None):
+                   p_affine=0.75, p_lighting=0.75, xtra_tfms=None):
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
     if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
@@ -33,6 +33,7 @@ def get_transforms(do_flip=True, flip_vert=False, max_rotate=10., max_zoom=1.1, 
     return (res + listify(xtra_tfms), [crop_pad()])
 
 imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
+imagenet_norm,imagenet_denorm = normalize_funcs(*imagenet_stats)
 
 def train_epoch(model, dl, opt, loss_func):
     "Simple training of `model` for 1 epoch of `dl` using optim `opt` and loss function `loss_func`"
@@ -92,6 +93,7 @@ Learner.init = _init
 
 class ConvLearner(Learner):
     def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.5, custom_head=None, **kwargs):
+        torch.backends.cudnn.benchmark = True
         body = create_body(arch(pretrained), cut)
         nf = num_features(body) * 2
         head = custom_head or create_head(nf, data.c, lin_ftrs, ps)

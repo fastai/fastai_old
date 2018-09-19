@@ -6,7 +6,7 @@
 
 from nb_002 import *
 
-import typing
+import typing, os
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 
 def normalize(x, mean,std):   return (x-mean[...,None,None]) / std[...,None,None]
@@ -28,6 +28,16 @@ def transform_datasets(train_ds, valid_ds, test_ds=None, tfms=None, **kwargs):
            DatasetTfm(valid_ds, tfms[1],  **kwargs)]
     if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
     return res
+
+# CIFAR 10 stats looked up on google
+cifar_mean,cifar_std = map(tensor, ([0.491, 0.482, 0.447], [0.247, 0.243, 0.261]))
+cifar_norm,cifar_denorm = normalize_funcs(cifar_mean,cifar_std)
+
+def num_cpus():
+    try:                   return len(os.sched_getaffinity(0))
+    except AttributeError: return os.cpu_count()
+
+default_cpus = min(16, num_cpus())
 
 @dataclass
 class DeviceDataLoader():
@@ -55,8 +65,9 @@ class DeviceDataLoader():
         return iter(self.gen)
 
     @classmethod
-    def create(cls, dataset, bs=1, shuffle=False, device=default_device, tfms=tfms, collate_fn=data_collate, **kwargs):
-        return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, **kwargs),
+    def create(cls, dataset, bs=1, shuffle=False, device=default_device, tfms=tfms,
+               num_workers=default_cpus, collate_fn=data_collate, **kwargs):
+        return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, num_workers=num_workers, **kwargs),
                    device=device, tfms=tfms, collate_fn=collate_fn)
 
 class DataBunch():
@@ -70,7 +81,7 @@ class DataBunch():
 
     @classmethod
     def create(cls, train_ds, valid_ds, test_ds=None,
-               path='.', bs=64, ds_tfms=None, num_workers=4,
+               path='.', bs=64, ds_tfms=None, num_workers=default_cpus,
                tfms=None, device=None, size=None, **kwargs):
         datasets = [train_ds,valid_ds]
         if test_ds is not None: datasets.append(test_ds)
