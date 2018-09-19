@@ -49,7 +49,7 @@ class UnetBlock(nn.Module):
         return self.bn(x)
 
 class DynamicUnet(nn.Sequential):
-    def __init__(self, encoder, last=True, n_classes=3):
+    def __init__(self, encoder, n_classes, last=True):
         imsize = (256,256)
         sfs_szs,x,self.sfs = model_sizes(encoder, size=imsize)
         sfs_idxs = reversed(get_sfs_idxs(sfs_szs, last))
