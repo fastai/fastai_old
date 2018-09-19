@@ -6,6 +6,8 @@
 
 from nb_004 import *
 
+bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
+
 def requires_grad(l, b=None):
     ps = list(l.parameters())
     if not ps: return None
@@ -14,10 +16,20 @@ def requires_grad(l, b=None):
 
 def trainable_params(m): return filter(lambda p: p.requires_grad, m.parameters())
 
+def split_bn_bias(layer_groups):
+    split_groups = []
+    for l in layer_groups:
+        l1,l2 = [],[]
+        for c in l.children():
+            if isinstance(c, bn_types): l2.append(c)
+            else:                       l1.append(c)
+        split_groups += [nn.Sequential(*l1), nn.Sequential(*l2)]
+    return split_groups
+
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
-    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False):
-        self.opt,self.true_wd = opt,true_wd
+    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False, bn_wd=True):
+        self.opt,self.true_wd,self.bn_wd = opt,true_wd,bn_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
@@ -25,7 +37,8 @@ class OptimWrapper():
 
     @classmethod
     def create(cls, opt_fn, lr, layer_groups, **kwargs):
-        opt = opt_fn([{'params': trainable_params(l), 'lr':0} for l in layer_groups])
+        split_groups = split_bn_bias(layer_groups)
+        opt = opt_fn([{'params': trainable_params(l), 'lr':0} for l in split_groups])
         opt = cls(opt, **kwargs)
         opt.lr = listify(lr, layer_groups)
         return opt
@@ -37,8 +50,10 @@ class OptimWrapper():
     def step(self):
         # weight decay outside of optimizer step (AdamW)
         if self.true_wd:
-            for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
-                for p in pg['params']: p.data.mul_(1 - wd*lr)
+            for lr,wd,pg1,pg2 in zip(self._lr,self._wd,self.opt.param_groups[::2],self.opt.param_groups[1::2]):
+                for p in pg1['params']: p.data.mul_(1 - wd*lr)
+                if self.bn_wd:
+                    for p in pg2['params']: p.data.mul_(1 - wd*lr)
             self.set_val('weight_decay', listify(0, self._wd))
         self.opt.step()
 
@@ -75,7 +90,7 @@ class OptimWrapper():
 
     @wd.setter
     def wd(self, val:float):
-        if not self.true_wd: self.set_val('weight_decay', listify(val, self._wd))
+        if not self.true_wd: self.set_val('weight_decay', listify(val, self._wd), bn_groups=self.bn_wd)
         self._wd = listify(val, self._wd)
 
     #Helper functions
@@ -88,15 +103,17 @@ class OptimWrapper():
         if 'betas' in self.opt_keys: self._mom,self._beta = self.read_val('betas')
         if 'weight_decay' in self.opt_keys: self._wd = self.read_val('weight_decay')
 
-    def set_val(self, key:str, val):
+    def set_val(self, key:str, val, bn_groups=True):
         "Set the values inside the optimizer dictionary at the key"
         if is_tuple(val): val = [(v1,v2) for v1,v2 in zip(*val)]
-        for v,pg in zip(val,self.opt.param_groups): pg[key] = v
+        for v,pg1,pg2 in zip(val,self.opt.param_groups[::2],self.opt.param_groups[1::2]):
+            pg1[key] = v
+            if bn_groups: pg2[key] = v
         return val
 
     def read_val(self, key:str) -> Union[List[float],Tuple[List[float],List[float]]]:
         "Read a hyper-parameter key in the optimizer dictionary."
-        val = [pg[key] for pg in self.opt.param_groups]
+        val = [pg[key] for pg in self.opt.param_groups[::2]]
         if is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
         return val
 
