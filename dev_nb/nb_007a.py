@@ -45,34 +45,6 @@ class SpacyTokenizer():
         for w in toks:
             self.tok.tokenizer.add_special_case(w, [{ORTH: w}])
 
-class Tokenizer():
-    def __init__(self, tok_fn=SpacyTokenizer, lang:str='en', rules:Collection[Callable[[str],str]]=None,
-                 special_cases:Collection[str]=None, n_cpus = None):
-        self.tok_fn,self.lang,self.special_cases = tok_fn,lang,special_cases
-        self.rules = rules if rules else []
-        for rule in self.rules:
-            if hasattr(rule, 'compile'): rule.compile()
-        self.n_cpus = n_cpus or num_cpus()//2
-
-    def __repr__(self):
-        res = f'Tokenizer {self.tok_fn.__name__} in {self.lang} with the following rules:\n'
-        for rule in self.rules: res += f' - {rule.__name__}\n'
-        return res
-
-    def proc_text(self, t, tok):
-        for rule in self.rules: t = rule(t)
-        return tok.tokenizer(t)
-
-    def process_all_1thread(self, texts):
-        tok = self.tok_fn(self.lang)
-        if self.special_cases: tok.add_special_cases(self.special_cases)
-        return [self.proc_text(t, tok) for t in texts]
-
-    def process_all(self, texts):
-        if self.n_cpus <= 1: return self.process_all_1thread(texts)
-        with ProcessPoolExecutor(self.n_cpus) as e:
-            return sum(e.map(self.process_all_1thread, partition_by_cores(texts, self.n_cpus)), [])
-
 def sub_br(t):
     "Replaces the <br /> by \n"
     re_br = re.compile(r'<\s*br\s*/?>', re.IGNORECASE)
@@ -112,7 +84,35 @@ def fixup(x):
         ' @-@ ','-').replace('\\', ' \\ ')
     return re1.sub(' ', html.unescape(x))
 
-rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces, sub_br]
+default_rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces, sub_br]
+default_spec_tok = [BOS, FLD, UNK, PAD]
+
+class Tokenizer():
+    def __init__(self, tok_fn=SpacyTokenizer, lang:str='en', rules:Collection[Callable[[str],str]]=None,
+                 special_cases:Collection[str]=None, n_cpus = None):
+        self.tok_fn,self.lang,self.special_cases = tok_fn,lang,special_cases
+        self.rules = rules if rules else default_rules
+        self.special_cases = special_cases if special_cases else default_spec_tok
+        self.n_cpus = n_cpus or num_cpus()//2
+
+    def __repr__(self):
+        res = f'Tokenizer {self.tok_fn.__name__} in {self.lang} with the following rules:\n'
+        for rule in self.rules: res += f' - {rule.__name__}\n'
+        return res
+
+    def proc_text(self, t, tok):
+        for rule in self.rules: t = rule(t)
+        return tok.tokenizer(t)
+
+    def process_all_1thread(self, texts):
+        tok = self.tok_fn(self.lang)
+        if self.special_cases: tok.add_special_cases(self.special_cases)
+        return [self.proc_text(t, tok) for t in texts]
+
+    def process_all(self, texts):
+        if self.n_cpus <= 1: return self.process_all_1thread(texts)
+        with ProcessPoolExecutor(self.n_cpus) as e:
+            return sum(e.map(self.process_all_1thread, partition_by_cores(texts, self.n_cpus)), [])
 
 def get_chunk_length(csv_name, chunksize):
     dfs = pd.read_csv(csv_name, header=None, chunksize=chunksize)
@@ -166,8 +166,8 @@ import shutil
 class TextDataset():
     "Put a train.csv and valid.csv files in a folder and this will take care of the rest."
 
-    def __init__(self, path, tokenizer, vocab=None, max_vocab=30000, chunksize=10000, name='train',
-                 min_freq=2, n_labels=1, create_mtd=TextMtd.CSV):
+    def __init__(self, path, tokenizer, vocab=None, max_vocab=60000, chunksize=10000, name='train',
+                 min_freq=2, n_labels=1, create_mtd=TextMtd.CSV, classes=None):
         self.path,self.tokenizer,self.max_vocab,self.min_freq = Path(path/'tmp'),tokenizer,max_vocab,min_freq
         self.chunksize,self.name,self.n_labels,self.create_mtd = chunksize,name,n_labels,create_mtd
         self.vocab=vocab
@@ -178,6 +178,7 @@ class TextDataset():
         if self.vocab is None: self.vocab = Vocab(self.path)
         self.ids = np.load(self.path/f'{self.name}_ids.npy')
         self.labels = np.load(self.path/f'{self.name}_lbl.npy')
+        self.classes = classes if classes else np.unique(self.labels)
 
     def __getitem__(self, idx): return self.ids[idx],self.labels[idx]
     def __len__(self): return len(self.ids)
@@ -286,9 +287,7 @@ class TextDataset():
             if get_total_length(path/f'{name}.csv', 10000) != len(df):
                 df.to_csv(path/f'{name}.csv', index=False, header=False)
         else: df.to_csv(path/f'{name}.csv', index=False, header=False)
-        txt_ds = cls(folder, tokenizer, name=name, **kwargs)
-        txt_ds.classes = classes
-        return txt_ds
+        return cls(folder, tokenizer, name=name, classes=classes, **kwargs)
 
 def extract_kwargs(names, kwargs):
     new_kwargs = {}
@@ -330,38 +329,39 @@ class LanguageModelLoader():
         seq_len = min(seq_len, len(self.data) - 1 - i)
         return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
 
-def data_from_textids(path, train='train', valid='valid', test=None, lm=False, itos='itos.pkl', **kwargs):
+def standard_data(datasets, path, **kwargs):
+    return DataBunch.create(*datasets, path=path, **kwargs)
+
+def lm_data(datasets, path, **kwargs):
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)
+
+def data_from_textids(path, train='train', valid='valid', test=None, data_func=standard_data, itos='itos.pkl', **kwargs):
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'id_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_ids(path, train, itos=itos, **txt_kwargs)
     datasets = [train_ds, TextDataset.from_ids(path, valid, itos=itos, **txt_kwargs)]
     if test: datasets.append(TextDataset.from_ids(path, test, itos=itos, **txt_kwargs))
-    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
-    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
-    return DataBunch(*dataloaders, path=path)
+    return data_func(datasets, path, **kwargs)
 
-def data_from_texttokens(path, train='train', valid='valid', test=None, lm=False, vocab=None, **kwargs):
+def data_from_texttokens(path, train='train', valid='valid', test=None, data_func=standard_data, vocab=None, **kwargs):
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'tok_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_tokens(path, train, vocab=vocab, **txt_kwargs)
     datasets = [train_ds, TextDataset.from_tokens(path, valid, vocab=train_ds.vocab, **txt_kwargs)]
     if test: datasets.append(TextDataset.from_tokens(path, test, vocab=train_ds.vocab, **txt_kwargs))
-    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
-    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
-    return DataBunch(*dataloaders, path=path)
+    return data_func(datasets, path, **kwargs)
 
-def data_from_textcsv(path, tokenizer, train='train', valid='valid', test=None, lm=False, vocab=None, **kwargs):
+def data_from_textcsv(path, tokenizer, train='train', valid='valid', test=None, data_func=standard_data, vocab=None, **kwargs):
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_csv(path, tokenizer, train, vocab=vocab, **txt_kwargs)
     datasets = [train_ds, TextDataset.from_csv(path, tokenizer, valid, vocab=train_ds.vocab, **txt_kwargs)]
     if test: datasets.append(TextDataset.from_csv(path, tokenizer, test, vocab=train_ds.vocab, **txt_kwargs))
-    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
-    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
-    return DataBunch(*dataloaders, path=path)
+    return data_func(datasets, path, **kwargs)
 
 def data_from_textfolder(path, tokenizer, train='train', valid='valid', test=None, shuffle=True,
-                         lm=False, vocab=None, **kwargs):
+                         data_func=standard_data, vocab=None, **kwargs):
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)
@@ -369,6 +369,4 @@ def data_from_textfolder(path, tokenizer, train='train', valid='valid', test=Non
                                         shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs)]
     if test: datasets.append(TextDataset.from_folder(path, tokenizer, test, classes=train_ds.classes,
                                         shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs))
-    if not lm: return DataBunch.create(*datasets, path=path, **kwargs)
-    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
-    return DataBunch(*dataloaders, path=path)
+    return data_func(datasets, path, **kwargs)
