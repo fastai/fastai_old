@@ -66,7 +66,7 @@ def show_doc(elt, doc_string=True, full_name=None, arg_comments={}, alt_doc_stri
     elif inspect.isfunction(elt):  doc = get_ft_doc(elt, full_name)
     link = f'<a id={full_name}></a>'
 
-    if is_fastai_class(elt): doc += f'<div style="text-align: right"><a href="{get_lib_link(elt)}">[source]</a></div>'
+    if is_fastai_class(elt): doc += get_source_link(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string)
     display(Markdown(link + doc))
@@ -186,9 +186,11 @@ def get_fn_link(ft):
         name = ft.__class__.__name__
     return f'{ft.__module__}.ipynb#{name}'
 
-def get_lib_link(ft):
+def get_source_link(ft):
     lineno = inspect.getsourcelines(ft)[1]
-    return f'{ft.__module__}.py#L{lineno}'
+    modstr = str(ft.__module__).replace('.', '/')
+    link = f"{modstr}.py#L{lineno}"
+    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def create_anchor(name):
     display(Markdown(f'<a id={name}></a>'))

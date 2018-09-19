@@ -58,6 +58,29 @@ def get_inner_fts(elt):
         if inspect.isclass(ft): fts += [f'{elt.__name__}.{n}' for n in get_inner_fts(ft)]
     return fts
 
+
+def get_global_vars(mod):
+    """Returns globally assigned variables"""
+    # https://stackoverflow.com/questions/8820276/docstring-for-variable/31764368#31764368
+    import ast,re
+    with open(mod.__file__, 'r') as f: fstr = f.read()
+    d = {}
+    flines = fstr.splitlines()
+    for node in ast.walk(ast.parse(fstr)):
+        if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
+            key,lineno = node.targets[0].id,node.targets[0].lineno-1
+            codestr = flines[lineno]
+            if re.match(f"^{key} = .*", codestr): # only top level assignment
+                d[key] = codestr+get_source_link(mod, lineno)
+    return d
+
+def get_source_link(mod, lineno):
+    "Returns link to line number in source code"
+    modstr = mod.__name__.replace('.', '/')
+    link = f"{modstr}.py#L{lineno}"
+    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
+
+
 def get_ft_names(mod):
     "Returns all the functions of module `mod`"
     # If the module has an attribute __all__, it picks those.
@@ -92,6 +115,9 @@ def create_module_page(mod_name, dest_path):
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
     ft_names.sort(key = str.lower)
     cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
+
+    for k,v in get_globals(mod).items(): cells.append(get_md_cell(v))
+
     for ft_name in ft_names:
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
@@ -132,15 +158,24 @@ def read_nb(fname):
     "Read a notebook and returns its corresponding json"
     with open(fname,'r') as f: return nbformat.reads(f.read(), as_version=4)
 
-def read_nb_content(nb, mod_name):
+def read_nb_content(cells, mod_name):
     "Builds a dictionary containing the position of the cells giving the document for functions in a notebook"
     doc_fns = {}
-    for i, cell in enumerate(nb['cells']):
+    for i, cell in enumerate(cells):
         if cell['cell_type'] == 'code':
             match = re.match(r"(.*)show_doc_from_name\('([^']*)',\s*'([^']*)'", cell['source'])
             if match is not None and match.groups()[1] == mod_name:
                 doc_fns[match.groups()[2]] = i
     return doc_fns
+
+def read_nb_types(cells):
+    doc_fns = {}
+    for i, cell in enumerate(cells):
+        if cell['cell_type'] == 'markdown':
+            match = re.match(r"^(\w*)\s*=\s*", cell['source'])
+            if match is not None: doc_fns[match.group(1)] = i
+    return doc_fns
+
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -173,7 +208,13 @@ def update_module_page(mod_name, dest_path):
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
     ft_names.sort(key = str.lower)
     cells = nb['cells']
-    pos_dict = read_nb_content(nb, mod_name)
+
+    type_dict = read_nb_types(cells)
+    for k,v in get_global_vars(mod).items():
+        if k in type_dict: cells[type_dict[k]] = get_md_cell(v)
+        else: cells.append(get_md_cell(v))
+
+    pos_dict = read_nb_content(cells, mod_name)
     for ft_name in ft_names:
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
