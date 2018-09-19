@@ -139,7 +139,7 @@ def even_mults(start, stop, n):
     step = mult**(1/(n-1))
     return np.array([start*(step**i) for i in range(n)])
 
-default_lr = slice(3e-3)
+default_lr = slice(1e-3)
 
 @dataclass
 class Learner():
