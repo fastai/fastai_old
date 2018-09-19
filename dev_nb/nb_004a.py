@@ -157,6 +157,7 @@ def even_mults(start, stop, n):
     return np.array([start*(step**i) for i in range(n)])
 
 default_lr = slice(3e-3)
+default_wd = 1e-2
 
 @dataclass
 class Learner():
@@ -167,7 +168,7 @@ class Learner():
     loss_fn:Callable=F.cross_entropy
     metrics:Collection[Callable]=None
     true_wd:bool=True
-    wd:Floats=3e-2
+    wd:Floats=default_wd
     train_bn:bool=True
     path:str = None
     model_dir:str = 'models'
