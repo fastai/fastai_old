@@ -15,23 +15,32 @@ from numpy import cos, sin, tan, tanh, log, exp
 from dataclasses import field
 from functools import reduce
 from collections import defaultdict, abc, namedtuple, Iterable
+from typing import Tuple, Hashable, Mapping, Dict
 
 import mimetypes
 import abc
 from abc import abstractmethod, abstractproperty
 
-def image2np(image):
+def image2np(image:Tensor)->np.ndarray:
+    "convert from torch style `image` to numpy/matplot style"
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
-def show_image(img, ax=None, figsize=(3,3), hide_axis=True, title=None, cmap='binary', alpha=None):
+def show_image(img:Tensor, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True,
+               title:Optional[str]=None, cmap:str='binary', alpha:Optional[float]=None)->plt.Axes:
+    "plot tensor `img` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
     if title: ax.set_title(title)
     return ax
 
-def find_classes(folder):
+FilePathList = Collection[Path]
+TensorImage = Tensor
+NPImage = np.ndarray
+
+def find_classes(folder:Path)->FilePathList:
+    "return class subdirectories in imagenet style train `folder`"
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
     assert(len(classes)>0)
@@ -39,40 +48,61 @@ def find_classes(folder):
 
 image_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('image/'))
 
-def get_image_files(c, check_ext=True):
+def get_image_files(c:Path, check_ext:bool=True)->FilePathList:
+    "return list of files in `c` that are images. `check_ext` will filter to `image_extensions`."
     return [o for o in list(c.iterdir())
             if not o.name.startswith('.') and not o.is_dir()
-           and (not check_ext or (o.suffix in image_extensions))]
+            and (not check_ext or (o.suffix in image_extensions))]
 
-def pil2tensor(image):
+def pil2tensor(image:NPImage)->TensorImage:
+    "convert PIL style `image` array to torch style image tensor `get_image_files`"
     arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
     return arr.permute(2,0,1)
 
-def open_image(fn):
+PathOrStr = Union[Path,str]
+def open_image(fn:PathOrStr):
+    "return `Image` object created from image in file `fn`"
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
-def arrays_split(mask, *arrs):
+NPArrayableList = Collection[Union[np.ndarray, list]]
+NPArrayMask = np.ndarray
+SplitArrayList = List[Tuple[np.ndarray,np.ndarray]]
+
+def arrays_split(mask:NPArrayMask, *arrs:NPArrayableList)->SplitArrayList:
+    "given `arrs` is [a,b,...] and `mask`index - return[(a[mask],a[~mask]),(b[mask],b[~mask]),...]"
     mask = array(mask)
     return list(zip(*[(a[mask],a[~mask]) for a in map(np.array, arrs)]))
 
-def random_split(valid_pct, *arrs):
+def random_split(valid_pct:float, *arrs:NPArrayableList)->SplitArrayList:
+    "randomly `array_split` with `valid_pct` ratio. good for creating validation set."
     is_train = np.random.uniform(size=(len(arrs[0]),)) > valid_pct
     return arrays_split(is_train, *arrs)
 
 class DatasetBase(Dataset):
+    "base class for all fastai datasets"
     def __len__(self): return len(self.x)
     @property
-    def c(self): return self.y.shape[-1] if len(self.y.shape)>1 else 1
+    def c(self):
+        "number of classes expressed by dataset y variable"
+        return self.y.shape[-1] if len(self.y.shape)>1 else 1
     def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
 
 class LabelDataset(DatasetBase):
+    "base class for fastai datasets that do classification"
     @property
-    def c(self): return len(self.classes)
+    def c(self):
+        "number of classes expressed by dataset y variable"
+        return len(self.classes)
+
+ImgLabel = str
+ImgLabels = Collection[ImgLabel]
+Classes = Collection[Any]
 
 class FilesDataset(LabelDataset):
-    def __init__(self, fns, labels, classes=None):
+    "Dataset for folders of images in style {folder}/{class}/{images}"
+    def __init__(self, fns:FilePathList, labels:ImgLabels, classes:Optional[Classes]=None):
         self.classes = ifnone(classes, list(set(labels)))
         self.class2idx = {v:k for k,v in enumerate(self.classes)}
         self.x = np.array(fns)
@@ -81,17 +111,21 @@ class FilesDataset(LabelDataset):
     def __getitem__(self,i): return open_image(self.x[i]),self.y[i]
 
     @staticmethod
-    def _folder_files(folder, label, check_ext=True):
+    def _folder_files(folder:Path, label:ImgLabel, check_ext=True)->Tuple[FilePathList,ImgLabels]:
+        "from `folder` return image files and labels. The labels are all `label`. `check_ext` means only image files"
         fnames = get_image_files(folder, check_ext=check_ext)
         return fnames,[label]*len(fnames)
 
     @classmethod
-    def from_single_folder(cls, folder, classes, check_ext=True):
+    def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
+        "typically used for test set. label all images in `folder` with `classes[0]`"
         fns,labels = cls._folder_files(folder, classes[0], check_ext=check_ext)
         return cls(fns, labels, classes=classes)
 
     @classmethod
-    def from_folder(cls, folder, classes=None, valid_pct=0., check_ext=True):
+    def from_folder(cls, folder:Path, classes:Optional[Classes]=None,
+                    valid_pct:float=0., check_ext:bool=True) -> Union['FilesDataset', List['FilesDataset']]:
+        """dataset of `classes` labeled images in `folder`. Optional `valid_pct` split validation set."""
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
 
         fns,labels = [],[]
@@ -102,10 +136,24 @@ class FilesDataset(LabelDataset):
         if valid_pct==0.: return cls(fns, labels, classes=classes)
         return [cls(*a, classes=classes) for a in random_split(valid_pct, fns, labels)]
 
-def logit(x):  return -(1/x-1).log()
-def logit_(x): return (x.reciprocal_().sub_(1)).log_().neg_()
+def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
+def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
+
+FlowField = Tensor
+LogitTensorImage = TensorImage
+AffineMatrix = Tensor
+KWArgs = Dict[str,Any]
+ArgStar = Collection[Any]
+CoordSize = Tuple[int,int,int]
+
+LightingFunc = Callable[[LogitTensorImage, ArgStar, KWArgs], LogitTensorImage]
+PixelFunc = Callable[[TensorImage, ArgStar, KWArgs], TensorImage]
+CoordFunc = Callable[[FlowField, CoordSize, ArgStar, KWArgs], LogitTensorImage]
+AffineFunc = Callable[[KWArgs], AffineMatrix]
+
 
 class ItemBase():
+    "All tranformable dataset items use this type"
     @property
     @abstractmethod
     def device(self): pass
@@ -114,19 +162,25 @@ class ItemBase():
     def data(self): pass
 
 class ImageBase(ItemBase):
-    def lighting(self, func, *args, **kwargs): return self
-    def pixel(self, func, *args, **kwargs): return self
-    def coord(self, func, *args, **kwargs): return self
-    def affine(self, func, *args, **kwargs): return self
+    "Img based `Dataset` items dervie from this. Subclass to handle lighting, pixel, etc"
+    def lighting(self, func:LightingFunc, *args, **kwargs)->'ImageBase': return self
+    def pixel(self, func:PixelFunc, *args, **kwargs)->'ImageBase': return self
+    def coord(self, func:CoordFunc, *args, **kwargs)->'ImageBase': return self
+    def affine(self, func:AffineFunc, *args, **kwargs)->'ImageBase': return self
 
-    def set_sample(self, **kwargs):
+    def set_sample(self, **kwargs)->'ImageBase':
+        "set parameters that control how we `grid_sample` the image after transforms are applied"
         self.sample_kwargs = kwargs
         return self
 
-    def clone(self): return self.__class__(self.data.clone())
+    def clone(self)->'ImageBase':
+        "clones this item and its `data`"
+        return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    def __init__(self, px):
+    "supports appying transforms to image data"
+    def __init__(self, px)->'Image':
+        "create from raw tensor image data `px`"
         self._px = px
         self._logit_px=None
         self._flow=None
@@ -134,15 +188,20 @@ class Image(ImageBase):
         self.sample_kwargs = {}
 
     @property
-    def shape(self): return self._px.shape
+    def shape(self)->Tuple[int,int,int]:
+        "returns (ch, h, w) for this image"
+        return self._px.shape
     @property
-    def size(self): return self.shape[-2:]
+    def size(self)->Tuple[int,int,int]:
+        "returns (h, w) for this image"
+        return self.shape[-2:]
     @property
-    def device(self): return self._px.device
+    def device(self)->torch.device: return self._px.device
 
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
-    def refresh(self):
+    def refresh(self)->None:
+        "applies any logit or affine transfers that have been "
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
@@ -153,74 +212,94 @@ class Image(ImageBase):
         return self
 
     @property
-    def px(self):
+    def px(self)->TensorImage:
+        "get the tensor pixel buffer"
         self.refresh()
         return self._px
     @px.setter
-    def px(self,v): self._px=v
+    def px(self,v:TensorImage)->None:
+        "set the pixel buffer to `v`"
+        self._px=v
 
     @property
-    def flow(self):
+    def flow(self)->FlowField:
+        "access the flow-field grid after applying queued affine transforms"
         if self._flow is None:
             self._flow = affine_grid(self.shape)
         if self._affine_mat is not None:
             self._flow = affine_mult(self._flow,self._affine_mat)
             self._affine_mat = None
         return self._flow
-    @flow.setter
-    def flow(self,v): self._flow=v
 
-    def lighting(self, func, *args, **kwargs):
+    @flow.setter
+    def flow(self,v:FlowField): self._flow=v
+
+    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image':
+        "equivalent to `image = sigmoid(func(logit(image)))`"
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
 
-    def pixel(self, func, *args, **kwargs):
+    def pixel(self, func:PixelFunc, *args, **kwargs)->'Image':
+        "equivalent to `image.px = func(image.px)`"
         self.px = func(self.px, *args, **kwargs)
         return self
 
-    def coord(self, func, *args, **kwargs):
+    def coord(self, func:CoordFunc, *args, **kwargs)->'Image':
+        "equivalent to `image.flow = func(image.flow, image.size)`"
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
-    def affine(self, func, *args, **kwargs):
+    def affine(self, func:AffineFunc, *args, **kwargs)->'Image':
+        "equivalent to `image.affine_mat = image.affine_mat @ func()`"
         m = tensor(func(*args, **kwargs)).to(self.device)
         self.affine_mat = self.affine_mat @ m
         return self
 
-    def resize(self, size):
+    def resize(self, size:Union[int,CoordSize])->'Image':
+        "resize the image to `size`, size can be a single int"
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
         self.flow = affine_grid(size)
         return self
 
     @property
-    def affine_mat(self):
+    def affine_mat(self)->AffineMatrix:
+        "get the affine matrix that will be applied by `refresh`"
         if self._affine_mat is None:
             self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
     @affine_mat.setter
-    def affine_mat(self,v): self._affine_mat=v
+    def affine_mat(self,v)->None: self._affine_mat=v
 
     @property
-    def logit_px(self):
+    def logit_px(self)->LogitTensorImage:
+        "get logit(image.px)"
         if self._logit_px is None: self._logit_px = logit_(self.px)
         return self._logit_px
     @logit_px.setter
-    def logit_px(self,v): self._logit_px=v
+    def logit_px(self,v:LogitTensorImage)->None: self._logit_px=v
 
-    def show(self, ax=None, **kwargs): show_image(self.px, ax=ax, **kwargs)
+    def show(self, ax:plt.Axes=None, **kwargs:Any)->None:
+        "plots the image into `ax`"
+        show_image(self.px, ax=ax, **kwargs)
 
     @property
-    def data(self): return self.px
+    def data(self)->TensorImage:
+        "returns this images pixels as a tensor"
+        return self.px
 
-def uniform(low, high, size=None):
-    return random.uniform(low,high) if size is None else torch.FloatTensor(size).uniform_(low,high)
+def uniform(low:Number, high:Number, size:List[int]=None)->float:
+    "draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
+    return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
 def log_uniform(low, high, size=None):
+    "draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
-def rand_bool(p, size=None): return uniform(0,1,size)<p
+def rand_bool(p:float, size=None):
+    "draw 1 or shape=`size` random booleans (True occuring probability p)"
+    return uniform(0,1,size)<p
 
 import inspect
 from copy import copy,deepcopy
