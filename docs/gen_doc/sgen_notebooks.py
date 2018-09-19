@@ -1,5 +1,5 @@
 import argparse
-from gen_notebooks import generate_all, update_all
+from .gen_notebooks import generate_all, update_all
 from pathlib import Path
 
 if __name__=='main':
