@@ -114,7 +114,7 @@ def ifnone(a:bool,b:Any):
     return b if a is None else a
 
 default_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-Tensors = Union[Tensor, Collection[Tensors]]
+Tensors = Union[Tensor, Collection['Tensors']]
 
 def to_device(b:Tensors, device:torch.device):
     "ensure `b` is on `device`"
@@ -140,7 +140,7 @@ class DeviceDataLoader():
     def create(cls, *args, device:torch.device=default_device, **kwargs): return cls(DataLoader(*args, **kwargs), device=device)
 
 def fit(epochs:int, model:Model, loss_fn:LossFunction,
-        opt:optim:Optimizer, train_dl:DataLoader, valid_dl:DataLoader) -> None:
+        opt:optim.Optimizer, train_dl:DataLoader, valid_dl:DataLoader) -> None:
     "train `model` for `epochs` with `loss_fun` and `optim`"
     for epoch in range(epochs):
         model.train()
