@@ -139,6 +139,8 @@ def even_mults(start, stop, n):
     step = mult**(1/(n-1))
     return np.array([start*(step**i) for i in range(n)])
 
+default_lr = slice(3e-3)
+
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
@@ -170,7 +172,7 @@ class Learner():
         else: res = [lr.stop/3]*(len(self.layer_groups)-1) + [lr.stop]
         return np.array(res)
 
-    def fit(self, epochs:int, lr:Union[Floats,slice], wd:Floats=None, callbacks:Collection[Callback]=None):
+    def fit(self, epochs:int, lr:Union[Floats,slice]=default_lr, wd:Floats=None, callbacks:Collection[Callback]=None):
         lr = self.lr_range(lr)
         if wd is None: wd = self.wd
         self.create_opt(lr, wd)
@@ -200,8 +202,9 @@ class Learner():
     def save(self, name): torch.save(self.model.state_dict(), self.path/self.model_dir/f'{name}.pth')
     def load(self, name): self.model.load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
-def fit_one_cycle(learn:Learner, cyc_len:int, max_lr:float, moms:Tuple[float,float]=(0.95,0.85),
-                  div_factor:float=25., pct_start:float=0.5, wd:float=None, **kwargs):
+def fit_one_cycle(learn:Learner, cyc_len:int,
+                  max_lr:Union[Floats,slice]=default_lr, moms:Tuple[float,float]=(0.95,0.85),
+                  div_factor:float=25., pct_start:float=0.3, wd:float=None, **kwargs):
     "Fits a model following the 1cycle policy"
     max_lr = learn.lr_range(max_lr)
     cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
