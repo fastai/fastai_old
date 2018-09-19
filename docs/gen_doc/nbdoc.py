@@ -1,5 +1,6 @@
 import inspect,importlib,enum,re
 from IPython.core.display import display, Markdown, HTML
+from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
 
 __all__ = ['create_anchor', 'get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name',
@@ -8,12 +9,15 @@ __all__ = ['create_anchor', 'get_class_toc', 'get_fn_link', 'get_module_toc', 's
 def is_enum(cls):
     return cls == enum.Enum or cls == enum.EnumMeta
 
-def link_type(argtype):
+def link_type(argtype, include_bt:bool=False):
+    """creates link to documentation"""
     arg_name = wrap_class(argtype)
+    if include_bt: arg_name = f'`{arg_name}`'
     if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
     return arg_name
 
-def format_ft_def(elt, full_name, ignore_first=False) -> str:
+def format_ft_def(elt, full_name:str, ignore_first:bool=False) -> str:
+    """Formats and links function definition to show in documentation"""
     args, defaults, formatted_types = get_arg_spec(elt)
     if ignore_first: args = args[1:]
 
@@ -29,6 +33,7 @@ def format_ft_def(elt, full_name, ignore_first=False) -> str:
     return f'**{full_name}**({parsedargs}){parsedreturn}'
 
 def is_fastai_class(t):
+    """checks if belongs to fastai module"""
     if not inspect.getmodule(t): return False
     base_module = inspect.getmodule(t).__name__.split('.')[0]
     return base_module in ['fastai_v1', 'gen_doc', 'dev_nb']
@@ -42,28 +47,28 @@ def get_arg_spec(elt):
     formatted_types = {k:link_type(v) for k,v in annotations.items()}
     return (args, defaults, formatted_types)
 
-def get_ft_doc(elt, full_name:str):
-    """calls `format_ft_def` for `full_name`"""
-    doc = format_ft_def(elt, full_name)
-    return doc
-
-def get_enum_doc(elt, full_name):
+def get_enum_doc(elt, full_name:str) -> str:
+    """return formatted enum documentation"""
     vals = ', '.join(elt.__members__.keys())
     doc = f'**{full_name}**:Enum = [{vals}]'
     return doc
 
-def get_cls_doc(elt, full_name):
+def get_cls_doc(elt, full_name:str) -> str:
+    """return class definition"""
     parent_class = inspect.getclasstree([elt])[-1][0][1][0]
     doc = f'<em>class</em> ' + format_ft_def(elt, full_name, ignore_first=True)
-    if parent_class != object: doc += f'\n\nSubclass of **{link_type(parent_class)}**'
+    if parent_class != object: doc += f' :: Inherits from ({link_type(parent_class, include_bt=True)})'
     return doc
 
-def show_doc(elt, doc_string=True, full_name=None, arg_comments={}, alt_doc_string=''):
+def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}, alt_doc_string:str=''):
+    """show doc for element. Supported types: class, function, method, and enum"""
     if full_name is None: full_name = elt.__name__
     if inspect.isclass(elt):
         if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name)
         else:                      doc = get_cls_doc(elt, full_name)
-    elif inspect.isfunction(elt):  doc = get_ft_doc(elt, full_name)
+    elif inspect.isfunction(elt):  doc = format_ft_def(elt, full_name)
+    elif inspect.ismethod(elt):    doc = format_ft_def(elt, full_name)
+    else: doc = f'doc definition not supported for {full_name}'
     link = f'<a id={full_name}></a>'
 
     if is_fastai_class(elt): doc += get_source_link(elt)
@@ -71,7 +76,8 @@ def show_doc(elt, doc_string=True, full_name=None, arg_comments={}, alt_doc_stri
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string)
     display(Markdown(link + doc))
 
-def format_docstring(elt, arg_comments={}, alt_doc_string=''):
+def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
+    """merges and formats the docstring definition with arg_comments and alt_doc_string"""
     parsed = ""
     doc = parse_docstring(inspect.getdoc(elt))
     description = alt_doc_string or doc['long_description'] or doc['short_description']
@@ -89,17 +95,19 @@ def format_docstring(elt, arg_comments={}, alt_doc_string=''):
 
 import re
 BT_REGEX = re.compile("`([^`]*)`")
-def link_docstring(elt, description):
-    for m in BT_REGEX.finditer(description):
+def link_docstring(elt, docstring:str) -> str:
+    """searches `docstring` for backticks and attempts to link those functions to respective documentation"""
+    for m in BT_REGEX.finditer(docstring):
         if m.group(1) in elt.__globals__:
             link_elt = elt.__globals__[m.group(1)]
             if is_fastai_class(link_elt):
                 link = f'[{m.group(0)}]({get_fn_link(link_elt)})'
-                description = description.replace(m.group(0), link)
-    return description
+                docstring = docstring.replace(m.group(0), link)
+    return docstring
 
 
-def import_mod(mod_name):
+def import_mod(mod_name:str):
+    """returns module from `mod_name`"""
     splits = str.split(mod_name, '.')
     try: 
         if len(splits) > 1 : mod = importlib.import_module('.' + '.'.join(splits[1:]), splits[0])
@@ -108,7 +116,8 @@ def import_mod(mod_name):
     except: 
         print(f"Module {mod_name} doesn't exist.")
 
-def show_doc_from_name(mod_name, ft_name, doc_string=True, arg_comments={}, alt_doc_string=''):
+def show_doc_from_name(mod_name, ft_name:str, doc_string:bool=True, arg_comments:dict={}, alt_doc_string:str=''):
+    """shows documentation for `ft_name`. see `show_doc`"""
     mod = import_mod(mod_name)
     splits = str.split(ft_name, '.')
     assert hasattr(mod, splits[0]), print(f"Module {mod_name} doesn't have a function named {splits[0]}.")
@@ -118,7 +127,8 @@ def show_doc_from_name(mod_name, ft_name, doc_string=True, arg_comments={}, alt_
         elt = getattr(elt, split)
     show_doc(elt, doc_string, ft_name, arg_comments, alt_doc_string)
 
-def get_ft_names(mod):
+def get_ft_names(mod) -> List[str]:
+    """retrieves all the functions of `mod`"""
     fn_names = []
     for elt_name in dir(mod):
         elt = getattr(mod,elt_name)
@@ -129,7 +139,8 @@ def get_ft_names(mod):
         if inspect.isclass(elt) or inspect.isfunction(elt): fn_names.append(elt_name)
     return fn_names
 
-def get_inner_fts(elt):
+def get_inner_fts(elt) -> List[str]:
+    """return methods belonging to class"""
     fts = []
     for ft_name in elt.__dict__.keys():
         if ft_name[:2] == '__': continue
@@ -139,6 +150,7 @@ def get_inner_fts(elt):
     return fts
 
 def get_module_toc(mod_name):
+    """displays table of contents for given `mod_name`"""
     mod = import_mod(mod_name)
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
     ft_names.sort(key = str.lower)
@@ -152,7 +164,8 @@ def get_module_toc(mod_name):
                 tabmat += f'  - [{name}](#{name})\n'
     display(Markdown(tabmat))
 
-def get_class_toc(mod_name, cls_name):
+def get_class_toc(mod_name:str, cls_name:str):
+    """displays table of contents for `cls_name`"""
     splits = str.split(mod_name, '.')
     try: mod = importlib.import_module('.' + '.'.join(splits[1:]), splits[0])
     except: 
@@ -179,14 +192,17 @@ def show_video_from_youtube(code, start=0):
     url = f'https://www.youtube.com/embed/{code}?start={start}&amp;rel=0&amp;controls=0&amp;showinfo=0'
     return show_video(url)
 
-def get_fn_link(ft):
+def get_fn_link(ft) -> str:
+    """returns function link to notebook documentation"""
     if hasattr(ft, '__name__'):
         name = ft.__name__
     elif hasattr(ft,'__class__'):
         name = ft.__class__.__name__
+
     return f'{ft.__module__}.ipynb#{name}'
 
-def get_source_link(ft):
+def get_source_link(ft) -> str:
+    """returns link to  line in source code"""
     lineno = inspect.getsourcelines(ft)[1]
     modstr = str(ft.__module__).replace('.', '/')
     link = f"{modstr}.py#L{lineno}"
