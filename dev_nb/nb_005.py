@@ -52,7 +52,7 @@ class AdaptiveConcatPool2d(nn.Module):
     def forward(self, x): return torch.cat([self.mp(x), self.ap(x)], 1)
 
 def create_body(model, cut=None, body_fn=None):
-    return (nn.Sequential(*list(model.children())[:-cut]) if cut
+    return (nn.Sequential(*list(model.children())[:cut]) if cut
             else body_fn(model) if body_fn else model)
 
 def num_features(m):
@@ -91,15 +91,26 @@ def apply_init(m, init_fn): apply_leaf(m, partial(cond_init, init_fn=init_fn))
 def _init(learn, init): apply_init(learn.model, init)
 Learner.init = _init
 
+def _default_split(m): return split_model(m, m[1])
+def _resnet_split(m):  return split_model(m, (m[0][6],m[1]))
+_default_meta = {'cut':-1, 'split':_default_split}
+_resnet_meta  = {'cut':-2, 'split':_resnet_split }
+model_meta = {
+    tvm.resnet18 :{**_resnet_meta}, tvm.resnet34: {**_resnet_meta},
+    tvm.resnet50 :{**_resnet_meta}, tvm.resnet101:{**_resnet_meta},
+    tvm.resnet152:{**_resnet_meta}}
+
 class ConvLearner(Learner):
-    def __init__(self, data, arch, cut, pretrained=True, lin_ftrs=None, ps=0.5, custom_head=None, **kwargs):
+    def __init__(self, data, arch, cut=None, pretrained=True, lin_ftrs=None, ps=0.5,
+                 custom_head=None, split_on=None, **kwargs):
+        meta = model_meta.get(arch, _default_meta)
         torch.backends.cudnn.benchmark = True
-        body = create_body(arch(pretrained), cut)
+        body = create_body(arch(pretrained), ifnone(cut,meta['cut']))
         nf = num_features(body) * 2
         head = custom_head or create_head(nf, data.c, lin_ftrs, ps)
         model = nn.Sequential(body, head)
         super().__init__(data, model, **kwargs)
-        self.split([model[1]])
+        self.split(ifnone(split_on,meta['split']))
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
 
