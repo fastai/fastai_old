@@ -27,9 +27,6 @@ def lm_split(model):
     groups.append(nn.Sequential(model[0].encoder, model[0].encoder_dp, model[1]))
     return groups
 
-def save_encoder(learn, name):
-    torch.save(learn.model[0].state_dict(), learn.path/learn.model_dir/f'{name}.pth')
-
 from torch.utils.data import Sampler, BatchSampler
 
 class SortSampler(Sampler):
@@ -67,6 +64,17 @@ def pad_collate(samples, pad_idx=1, pad_first=True):
     res = torch.zeros(max_len, len(samples)).long() + pad_idx
     for i,s in enumerate(samples): res[-len(s[0]):,i] = LongTensor(s[0])
     return res, LongTensor([s[1] for s in samples]).squeeze()
+
+def classifier_data(datasets, path, **kwargs):
+    bs = kwargs.pop('bs') if 'bs' in kwargs else 64
+    pad_idx = kwargs.pop('pad_idx') if 'pad_idx' in kwargs else 1
+    train_sampler = SortishSampler(datasets[0].ids, key=lambda x: len(datasets[0].ids[x]), bs=bs//2)
+    train_dl = DeviceDataLoader.create(datasets[0], bs//2, sampler=train_sampler, collate_fn=pad_collate)
+    dataloaders = [train_dl]
+    for ds in datasets[1:]:
+        sampler = SortSampler(ds.ids, key=lambda x: len(ds.ids[x]))
+        dataloaders.append(DeviceDataLoader.create(ds, bs,  sampler=sampler, collate_fn=pad_collate))
+    return DataBunch(*dataloaders, path=path)
 
 class MultiBatchRNNCore(RNNCore):
     def __init__(self, bptt, max_seq, *args, **kwargs):
@@ -114,6 +122,13 @@ class PoolingLinearClassifier(nn.Module):
         x = self.layers(x)
         return x, raw_outputs, outputs
 
+def rnn_classifier_split(model):
+    "Splits a RNN model in groups."
+    groups = [nn.Sequential(model[0].encoder, model[0].encoder_dp)]
+    groups += [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
+    groups.append(model[1])
+    return groups
+
 def get_rnn_classifier(bptt, max_seq, n_class, vocab_sz, emb_sz, n_hid, n_layers, pad_token, layers, drops,
                        bidir=False, qrnn=False, hidden_p=0.2, input_p=0.6, embed_p=0.1, weight_p=0.5):
     rnn_enc = MultiBatchRNNCore(bptt, max_seq, vocab_sz, emb_sz, n_hid, n_layers, pad_token=pad_token, bidir=bidir,
@@ -127,5 +142,50 @@ def rnn_classifier_split(model):
     groups.append(model[1])
     return groups
 
-def load_encoder(learn, name):
-    learn.model[0].load_state_dict(torch.load(learn.path/learn.model_dir/f'{name}.pth'))
+class RNNLearner(Learner):
+
+    def __init__(self, data, model, bptt, split_func=None, clip=None, adjust=False, alpha=2, beta=1, **kwargs):
+        super().__init__(data, model)
+        self.callbacks.append(RNNTrainer(self, bptt, alpha=alpha, beta=beta, adjust=adjust))
+        if clip: self.callback_fns.append(partial(GradientClipping, clip=clip))
+        if split_func: self.split(split_func)
+        self.metrics = [accuracy]
+
+    def save_encoder(self, name):
+        torch.save(self.model[0].state_dict(), self.path/self.model_dir/f'{name}.pth')
+
+    def load_encoder(self, name):
+        self.model[0].load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
+
+    def load_pretrained(self, wgts_fname, itos_fname):
+        old_itos = pickle.load(open(self.path/self.model_dir/f'{itos_fname}.pkl', 'rb'))
+        old_stoi = {v:k for k,v in enumerate(old_itos)}
+        wgts = torch.load(self.path/self.model_dir/f'{wgts_fname}.pth', map_location=lambda storage, loc: storage)
+        wgts = convert_weights(wgts, old_stoi, self.data.train_ds.vocab.itos)
+        self.model.load_state_dict(wgts)
+
+    @classmethod
+    def language_model(cls, data, bptt=70, emb_sz=400, nh=1150, nl=3, pad_token=1, drop_mult=1., tie_weights=True, bias=True,
+                       qrnn=False, pretrained_fnames=None, **kwargs):
+        dps = np.array([0.25, 0.1, 0.2, 0.02, 0.15]) * drop_mult
+        vocab_size = len(data.train_ds.vocab.itos)
+        model = get_language_model(vocab_size, emb_sz, nh, nl, pad_token, input_p=dps[0], output_p=dps[1],
+                    weight_p=dps[2], embed_p=dps[3], hidden_p=dps[4], tie_weights=tie_weights, bias=bias, qrnn=qrnn)
+        learn = cls(data, model, bptt, split_func=lm_split, **kwargs)
+        if pretrained_fnames is not None: learn.load_pretrained(*pretrained_fnames)
+        return learn
+
+    @classmethod
+    def classifier(cls, data, bptt=70, max_len=70*20, emb_sz=400, nh=1150, nl=3, layers=None, drops=None, pad_token=1,
+                   drop_mult=1., tie_weights=True, bias=True, qrnn=False, pretrained_fnames=None, **kwargs):
+        dps = np.array([0.4,0.5,0.05,0.3,0.4]) * drop_mult
+        if layers is None: layers = [50]
+        if drops is None:  drops = [0.1]
+        vocab_size = len(data.train_ds.vocab.itos)
+        n_class = len(data.train_ds.classes)
+        layers = [emb_sz*3] + layers + [n_class]
+        drops = [dps[4]] + drops
+        model = get_rnn_classifier(bptt, max_len, n_class, vocab_size, emb_sz, nh, nl, pad_token,
+                    layers, drops, input_p=dps[0], weight_p=dps[1], embed_p=dps[2], hidden_p=dps[3], qrnn=qrnn)
+        learn = cls(data, model, bptt, split_func=rnn_classifier_split, **kwargs)
+        return learn
