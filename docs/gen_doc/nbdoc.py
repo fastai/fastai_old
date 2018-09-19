@@ -47,11 +47,6 @@ def get_arg_spec(elt):
     formatted_types = {k:link_type(v) for k,v in annotations.items()}
     return (args, defaults, formatted_types)
 
-def get_ft_doc(elt, full_name:str) -> str:
-    """return function definition for documentation"""
-    doc = format_ft_def(elt, full_name)
-    return doc
-
 def get_enum_doc(elt, full_name:str) -> str:
     """return formatted enum documentation"""
     vals = ', '.join(elt.__members__.keys())
@@ -62,7 +57,7 @@ def get_cls_doc(elt, full_name:str) -> str:
     """return class definition"""
     parent_class = inspect.getclasstree([elt])[-1][0][1][0]
     doc = f'<em>class</em> ' + format_ft_def(elt, full_name, ignore_first=True)
-    if parent_class != object: doc += f':: Inherits from ({link_type(parent_class, include_bt=True)})'
+    if parent_class != object: doc += f' :: Inherits from ({link_type(parent_class, include_bt=True)})'
     return doc
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}, alt_doc_string:str=''):
@@ -71,7 +66,8 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}
     if inspect.isclass(elt):
         if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name)
         else:                      doc = get_cls_doc(elt, full_name)
-    elif inspect.isfunction(elt):  doc = get_ft_doc(elt, full_name)
+    elif inspect.isfunction(elt):  doc = format_ft_def(elt, full_name)
+    elif inspect.ismethod(elt):    doc = format_ft_def(elt, full_name)
     else: doc = f'doc definition not supported for {full_name}'
     link = f'<a id={full_name}></a>'
 
