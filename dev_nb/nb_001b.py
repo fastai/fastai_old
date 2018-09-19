@@ -61,6 +61,8 @@ class Lambda(nn.Module):
 
     def forward(self, x): return self.func(x)
 
+def noop(x): return x
+
 def ResizeBatch(*size:int) -> Tensor:
     "Layer that resizes x to `size`, good for connecting mismatched layers"
     return Lambda(lambda x: x.view((-1,)+size))
@@ -71,10 +73,10 @@ def PoolFlatten()->nn.Sequential:
     "apply `nn.AdaptiveAvgPool2d` to `x` and then flatten the result"
     return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
-def conv2d(ni:int, nf:int, ks:int=3, stride:int=1, padding:int=None) -> nn.Conv2d:
+def conv2d(ni:int, nf:int, ks:int=3, stride:int=1, padding:int=None, bias=False) -> nn.Conv2d:
     "create `nn.Conv2d` layer: `ni` inputs, `nf` outputs, `ks` kernel size. `padding` defaults to `k//2`"
     if padding is None: padding = ks//2
-    return nn.Conv2d(ni, nf, kernel_size=ks, stride=stride, padding=padding)
+    return nn.Conv2d(ni, nf, kernel_size=ks, stride=stride, padding=padding, bias=bias)
 
 def conv2d_relu(ni:int, nf:int, ks:int=3, stride:int=1,
                 padding:int=None, bn:bool=False) -> nn.Sequential:

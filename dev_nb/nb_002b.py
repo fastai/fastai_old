@@ -30,8 +30,8 @@ def transform_datasets(train_ds, valid_ds, test_ds=None, tfms=None, **kwargs):
     return res
 
 # CIFAR 10 stats looked up on google
-cifar_mean,cifar_std = map(tensor, ([0.491, 0.482, 0.447], [0.247, 0.243, 0.261]))
-cifar_norm,cifar_denorm = normalize_funcs(cifar_mean,cifar_std)
+cifar_stats = (tensor([0.491, 0.482, 0.447]), tensor([0.247, 0.243, 0.261]))
+cifar_norm,cifar_denorm = normalize_funcs(*cifar_stats)
 
 def num_cpus():
     try:                   return len(os.sched_getaffinity(0))
