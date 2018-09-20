@@ -6,7 +6,10 @@
 
 from nb_002b import *
 
-def find_coeffs(orig_pts, targ_pts):
+Point=Tuple[float,float]
+Points=Collection[Point]
+def find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
+    "find 8 coeff mentioned here: https://web.archive.org/web/20150222120106/xenia.media.mit.edu/~cwren/interpolator/"
     matrix = []
     #The equations we'll need to solve.
     for p1, p2 in zip(targ_pts, orig_pts):
@@ -18,7 +21,8 @@ def find_coeffs(orig_pts, targ_pts):
     #The 8 scalars we seek are solution of AX = B
     return torch.gesv(B,A)[0][:,0]
 
-def apply_perspective(coords, coeffs):
+def apply_perspective(coords:FlowField, coeffs:Points)->FlowField:
+    "trainform `coords` with `coeffs`"
     size = coords.size()
     #compress all the dims expect the last one ang adds ones, coords become N * 3
     coords = coords.view(-1,2)
@@ -30,25 +34,30 @@ def apply_perspective(coords, coeffs):
 
 _orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
 
-def _perspective_warp(c, targ_pts):
+def _perspective_warp(c:FlowField, targ_pts:Points):
+    "apply warp to `targ_pts` from `_orig_pts` to `c` `FlowField`"
     return apply_perspective(c, find_coeffs(_orig_pts, targ_pts))
 
 @TfmCoord
 def perspective_warp(c, img_size, magnitude:partial(uniform,size=8)=0):
+    "apply warp to `c` and with size `img_size` with `magnitude` amount"
+
     magnitude = magnitude.view(4,2)
     targ_pts = [[x+m for x,m in zip(xs, ms)] for xs, ms in zip(_orig_pts, magnitude)]
     return _perspective_warp(c, targ_pts)
 
 @TfmCoord
 def symmetric_warp(c, img_size, magnitude:partial(uniform,size=4)=0):
+    "apply warp to `c` with size `img_size` and `magnitude` amount"
     m = listify(magnitude, 4)
     targ_pts = [[-1-m[3],-1-m[1]], [-1-m[2],1+m[1]], [1+m[3],-1-m[0]], [1+m[2],1+m[0]]]
     return _perspective_warp(c, targ_pts)
 
-def rand_int(low,high): return random.randint(low, high)
+def rand_int(low:int,high:int)->int: return random.randint(low, high)
 
 @TfmCoord
 def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
+    "tilt `c` field and resize to`img_size` with random `direction` and `magnitude`"
     orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
     if direction == 0:   targ_pts = [[-1,-1], [-1,1], [1,-1-magnitude], [1,1+magnitude]]
     elif direction == 1: targ_pts = [[-1,-1-magnitude], [-1,1+magnitude], [1,-1], [1,1]]
@@ -59,6 +68,7 @@ def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
 
 @TfmCoord
 def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
+    "skew `c` field and resize to`img_size` with random `direction` and `magnitude`"
     orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
     if direction == 0:   targ_pts = [[-1-magnitude,-1], [-1,1], [1,-1], [1,1]]
     elif direction == 1: targ_pts = [[-1,-1-magnitude], [-1,1], [1,-1], [1,1]]
