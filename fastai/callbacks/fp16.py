@@ -4,7 +4,7 @@ from ..basic_train import *
 from torch._utils import _unflatten_dense_tensors
 from torch.nn.utils import parameters_to_vector
 
-__all__ = [MixedPrecision]
+__all__ = ['MixedPrecision']
 
 def bn2float(module:nn.Module) -> nn.Module:
     "Puts all batchnorm layers back in FP32."
