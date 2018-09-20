@@ -1,4 +1,4 @@
-from .core import *
+from ..core import *
 from ..data import DataBunch
 from ..callback import *
 

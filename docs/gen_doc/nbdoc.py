@@ -1,4 +1,4 @@
-import inspect,importlib,enum,re
+import inspect,importlib,enum,os,re
 from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
@@ -62,7 +62,7 @@ def get_cls_doc(elt, full_name:str) -> str:
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}, alt_doc_string:str=''):
     """show doc for element. Supported types: class, function, method, and enum"""
-    if full_name is None: full_name = elt.__name__
+    if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
     if inspect.isclass(elt):
         if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name)
         else:                      doc = get_cls_doc(elt, full_name)
@@ -93,13 +93,12 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
     if return_comment: parsed += f'\n\n*return*: {return_comment}'
     return parsed
 
-import re
 BT_REGEX = re.compile("`([^`]*)`")
 def link_docstring(elt, docstring:str) -> str:
     """searches `docstring` for backticks and attempts to link those functions to respective documentation"""
     for m in BT_REGEX.finditer(docstring):
-        if m.group(1) in elt.__globals__:
-            link_elt = elt.__globals__[m.group(1)]
+        if m.group(1) in globals():
+            link_elt = globals()[m.group(1)]
             if is_fastai_class(link_elt):
                 link = f'[{m.group(0)}]({get_fn_link(link_elt)})'
                 docstring = docstring.replace(m.group(0), link)
@@ -198,14 +197,14 @@ def get_fn_link(ft) -> str:
         name = ft.__name__
     elif hasattr(ft,'__class__'):
         name = ft.__class__.__name__
-
-    return f'{ft.__module__}.ipynb#{name}'
+    return f'{ft.__module__}.html#{name}'
 
 def get_source_link(ft) -> str:
     """returns link to  line in source code"""
     lineno = inspect.getsourcelines(ft)[1]
-    modstr = str(ft.__module__).replace('.', '/')
-    link = f"{modstr}.py#L{lineno}"
+    fpath = os.path.realpath(inspect.getfile(ft))
+    relpath = os.path.relpath(fpath, os.getcwd())
+    link = f"{relpath}#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def create_anchor(name):

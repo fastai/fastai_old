@@ -2,7 +2,7 @@ from .torch_core import *
 from .data import *
 from .callback import *
 
-__all__ = [loss_batch, fit, Learner]
+__all__ = ['loss_batch', 'fit', 'Learner']
 
 def loss_batch(model:nn.Module, xb:Tensor, yb:Tensor, loss_fn:LossFunction, opt:OptimWrapper=None,
                cb_handler:CallbackHandler=None, metrics:Collection[Metric]=None) -> Sequence[Union[float,int]]:
