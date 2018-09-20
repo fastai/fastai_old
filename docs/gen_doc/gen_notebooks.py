@@ -166,8 +166,7 @@ def read_nb_content(cells, mod_name):
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'code':
             match = re.match(r"(.*)show_doc\(([\w\.]*)", cell['source'])
-            if match is not None and match.groups()[1] == mod_name:
-                doc_fns[match.groups()[2]] = i
+            if match is not None: doc_fns[match.groups()[1]] = i
     return doc_fns
 
 def read_nb_types(cells):
