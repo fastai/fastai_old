@@ -28,7 +28,8 @@ from torch.nn.utils import parameters_to_vector
 
 def get_master(layer_groups:Collection[nn.Module], flat_master:bool=False) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
     "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"
-    model_params = [[param for param in lg.parameters() if param.requires_grad] for lg in layer_groups]
+    split_groups = split_bn_bias(layer_groups)
+    model_params = [[param for param in lg.parameters() if param.requires_grad] for lg in split_groups]
     if flat_master:
         master_params = [parameters_to_vector([param.data.float() for param in lg]) for lg in model_params]
         master_params = [torch.nn.Parameter(mp, requires_grad=True) for mp in master_params]
@@ -87,7 +88,8 @@ class MixedPrecision(Callback):
         #Changes the optimizer so that the optimization step is done in FP32.
         opt = self.learn.opt
         mom,wd,beta = opt.mom,opt.wd,opt.beta
-        opt_params = [{'params': mp, 'lr': lr} for mp,lr in zip(self.master_params, self.learn.opt._lr)]
+        lrs = [lr for lr in self.learn.opt._lr for _ in range(2)]
+        opt_params = [{'params': mp, 'lr': lr} for mp,lr in zip(self.master_params, lrs)]
         self.learn.opt.opt = self.learn.opt_fn(opt_params)
         opt.mom,opt.wd,opt.beta = mom,wd,beta
 
