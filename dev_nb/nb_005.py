@@ -154,7 +154,7 @@ def _tta_only(learn, is_test=False, scale=1.25):
 
 Learner.tta_only = _tta_only
 
-def _TTA(learn, beta=0.5, scale=1.35, is_test=False):
+def _TTA(learn, beta=0.4, scale=1.35, is_test=False):
     preds,y = learn.get_preds(is_test)
     all_preds = list(learn.tta_only(scale=scale, is_test=is_test))
     avg_preds = torch.stack(all_preds).mean(0)
