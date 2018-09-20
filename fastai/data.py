@@ -1,6 +1,6 @@
 from .torch_core import *
 
-__all__ = [DeviceDataLoader, DataBunch]
+__all__ = ['DeviceDataLoader', 'DataBunch']
 
 @dataclass
 class DeviceDataLoader():
