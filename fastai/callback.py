@@ -1,7 +1,7 @@
 from .data import *
 from .torch_core import *
 
-__all__ = [OptimWrapper, Callback, CallbackHandler, Recorder, Stepper]
+__all__ = ['OptimWrapper', 'Callback', 'CallbackHandler', 'Recorder', 'Stepper']
 
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
@@ -208,14 +208,13 @@ class Recorder(Callback):
         if self.pbar is not None and hasattr(self.pbar,'child'):
             self.pbar.child.comment = f'{smooth_loss:.4f}'
 
-    def on_epoch_end(self, epoch:int, num_batch:int, smooth_loss:float, last_metrics:Sequence[float], **kwargs):
+    def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
         self.nb_batches.append(num_batch)
         if last_metrics is not None:
             self.val_losses.append(last_metrics[0])
             if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            self.pbar.write(f'{epoch}, {smooth_loss}, {*last_metrics}')
-            self.pbar.update_graph(*self.send_graphs())
-        else:  self.pbar.write(f'{epoch}, {smooth_loss}')
+            self.format_stats([epoch, smooth_loss] + last_metrics)
+        else:  self.format_stats([epoch, smooth_loss])
 
     def plot_lr(self, show_moms:bool=False):
         iterations = list(range(len(self.lrs)))

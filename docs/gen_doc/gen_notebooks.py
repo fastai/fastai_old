@@ -39,9 +39,9 @@ def get_code_cell(code, hidden=False):
             'source' : code,
             'outputs': []}
 
-def get_doc_cell(mod_name, ft_name):
+def get_doc_cell(ft_name):
     "a code cell with the command to show the doc of a given function"
-    code = f"show_doc_from_name('{mod_name}','{ft_name}')"
+    code = f"show_doc({ft_name})"
     return get_code_cell(code, True)
 
 def is_enum(cls):
@@ -75,12 +75,12 @@ def get_global_vars(mod):
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
 
-def get_source_link(mod, lineno):
+def get_source_link(mod, lineno) -> str:
     "Returns link to line number in source code"
-    modstr = mod.__name__.replace('.', '/')
-    link = f"{modstr}.py#L{lineno}"
+    fpath = os.path.realpath(inspect.getfile(mod))
+    relpath = os.path.relpath(fpath, os.getcwd())
+    link = f"{relpath}#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
-
 
 def get_ft_names(mod):
     "Returns all the functions of module `mod`"
@@ -114,7 +114,7 @@ def create_module_page(mod_name, dest_path):
     mod = importlib.import_module(mod_name)
     ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
     ft_names.sort(key = str.lower)
-    cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
+    cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'from {mod_name} import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
 
     gvars = get_global_vars(mod)
     if gvars: cells.append(get_md_cell('### Global Variable Definitions:'))
@@ -124,13 +124,13 @@ def create_module_page(mod_name, dest_path):
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
             continue
-        cells += [get_doc_cell(f'{mod_name}',ft_name), get_empty_cell()]
+        cells += [get_doc_cell(ft_name), get_empty_cell()]
         elt = getattr(mod, ft_name)
         if inspect.isclass(elt) and not is_enum(elt.__class__):
             in_ft_names = get_inner_fts(elt)
             in_ft_names.sort(key = str.lower)
             for name in in_ft_names:
-                cells += [get_doc_cell(f'{mod_name}', name), get_empty_cell()]
+                cells += [get_doc_cell(name), get_empty_cell()]
     nb['cells'] = init_cell + cells
     json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
     execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
@@ -165,9 +165,8 @@ def read_nb_content(cells, mod_name):
     doc_fns = {}
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'code':
-            match = re.match(r"(.*)show_doc_from_name\('([^']*)',\s*'([^']*)'", cell['source'])
-            if match is not None and match.groups()[1] == mod_name:
-                doc_fns[match.groups()[2]] = i
+            match = re.match(r"(.*)show_doc\(([\w\.]*)", cell['source'])
+            if match is not None: doc_fns[match.groups()[1]] = i
     return doc_fns
 
 def read_nb_types(cells):
@@ -192,12 +191,12 @@ def update_pos(pos_dict, start_key, nbr=2):
         if str.lower(key) >= str.lower(start_key): pos_dict[key] += nbr
     return pos_dict
 
-def insert_cells(cells, pos_dict, mod_name, ft_name):
+def insert_cells(cells, pos_dict, ft_name):
     "Insert the function doc cells of a function in the list of cells at their correct postition and updates the position dictionary"
     idx = get_insert_idx(pos_dict, ft_name)
-    if idx == -1: cells += [get_doc_cell(mod_name,ft_name), get_empty_cell()]
+    if idx == -1: cells += [get_doc_cell(ft_name), get_empty_cell()]
     else:
-        cells.insert(idx, get_doc_cell(mod_name, ft_name))
+        cells.insert(idx, get_doc_cell(ft_name))
         cells.insert(idx+1, get_empty_cell())
         pos_dict = update_pos(pos_dict, ft_name, 2)
     return cells, pos_dict
@@ -223,14 +222,14 @@ def update_module_page(mod_name, dest_path):
             continue
 
         if ft_name not in pos_dict.keys():
-            cells, pos_dict = insert_cells(cells, pos_dict, mod_name, ft_name)
+            cells, pos_dict = insert_cells(cells, pos_dict, ft_name)
         elt = getattr(mod, ft_name)
         if inspect.isclass(elt) and not is_enum(elt.__class__):
             in_ft_names = get_inner_fts(elt)
             in_ft_names.sort(key = str.lower)
             for name in in_ft_names:
                 if name not in pos_dict.keys():
-                    cells, pos_dict = insert_cells(cells, pos_dict, mod_name, name)
+                    cells, pos_dict = insert_cells(cells, pos_dict, name)
     nb['cells'] = cells
     json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
     execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
