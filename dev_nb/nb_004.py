@@ -508,7 +508,7 @@ class OneCycleScheduler(Callback):
 
     def __post_init__(self): self.moms=tuple(listify(self.moms,2))
 
-    def steps(self, *steps_cfg:StartEndTuple):
+    def steps(self, *steps_cfg:StartOptEnd):
         "build anneal schedule for all of the parameters"
         return [Stepper(step, n_iter, func=func)
                 for (step,(n_iter,func)) in zip(steps_cfg, self.phases)]
