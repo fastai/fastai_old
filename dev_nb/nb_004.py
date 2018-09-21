@@ -7,12 +7,12 @@
 from nb_003 import *
 from torch import Tensor,tensor
 from fast_progress import master_bar,progress_bar
-from fast_progress.fast_progress import MasterBar
+from fast_progress.fast_progress import MasterBar, ProgressBar
 import re
 from typing import Iterator
 
 Floats = Union[float, Collection[float]]
-Rank0Tensor = typing.NewType('Rank0Tensor', Tensor)
+PBar = Union[MasterBar, ProgressBar]
 
 class OptimWrapper():
     "normalize naming of parameters on wrapped optimizers"
@@ -171,7 +171,7 @@ class CallbackHandler():
         "call through to all of the callback handlers"
         return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
-    def on_train_begin(self, epochs:int, pbar:MasterBar, metrics:MetricFuncList)->None:
+    def on_train_begin(self, epochs:int, pbar:PBar, metrics:MetricFuncList)->None:
         "about to start learning"
         self.state_dict = _get_init_state()
         self.state_dict['n_epochs'],self.state_dict['pbar'],self.state_dict['metrics'] = epochs,pbar,metrics
@@ -267,7 +267,7 @@ def loss_batch(model:Model, xb:Tensor, yb:Tensor, loss_fn:OptLossFunc=None,
 
 def validate(model:Model, dl:DataLoader, loss_fn:OptLossFunc=None,
              metrics:OptMetrics=None, cb_handler:OptCallbackHandler=None,
-             pbar:Optional[MasterBar]=None)->Iterator[Tuple[Union[Tensor,int],...]]:
+             pbar:Optional[PBar]=None)->Iterator[Tuple[Union[Tensor,int],...]]:
     "calculate loass and metrics for the validation set"
     model.eval()
     with torch.no_grad():
@@ -329,7 +329,7 @@ class Recorder(LearnerCallback):
         self.opt = self.learn.opt
         self.train_dl = self.learn.data.train_dl
 
-    def on_train_begin(self, pbar:MasterBar, metrics:MetricFuncList, **kwargs:Any)->None:
+    def on_train_begin(self, pbar:PBar, metrics:MetricFuncList, **kwargs:Any)->None:
         "initialize recording status at beginning of training"
         self.pbar = pbar
         self.names = ['epoch', 'train loss', 'valid loss'] + [fn.__name__ for fn in metrics]
@@ -477,10 +477,10 @@ def annealing_poly(degree:Number)->Number:
     return functools.partial(do_annealing_poly, degree=degree)
 
 def is_tuple(x:Any)->bool: return isinstance(x, tuple)
-StartEndTuple=Tuple[float,float]
+StartOptEnd=Union[float,Tuple[float,float]]
 class Stepper():
     "used to \"step\" from start,end (`vals`) over `n_iter` iterations on a schedule defined by `func` (defaults to linear)"
-    def __init__(self, vals:StartEndTuple, n_iter:int, func:Optional[AnnealFunc]=None):
+    def __init__(self, vals:StartOptEnd, n_iter:int, func:Optional[AnnealFunc]=None):
         self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
         self.n_iter = n_iter
         if func is None: self.func = annealing_linear if is_tuple(vals) else annealing_no
