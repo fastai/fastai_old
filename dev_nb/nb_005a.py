@@ -6,14 +6,18 @@
 
 from nb_005 import *
 
+
+HookFunc = Callable[[Model, Tensors, Tensors], Any]
+
 class Hook():
-    def __init__(self, m, hook_func, is_forward=True):
+    "Creates a hook"
+    def __init__(self, m:Model, hook_func:HookFunc, is_forward:bool=True):
         self.hook_func,self.stored = hook_func,None
         f = m.register_forward_hook if is_forward else m.register_backward_hook
         self.hook = f(self.hook_fn)
         self.removed = False
 
-    def hook_fn(self, module, input, output):
+    def hook_fn(self, module:Model, input:Tensors, output:Tensors):
         input  = (o.detach() for o in input ) if is_listy(input ) else input.detach()
         output = (o.detach() for o in output) if is_listy(output) else output.detach()
         self.stored = self.hook_func(module, input, output)
@@ -24,11 +28,12 @@ class Hook():
             self.removed=True
 
 class Hooks():
-    def __init__(self, ms, hook_func, is_forward=True):
+    "Creates several hooks"
+    def __init__(self, ms:Collection[Model], hook_func:HookFunc, is_forward:bool=True):
         self.hooks = [Hook(m, hook_func, is_forward) for m in ms]
 
-    def __getitem__(self,i): return self.hooks[i]
-    def __len__(self): return len(self.hooks)
+    def __getitem__(self,i:int) -> Hook: return self.hooks[i]
+    def __len__(self) -> int: return len(self.hooks)
     def __iter__(self): return iter(self.hooks)
     @property
     def stored(self): return [o.stored for o in self]
@@ -36,11 +41,12 @@ class Hooks():
     def remove(self):
         for h in self.hooks: h.remove()
 
-def hook_output (module):  return Hook (module,  lambda m,i,o: o)
-def hook_outputs(modules): return Hooks(modules, lambda m,i,o: o)
+def hook_output (module:Model) -> Hook:  return Hook (module,  lambda m,i,o: o)
+def hook_outputs(modules:Collection[Model]) -> Hooks: return Hooks(modules, lambda m,i,o: o)
 
 class HookCallback(LearnerCallback):
-    def __init__(self, learn, modules=None, do_remove=True):
+    "Callback that registers given hooks"
+    def __init__(self, learn:Learner, modules:Sequence[Model]=None, do_remove:bool=True):
         super().__init__(learn)
         self.modules,self.do_remove = modules,do_remove
 
@@ -57,11 +63,13 @@ class HookCallback(LearnerCallback):
     def __del__(self): self.remove()
 
 class ActivationStats(HookCallback):
+    "Callback that record the activations"
     def on_train_begin(self, **kwargs):
         super().on_train_begin(**kwargs)
         self.stats = []
 
-    def hook(self, m,i,o): return o.mean().item(),o.std().item()
+    def hook(self, m:Model, i:Tensors, o:Tensors) -> Tuple[Rank0Tensor,Rank0Tensor]:
+        return o.mean().item(),o.std().item()
     def on_batch_end(self, **kwargs): self.stats.append(self.hooks.stored)
     def on_train_end(self, **kwargs): self.stats = tensor(self.stats).permute(2,1,0)
 

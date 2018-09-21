@@ -6,12 +6,14 @@
 
 from nb_005a import *
 import pandas as pd
+from pandas import Series
 import csv
 from collections import OrderedDict
 
-def uniqueify(x): return list(OrderedDict.fromkeys(x).keys())
+def uniqueify(x:Series) -> List[Any]: return list(OrderedDict.fromkeys(x).keys())
 
-def fbeta(y_pred, y_true, thresh=0.5, beta=2, eps=1e-9, sigmoid=True):
+def fbeta(y_pred:Tensor, y_true:Tensor, thresh:float=0.5, beta:float=2, eps:float=1e-9, sigmoid:bool=True) -> Rank0Tensor:
+    "Computes the f_beta between preds and targets"
     beta2 = beta**2
     if sigmoid: y_pred = y_pred.sigmoid()
     y_pred = (y_pred>thresh).float()
@@ -22,6 +24,6 @@ def fbeta(y_pred, y_true, thresh=0.5, beta=2, eps=1e-9, sigmoid=True):
     res = (prec*rec)/(prec*beta2+rec+eps)*(1+beta2)
     return res.mean()
 
-def accuracy_thresh(y_pred, y_true, thresh=0.5, sigmoid=True):
+def accuracy_thresh(y_pred:Tensor, y_true:Tensor, thresh:float=0.5, sigmoid:bool=True) -> Rank0Tensor:
     if sigmoid: y_pred = y_pred.sigmoid()
     return ((y_pred>thresh)==y_true.byte()).float().mean()
