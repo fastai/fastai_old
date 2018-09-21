@@ -6,23 +6,7 @@
 
 from nb_007a import *
 
-def convert_weights(wgts:Dict[str,Tensor], stoi_wgts:Dict[str,int], itos_new:Collection[str]) -> wgts:Dict[str,Tensor]:
-    "Converts the model weights to go with a new vocabulary."
-    dec_bias, enc_wgts = wgts['1.decoder.bias'], wgts['0.encoder.weight']
-    bias_m, wgts_m = dec_bias.mean(0), enc_wgts.mean(0)
-    new_w = enc_wgts.new_zeros((len(itos_new),enc_wgts.size(1))).zero_()
-    new_b = dec_bias.new_zeros((len(itos_new),)).zero_()
-    for i,w in enumerate(itos_new):
-        r = stoi_wgts[w] if w in stoi_wgts else -1
-        new_w[i] = enc_wgts[r] if r>=0 else wgts_m
-        new_b[i] = dec_bias[r] if r>=0 else bias_m
-    wgts['0.encoder.weight'] = new_w
-    wgts['0.encoder_dp.emb.weight'] = new_w.clone()
-    wgts['1.decoder.weight'] = new_w.clone()
-    wgts['1.decoder.bias'] = new_b
-    return wgts
-
-def lm_split(model:nn.Module) -> List[nn.Module]:
+def lm_split(model:Model) -> List[Model]:
     "Splits a RNN model in groups for differential learning rates."
     groups = [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
     groups.append(nn.Sequential(model[0].encoder, model[0].encoder_dp, model[1]))
@@ -30,11 +14,14 @@ def lm_split(model:nn.Module) -> List[nn.Module]:
 
 from torch.utils.data import Sampler, BatchSampler
 
+NPArrayList = Collection[np.ndarray]
+KeyFunc = Callable[[int], int]
+
 class SortSampler(Sampler):
     "Go through the text data by order of length"
 
-    def __init__(self, data_source:, key): self.data_source,self.key = data_source,key
-    def __len__(self): return len(self.data_source)
+    def __init__(self, data_source:NPArrayList, key:KeyFunc): self.data_source,self.key = data_source,key
+    def __len__(self) -> int: return len(self.data_source)
     def __iter__(self):
         return iter(sorted(range(len(self.data_source)), key=self.key, reverse=True))
 
@@ -42,10 +29,10 @@ class SortSampler(Sampler):
 class SortishSampler(Sampler):
     "Go through the text data by order of length with a bit of randomness"
 
-    def __init__(self, data_source, key, bs):
+    def __init__(self, data_source:NPArrayList, key:KeyFunc, bs:int):
         self.data_source,self.key,self.bs = data_source,key,bs
 
-    def __len__(self): return len(self.data_source)
+    def __len__(self) -> int: return len(self.data_source)
 
     def __iter__(self):
         idxs = np.random.permutation(len(self.data_source))
@@ -60,13 +47,17 @@ class SortishSampler(Sampler):
         sort_idx = np.concatenate((ck_idx[0], sort_idx))
         return iter(sort_idx)
 
-def pad_collate(samples, pad_idx=1, pad_first=True):
+BatchSamples = Collection[Tuple[Collection[int], int]]
+
+def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tuple[LongTensor, LongTensor]:
+    "Function that collect samples and adds padding"
     max_len = max([len(s[0]) for s in samples])
     res = torch.zeros(max_len, len(samples)).long() + pad_idx
     for i,s in enumerate(samples): res[-len(s[0]):,i] = LongTensor(s[0])
     return res, LongTensor([s[1] for s in samples]).squeeze()
 
-def classifier_data(datasets, path, **kwargs):
+def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
+    "Function that transform the datasets in a DataBunch for classification"
     bs = kwargs.pop('bs') if 'bs' in kwargs else 64
     pad_idx = kwargs.pop('pad_idx') if 'pad_idx' in kwargs else 1
     train_sampler = SortishSampler(datasets[0].ids, key=lambda x: len(datasets[0].ids[x]), bs=bs//2)
@@ -78,14 +69,17 @@ def classifier_data(datasets, path, **kwargs):
     return DataBunch(*dataloaders, path=path)
 
 class MultiBatchRNNCore(RNNCore):
-    def __init__(self, bptt, max_seq, *args, **kwargs):
+    "Creates a RNNCore module that can process a full sentence."
+
+    def __init__(self, bptt:int, max_seq:int, *args, **kwargs):
         self.max_seq,self.bptt = max_seq,bptt
         super().__init__(*args, **kwargs)
 
-    def concat(self, arrs):
+    def concat(self, arrs:Collection[Tensor]) -> Tensor:
+        "Concatenates the arrays along the batch dimension."
         return [torch.cat([l[si] for l in arrs]) for si in range(len(arrs[0]))]
 
-    def forward(self, input):
+    def forward(self, input:LongTensor) -> Tuple[Tensor,Tensor]:
         sl,bs = input.size()
         self.reset()
         raw_outputs, outputs = [],[]
@@ -96,24 +90,23 @@ class MultiBatchRNNCore(RNNCore):
                 outputs.append(o)
         return self.concat(raw_outputs), self.concat(outputs)
 
-def bn_dp_lin(n_in, n_out, drop, relu=True):
-    layers = [nn.BatchNorm1d(n_in), nn.Dropout(drop), nn.Linear(n_in, n_out)]
-    if relu: layers.append(nn.ReLU(inplace=True))
-    return layers
-
 class PoolingLinearClassifier(nn.Module):
-    def __init__(self, layers, drops):
-        super().__init__()
-        lyrs = []
-        for i in range(len(layers)-1):
-            lyrs += bn_dp_lin(layers[i], layers[i + 1], drops[i], i!=len(layers)-2)
-        self.layers = nn.Sequential(*lyrs)
+    "Creates a linear classifier with pooling."
 
-    def pool(self, x, bs, is_max):
+    def __init__(self, layers:Collection[int], drops:Collection[float]):
+        super().__init__()
+        mod_layers = []
+        activs = [nn.ReLU(inplace=True)] * (len(layers) - 2) + [None]
+        for n_in,n_out,p,actn in zip(layers[:-1],layers[1:], drops, activs):
+            mod_layers += bn_drop_lin(n_in, n_out, p=p, actn=actn)
+        self.layers = nn.Sequential(*mod_layers)
+
+    def pool(self, x:Tensor, bs:int, is_max:bool):
+        "Pools the tensor along the seq_len dimension."
         f = F.adaptive_max_pool1d if is_max else F.adaptive_avg_pool1d
         return f(x.permute(1,2,0), (1,)).view(bs,-1)
 
-    def forward(self, input):
+    def forward(self, input:Tuple[Tensor,Tensor]) -> Tuple[Tensor,Tensor,Tensor]:
         raw_outputs, outputs = input
         output = outputs[-1]
         sl,bs,_ = output.size()
@@ -123,42 +116,45 @@ class PoolingLinearClassifier(nn.Module):
         x = self.layers(x)
         return x, raw_outputs, outputs
 
-def rnn_classifier_split(model):
+def rnn_classifier_split(model:Model) -> List[Model]:
     "Splits a RNN model in groups."
     groups = [nn.Sequential(model[0].encoder, model[0].encoder_dp)]
     groups += [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
     groups.append(model[1])
     return groups
 
-def get_rnn_classifier(bptt, max_seq, n_class, vocab_sz, emb_sz, n_hid, n_layers, pad_token, layers, drops,
-                       bidir=False, qrnn=False, hidden_p=0.2, input_p=0.6, embed_p=0.1, weight_p=0.5):
+def get_rnn_classifier(bptt:int, max_seq:int, n_class:int, vocab_sz:int, emb_sz:int, n_hid:int, n_layers:int,
+                       pad_token:int, layers:Collection[int], drops:Collection[float], bidir:bool=False, qrnn:bool=False,
+                       hidden_p:float=0.2, input_p:float=0.6, embed_p:float=0.1, weight_p:float=0.5) -> Model:
+    "Creates a RNN classifier model"
     rnn_enc = MultiBatchRNNCore(bptt, max_seq, vocab_sz, emb_sz, n_hid, n_layers, pad_token=pad_token, bidir=bidir,
                       qrnn=qrnn, hidden_p=hidden_p, input_p=input_p, embed_p=embed_p, weight_p=weight_p)
     return SequentialRNN(rnn_enc, PoolingLinearClassifier(layers, drops))
 
-def rnn_classifier_split(model):
-    "Splits a RNN model in groups."
-    groups = [nn.Sequential(model[0].encoder, model[0].encoder_dp)]
-    groups += [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
-    groups.append(model[1])
-    return groups
+SplitFunc = Callable[[Model], List[Model]]
+OptSplitFunc = Optional[SplitFunc]
+OptStrTuple = Optional[Tuple[str,str]]
 
 class RNNLearner(Learner):
-
-    def __init__(self, data, model, bptt, split_func=None, clip=None, adjust=False, alpha=2, beta=1, **kwargs):
+    "Basic class for a Learner in RNN"
+    def __init__(self, data:DataBunch, model:Model, bptt:int=70, split_func:OptSplitFunc=None, clip:float=None,
+                 adjust:bool=False, alpha:float=2., beta:float=1., **kwargs):
         super().__init__(data, model)
         self.callbacks.append(RNNTrainer(self, bptt, alpha=alpha, beta=beta, adjust=adjust))
         if clip: self.callback_fns.append(partial(GradientClipping, clip=clip))
         if split_func: self.split(split_func)
         self.metrics = [accuracy]
 
-    def save_encoder(self, name):
+    def save_encoder(self, name:str):
+        "Saves the encoder to the model directory"
         torch.save(self.model[0].state_dict(), self.path/self.model_dir/f'{name}.pth')
 
-    def load_encoder(self, name):
+    def load_encoder(self, name:str):
+        "Loads the encoder from the model directory"
         self.model[0].load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
-    def load_pretrained(self, wgts_fname, itos_fname):
+    def load_pretrained(self, wgts_fname:str, itos_fname:str):
+        "Loads a pretrained model and adapts it to the data vocabulary."
         old_itos = pickle.load(open(self.path/self.model_dir/f'{itos_fname}.pkl', 'rb'))
         old_stoi = {v:k for k,v in enumerate(old_itos)}
         wgts = torch.load(self.path/self.model_dir/f'{wgts_fname}.pth', map_location=lambda storage, loc: storage)
@@ -166,8 +162,10 @@ class RNNLearner(Learner):
         self.model.load_state_dict(wgts)
 
     @classmethod
-    def language_model(cls, data, bptt=70, emb_sz=400, nh=1150, nl=3, pad_token=1, drop_mult=1., tie_weights=True, bias=True,
-                       qrnn=False, pretrained_fnames=None, **kwargs):
+    def language_model(cls, data:DataBunch, bptt:int=70, emb_sz:int=400, nh:int=1150, nl:int=3, pad_token:int=1,
+                       drop_mult:float=1., tie_weights:bool=True, bias:bool=True, qrnn:bool=False,
+                       pretrained_fnames:OptStrTuple=None, **kwargs) -> 'RNNLearner':
+        "Creates a Learner with a language model."
         dps = np.array([0.25, 0.1, 0.2, 0.02, 0.15]) * drop_mult
         vocab_size = len(data.train_ds.vocab.itos)
         model = get_language_model(vocab_size, emb_sz, nh, nl, pad_token, input_p=dps[0], output_p=dps[1],
@@ -177,8 +175,10 @@ class RNNLearner(Learner):
         return learn
 
     @classmethod
-    def classifier(cls, data, bptt=70, max_len=70*20, emb_sz=400, nh=1150, nl=3, layers=None, drops=None, pad_token=1,
-                   drop_mult=1., tie_weights=True, bias=True, qrnn=False, pretrained_fnames=None, **kwargs):
+    def classifier(cls, data:DataBunch, bptt:int=70, max_len:int=70*20, emb_sz:int=400, nh:int=1150, nl:int=3,
+                   layers:Collection[int]=None, drops:Collection[float]=None, pad_token:int=1,
+                   drop_mult:float=1., qrnn:bool=False, **kwargs) -> 'RNNLearner':
+        "Creates a RNN classifier."
         dps = np.array([0.4,0.5,0.05,0.3,0.4]) * drop_mult
         if layers is None: layers = [50]
         if drops is None:  drops = [0.1]
