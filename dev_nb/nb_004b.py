@@ -6,32 +6,36 @@
 
 from nb_004a import *
 
-def to_half(b):  return [b[0].half(), b[1]]
+def to_half(b:Collection[Tensor])->Collection[Tensor]:
+    "[x,y] -> [x.half(),y] (half precision)"
+    return [b[0].half(), b[1]]
 
-def compose(*funcs):
+def compose(*funcs:Callable)->Callable:
+    "compose list of funcs"
     def compose_(funcs, x, *args, **kwargs):
         for f in listify(funcs): x = f(x, *args, **kwargs)
         return x
     return partial(compose_, funcs)
 
-def bn2float(module):
+def bn2float(module:nn.Module)->nn.Module:
+    "if a module is batchnorm don't use half precision"
     if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()
     for child in module.children(): bn2float(child)
     return module
 
-def model2half(model):
+def model2half(model:nn.Module)->nn.Module:
     "Converts the model to half precision except the batchnorm layers"
     return bn2float(model.half())
 
 from torch._utils import _unflatten_dense_tensors
 from torch.nn.utils import parameters_to_vector
 
-def get_master(layer_groups:Collection[nn.Module], flat_master:bool=False) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
+def get_master(layer_groups:ModuleList, flat_master:bool=False) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
     "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"
     split_groups = split_bn_bias(layer_groups)
     model_params = [[param for param in lg.parameters() if param.requires_grad] for lg in split_groups]
     if flat_master:
-        master_params = [parameters_to_vector([param.data.float() for param in lg]) for lg in model_params]
+        master_params = [parameters_to_vector([param.data.float() for param in lg]) for lg in model_params if lg]
         master_params = [torch.nn.Parameter(mp, requires_grad=True) for mp in master_params]
         for mp in master_params:
             if mp.grad is None: mp.grad = mp.new(*mp.size())
@@ -42,7 +46,7 @@ def get_master(layer_groups:Collection[nn.Module], flat_master:bool=False) -> Tu
             for param in mp: param.requires_grad = True
         return model_params, master_params
 
-def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
+def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False)->None:
     "Copies the model gradients to the master parameters for the optimizer step"
     if flat_master:
         for model_group,master_group in zip(model_params,master_params):
@@ -55,7 +59,7 @@ def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tenso
                     master.grad.data.copy_(model.grad.data)
                 else: master.grad = None
 
-def master2model(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False):
+def master2model(model_params:Sequence[Tensor], master_params:Sequence[Tensor], flat_master:bool=False)->None:
     "Copy master parameters to model parameters"
     if flat_master:
         for model_group,master_group in zip(model_params,master_params):
@@ -76,7 +80,8 @@ class MixedPrecision(Callback):
     flat_master:bool=False
     def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn."
 
-    def on_train_begin(self, **kwargs):
+    def on_train_begin(self, **kwargs:Any)->None:
+        "ensures everything is in half precision mode"
         #Ensures the dataloaders are in half precision.
 #         self.learn.data.train_dl.half = True
         self.learn.data.train_dl.add_tfm(to_half)
@@ -93,32 +98,35 @@ class MixedPrecision(Callback):
         self.learn.opt.opt = self.learn.opt_fn(opt_params)
         opt.mom,opt.wd,opt.beta = mom,wd,beta
 
-    def on_train_end(self, **kwargs):
+    def on_train_end(self, **kwargs:Any)->None:
+        "removes half precision transforms added at `on_train_begin`"
         self.learn.data.train_dl.remove_tfm(to_half)
         if hasattr(self.learn.data, 'valid_dl') and self.learn.data.valid_dl is not None:
             self.learn.data.valid_dl.remove_tfm(to_half)
 
-    def on_loss_begin(self, last_output:Tensor, **kwargs) -> Tensor:
-        #It's better to compute the loss in FP32, to avoid reduction overflow.
+    def on_loss_begin(self, last_output:Tensor, **kwargs:Any) -> Tensor:
+        "converts half precision output to FP32 to avoid reduction overflow."
         return last_output.float()
 
-    def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs) -> Rank0Tensor:
+    def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs:Any) -> Rank0Tensor:
+        "scale gradients up by `loss_scale` to prevent underflow"
         #To avoid gradient underflow, we scale the gradients
         return last_loss * self.loss_scale
 
-    def on_backward_end(self, **kwargs):
-        #Convert the gradients back to FP32 and divide them by the scale.
+    def on_backward_end(self, **kwargs:Any ):
+        "Convert the gradients back to FP32 and divide them by the scale."
         model_g2master_g(self.model_params, self.master_params, self.flat_master)
         for group in self.master_params:
             for param in group: param.grad.div_(self.loss_scale)
 
-    def on_step_end(self, **kwargs):
+    def on_step_end(self, **kwargs:Any)->None:
+        "Update the params from master to model and zero grad"
         #Zeros the gradients of the model since the optimizer is disconnected.
         self.learn.model.zero_grad()
         #Update the params from master to model.
         master2model(self.model_params, self.master_params, self.flat_master)
 
-def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False):
+def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False)->Learner:
     "Transforms the learner in FP16 precision"
     learn.model = model2half(learn.model)
     learn.mp_cb = MixedPrecision(learn, loss_scale=loss_scale, flat_master=flat_master)
