@@ -35,11 +35,15 @@ def get_master(layer_groups:ModuleList, flat_master:bool=False) -> Tuple[List[Li
     split_groups = split_bn_bias(layer_groups)
     model_params = [[param for param in lg.parameters() if param.requires_grad] for lg in split_groups]
     if flat_master:
-        master_params = [parameters_to_vector([param.data.float() for param in lg]) for lg in model_params if lg]
-        master_params = [torch.nn.Parameter(mp, requires_grad=True) for mp in master_params]
-        for mp in master_params:
-            if mp.grad is None: mp.grad = mp.new(*mp.size())
-        return model_params, [[mp] for mp in master_params]
+        master_params = []
+        for lg in model_params:
+            if len(lg) !=0 :
+                mp = parameters_to_vector([param.data.float() for param in lg])
+                mp = torch.nn.Parameter(mp, requires_grad=True)
+                if mp.grad is None: mp.grad = mp.new(*mp.size())
+                master_params.append([mp])
+            else: master_params.append([])
+        return model_params, master_params
     else:
         master_params = [[param.clone().float().detach() for param in lg] for lg in model_params]
         for mp in master_params:
@@ -50,7 +54,8 @@ def model_g2master_g(model_params:Sequence[Tensor], master_params:Sequence[Tenso
     "Copies the model gradients to the master parameters for the optimizer step"
     if flat_master:
         for model_group,master_group in zip(model_params,master_params):
-            master_group[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_group]))
+            if len(master_group) != 0:
+                master_group[0].grad.data.copy_(parameters_to_vector([p.grad.data.float() for p in model_group]))
     else:
         for model_group,master_group in zip(model_params,master_params):
             for model, master in zip(model_group, master_group):
@@ -63,8 +68,9 @@ def master2model(model_params:Sequence[Tensor], master_params:Sequence[Tensor], 
     "Copy master parameters to model parameters"
     if flat_master:
         for model_group,master_group in zip(model_params,master_params):
-            for model, master in zip(model_group, _unflatten_dense_tensors(master_group[0].data, model_group)):
-                model.data.copy_(master)
+            if len(model_group) != 0:
+                for model, master in zip(model_group, _unflatten_dense_tensors(master_group[0].data, model_group)):
+                    model.data.copy_(master)
     else:
         for model_group,master_group in zip(model_params,master_params):
             for model, master in zip(model_group, master_group): model.data.copy_(master.data)
