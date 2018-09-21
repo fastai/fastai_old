@@ -65,8 +65,8 @@ def get_global_vars(mod):
     # https://stackoverflow.com/questions/8820276/docstring-for-variable/31764368#31764368
     import ast,re
     with open(mod.__file__, 'r') as f: fstr = f.read()
-    d = {}
     flines = fstr.splitlines()
+    d = {}
     for node in ast.walk(ast.parse(fstr)):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
             key,lineno = node.targets[0].id,node.targets[0].lineno-1
@@ -74,6 +74,12 @@ def get_global_vars(mod):
             if re.match(f"^{key}\s*=\s*.*", codestr): # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
+
+def get_exports(mod):
+    public_names = mod.__all__ if hasattr(mod, '__all__') else dir(mod)
+    public_names.sort(key=str.lower)
+    return public_names
+
 
 def get_source_link(mod, lineno) -> str:
     "Returns link to line number in source code"
@@ -87,7 +93,7 @@ def get_ft_names(mod):
     # If the module has an attribute __all__, it picks those.
     # Otherwise, it returns all the functions defined inside a module.
     fn_names = []
-    for elt_name in dir(mod):
+    for elt_name in get_exports(mod):
         elt = getattr(mod,elt_name)
         #This removes the files imported from elsewhere
         try:    fname = inspect.getfile(elt)
@@ -112,15 +118,14 @@ def create_module_page(mod_name, dest_path):
     nb = get_empty_notebook()
     init_cell = [get_md_cell(f'# {mod_name}'), get_md_cell('Type an introduction of the package here.')]
     mod = importlib.import_module(mod_name)
-    ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
-    ft_names.sort(key = str.lower)
     cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'from {mod_name} import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
 
-    gvars = get_global_vars(mod)
-    if gvars: cells.append(get_md_cell('### Global Variable Definitions:'))
-    for k,v in gvars.items(): cells.append(get_md_cell(v))
+    gvar_map = get_global_vars(mod)
+    if gvar_map: cells.append(get_md_cell('### Global Variable Definitions:'))
+    for name in get_exports(mod):
+        if name in gvar_map: cells.append(get_md_cell(gvar_map[name]))
 
-    for ft_name in ft_names:
+    for ft_name in get_ft_names(mod):
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
             continue
@@ -206,17 +211,18 @@ def update_module_page(mod_name, dest_path):
     nb = read_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
     mod = importlib.import_module(mod_name)
     mod = importlib.reload(mod)
-    ft_names = mod.__all__ if hasattr(mod,'__all__') else get_ft_names(mod)
-    ft_names.sort(key = str.lower)
     cells = nb['cells']
 
     type_dict = read_nb_types(cells)
-    for k,v in get_global_vars(mod).items():
-        if k in type_dict: cells[type_dict[k]] = get_md_cell(v)
-        else: cells.append(get_md_cell(v))
+    gvar_map = get_global_vars(mod)
+    for name in get_exports(mod):
+        if name not in gvar_map: continue
+        code = gvar_map[name]
+        if name in type_dict: cells[type_dict[name]] = get_md_cell(code)
+        else: cells.append(get_md_cell(code))
 
     pos_dict = read_nb_content(cells, mod_name)
-    for ft_name in ft_names:
+    for ft_name in get_ft_names(mod):
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
             continue
