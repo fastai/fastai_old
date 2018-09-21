@@ -91,10 +91,11 @@ class TabularDataset(DatasetBase):
             self.stats = None
         self.conts = FloatTensor(self.conts)
 
-    def __len__(self): return len(self.y)
-    def __getitem__(self, idx): return ((self.cats[idx], self.conts[idx]), self.y[idx])
+    def __len__(self) -> int: return len(self.y)
+    def __getitem__(self, idx) -> Tuple[Tuple[LongTensor,FloatTensor], Tensor]:
+        return ((self.cats[idx], self.conts[idx]), self.y[idx])
     @property
-    def c(self): return 1
+    def c(self) -> int: return 1
 
 
     @classmethod

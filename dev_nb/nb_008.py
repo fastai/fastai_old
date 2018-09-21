@@ -7,12 +7,13 @@
 from nb_007a import *
 from pandas import Series,DataFrame
 
-def series2cat(df, *col_names):
-    ""
+def series2cat(df:DataFrame, *col_names):
+    "Categorifies the columns in df."
     for c in listify(col_names): df[c] = df[c].astype('category').cat.as_ordered()
 
 @dataclass
-class ColabFilteringDataset():
+class ColabFilteringDataset(DatasetBase):
+    "Base dataset for collaborative filtering"
     user:Series
     item:Series
     ratings:DataFrame
@@ -20,10 +21,13 @@ class ColabFilteringDataset():
         self.user_ids = np.array(self.user.cat.codes, dtype=np.int64)
         self.item_ids = np.array(self.item.cat.codes, dtype=np.int64)
 
-    def __len__(self): return len(self.ratings)
+    def __len__(self)->int: return len(self.ratings)
 
-    def __getitem__(self, idx:int):
+    def __getitem__(self, idx:int)->Tuple[Tuple[int,int],float]:
         return (self.user_ids[idx],self.item_ids[idx]), self.ratings[idx]
+
+    @property
+    def c(self) -> int: return 1
 
     @property
     def n_user(self)->int: return len(self.user.cat.categories)
@@ -32,7 +36,9 @@ class ColabFilteringDataset():
     def n_item(self)->int: return len(self.item.cat.categories)
 
     @classmethod
-    def from_df(cls, rating_df:DataFrame, pct_val:float=0.2, user_name:str=None, item_name:str=None, rating_name:str=None):
+    def from_df(cls, rating_df:DataFrame, pct_val:float=0.2, user_name:Optional[str]=None, item_name:Optional[str]=None,
+                rating_name:Optional[str]=None) -> Tuple['ColabFilteringDataset','ColabFilteringDataset']:
+        "Splits a given dataframe in a training and validation set"
         if user_name is None:   user_name = rating_df.columns[0]
         if item_name is None:   item_name = rating_df.columns[1]
         if rating_name is None: rating_name = rating_df.columns[2]
@@ -45,21 +51,25 @@ class ColabFilteringDataset():
                 cls(user[idx[:cut]], item[idx[:cut]], ratings[idx[:cut]]))
 
     @classmethod
-    def from_csv(cls, csv_name:str, **kwargs):
+    def from_csv(cls, csv_name:str, **kwargs) -> Tuple['ColabFilteringDataset','ColabFilteringDataset']:
+        "Splits a given table in a csv in a training and validation set"
         df = pd.read_csv(csv_name)
         return cls.from_df(df, **kwargs)
 
 def trunc_normal_(x:Tensor, mean:float=0., std:float=1.) -> Tensor:
+    "Truncated normal initialization"
     # From https://discuss.pytorch.org/t/implementing-truncated-normal-initializer/4778/12
     return x.normal_().fmod_(2).mul_(std).add_(mean)
 
-def get_embedding(ni:int,nf:int) -> nn.Module:
+def get_embedding(ni:int,nf:int) -> Model:
+    "Creates an embedding layer"
     emb = nn.Embedding(ni, nf)
     # See https://arxiv.org/abs/1711.09160
     with torch.no_grad(): trunc_normal_(emb.weight, std=0.01)
     return emb
 
 class EmbeddingDotBias(nn.Module):
+    "Base model for callaborative filtering"
     def __init__(self, n_factors:int, n_users:int, n_items:int, min_score:float=None, max_score:float=None):
         super().__init__()
         self.min_score,self.max_score = min_score,max_score
@@ -67,7 +77,7 @@ class EmbeddingDotBias(nn.Module):
             (n_users, n_factors), (n_items, n_factors), (n_users,1), (n_items,1)
         ]]
 
-    def forward(self, users, items):
+    def forward(self, users:LongTensor, items:LongTensor) -> Tensor:
         dot = self.u_weight(users)* self.i_weight(items)
         res = dot.sum(1) + self.u_bias(users).squeeze() + self.i_bias(items).squeeze()
         if self.min_score is None: return res
@@ -75,6 +85,7 @@ class EmbeddingDotBias(nn.Module):
 
 def get_collab_learner(n_factors:int, data:DataBunch, min_score:float=None, max_score:float=None,
                        loss_fn:LossFunction=F.mse_loss, **kwargs) -> Learner:
+    "Creates a learner for collaborative filtering"
     ds = data.train_ds
     model = EmbeddingDotBias(n_factors, ds.n_user, ds.n_item, min_score, max_score)
     return Learner(data, model, loss_fn=loss_fn, **kwargs)
