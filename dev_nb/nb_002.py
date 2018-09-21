@@ -162,7 +162,7 @@ class ItemBase():
     def data(self): pass
 
 class ImageBase(ItemBase):
-    "Img based `Dataset` items dervie from this. Subclass to handle lighting, pixel, etc"
+    "Img based `Dataset` items derive from this. Subclass to handle lighting, pixel, etc"
     def lighting(self, func:LightingFunc, *args, **kwargs)->'ImageBase': return self
     def pixel(self, func:PixelFunc, *args, **kwargs)->'ImageBase': return self
     def coord(self, func:CoordFunc, *args, **kwargs)->'ImageBase': return self
@@ -192,7 +192,7 @@ class Image(ImageBase):
         "returns (ch, h, w) for this image"
         return self._px.shape
     @property
-    def size(self)->Tuple[int,int,int]:
+    def size(self)->Tuple[int,int]:
         "returns (h, w) for this image"
         return self.shape[-2:]
     @property
@@ -405,7 +405,7 @@ def contrast(x, scale:log_uniform):
     "`scale` contrast of image `x`"
     return x.mul_(scale)
 
-TfmList=Collection[Transform]
+TfmList=Union[Transform, Collection[Transform]]
 def resolve_tfms(tfms:TfmList):
     "resolve every tfm in `tfms`"
     for f in listify(tfms): f.resolve()

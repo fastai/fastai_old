@@ -8,6 +8,7 @@ from nb_007a import *
 from pandas import Series,DataFrame
 
 def series2cat(df, *col_names):
+    ""
     for c in listify(col_names): df[c] = df[c].astype('category').cat.as_ordered()
 
 @dataclass
@@ -21,17 +22,17 @@ class ColabFilteringDataset():
 
     def __len__(self): return len(self.ratings)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx:int):
         return (self.user_ids[idx],self.item_ids[idx]), self.ratings[idx]
 
     @property
-    def n_user(self): return len(self.user.cat.categories)
+    def n_user(self)->int: return len(self.user.cat.categories)
 
     @property
-    def n_item(self): return len(self.item.cat.categories)
+    def n_item(self)->int: return len(self.item.cat.categories)
 
     @classmethod
-    def from_df(cls, rating_df, pct_val=0.2, user_name=None, item_name=None, rating_name=None):
+    def from_df(cls, rating_df:DataFrame, pct_val:float=0.2, user_name:str=None, item_name:str=None, rating_name:str=None):
         if user_name is None:   user_name = rating_df.columns[0]
         if item_name is None:   item_name = rating_df.columns[1]
         if rating_name is None: rating_name = rating_df.columns[2]
@@ -44,22 +45,22 @@ class ColabFilteringDataset():
                 cls(user[idx[:cut]], item[idx[:cut]], ratings[idx[:cut]]))
 
     @classmethod
-    def from_csv(cls, csv_name, **kwargs):
+    def from_csv(cls, csv_name:str, **kwargs):
         df = pd.read_csv(csv_name)
         return cls.from_df(df, **kwargs)
 
-def trunc_normal_(x, mean=0., std=1.):
+def trunc_normal_(x:Tensor, mean:float=0., std:float=1.) -> Tensor:
     # From https://discuss.pytorch.org/t/implementing-truncated-normal-initializer/4778/12
     return x.normal_().fmod_(2).mul_(std).add_(mean)
 
-def get_embedding(ni,nf):
+def get_embedding(ni:int,nf:int) -> nn.Module:
     emb = nn.Embedding(ni, nf)
     # See https://arxiv.org/abs/1711.09160
     with torch.no_grad(): trunc_normal_(emb.weight, std=0.01)
     return emb
 
 class EmbeddingDotBias(nn.Module):
-    def __init__(self, n_factors, n_users, n_items, min_score=None, max_score=None):
+    def __init__(self, n_factors:int, n_users:int, n_items:int, min_score:float=None, max_score:float=None):
         super().__init__()
         self.min_score,self.max_score = min_score,max_score
         (self.u_weight, self.i_weight, self.u_bias, self.i_bias) = [get_embedding(*o) for o in [
@@ -71,3 +72,9 @@ class EmbeddingDotBias(nn.Module):
         res = dot.sum(1) + self.u_bias(users).squeeze() + self.i_bias(items).squeeze()
         if self.min_score is None: return res
         return torch.sigmoid(res) * (self.max_score-self.min_score) + self.min_score
+
+def get_collab_learner(n_factors:int, data:DataBunch, min_score:float=None, max_score:float=None,
+                       loss_fn:LossFunction=F.mse_loss, **kwargs) -> Learner:
+    ds = data.train_ds
+    model = EmbeddingDotBias(n_factors, ds.n_user, ds.n_item, min_score, max_score)
+    return Learner(data, model, loss_fn=loss_fn, **kwargs)
