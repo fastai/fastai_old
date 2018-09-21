@@ -141,26 +141,32 @@ class ConvLearner(Learner):
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
 
-def pred_batch(learn, is_valid=True):
+def pred_batch(learn:Learner, is_valid:bool=True) -> Tuple[Tensors, Tensors, Tensors]:
+    "Returns input, target and output of the model on a batch"
     x,y = next(iter(learn.data.valid_dl if is_valid else learn.data.train_dl))
     return x,y,learn.model(x).detach()
 Learner.pred_batch = pred_batch
 
-def get_preds(model, dl, pbar=None):
+def get_preds(model:Model, dl:DataLoader, pbar:Optional[PBar]=None) -> List[Tensor]:
+    "Predicts the output of the elements in the dataloader"
     return [torch.cat(o).cpu() for o in validate(model, dl, pbar=pbar)]
 
-def _learn_get_preds(learn, is_test=False):
+def _learn_get_preds(learn:Learner, is_test:bool=False) -> List[Tensor]:
+    "Wrapper of get_preds for learner"
     return get_preds(learn.model, learn.data.holdout(is_test))
 Learner.get_preds = _learn_get_preds
 
-def show_image_batch(dl, classes, rows=None, figsize=(12,15), denorm=None):
+def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figsize:Tuple[int,int]=(12,15),
+                     denorm:Callable=None) -> None:
+    "Show a few images from a batch"
     x,y = next(iter(dl))
     if rows is None: rows = int(math.sqrt(len(x)))
     x = x[:rows*rows].cpu()
     if denorm: x = denorm(x)
     show_images(x,y[:rows*rows].cpu(),rows, classes)
 
-def _tta_only(learn, is_test=False, scale=1.25):
+def _tta_only(learn:Learner, is_test:bool=False, scale:float=1.25) -> Iterator[List[Tensor]]:
+    "Computes the outputs for several augmented inputs for TTA"
     dl = learn.data.holdout(is_test)
     ds = dl.dataset
     old = ds.tfms
@@ -181,7 +187,7 @@ def _tta_only(learn, is_test=False, scale=1.25):
 
 Learner.tta_only = _tta_only
 
-def _TTA(learn, beta=0.4, scale=1.35, is_test=False):
+def _TTA(learn:Learner, beta:float=0.4, scale:float=1.35, is_test:bool=False) -> Tensors:
     preds,y = learn.get_preds(is_test)
     all_preds = list(learn.tta_only(scale=scale, is_test=is_test))
     avg_preds = torch.stack(all_preds).mean(0)
