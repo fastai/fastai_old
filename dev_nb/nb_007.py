@@ -4,7 +4,7 @@
         #################################################
         # file to edit: dev_nb/007_wikitext_2.ipynb
 
-from nb_006e import *
+from nb_006b import *
 from collections import Counter
 
 class LanguageModelLoader():

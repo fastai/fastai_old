@@ -7,99 +7,99 @@
 from nb_005b import *
 
 class ImageMask(Image):
-    def lighting(self, func, *args, **kwargs): return self
+    "Class for image segmentation target"
+    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image': return self
 
     def refresh(self):
         self.sample_kwargs['mode'] = 'nearest'
         return super().refresh()
 
-def open_mask(fn): return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
+def open_mask(fn:PathOrStr) -> ImageMask: return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
 
 # Same as `show_image`, but renamed with _ prefix
-def _show_image(img, ax=None, figsize=(3,3), hide_axis=True, cmap='binary', alpha=None):
+def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
+                alpha:float=None) -> plt.Axes:
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
     return ax
 
-def show_image(x, y=None, ax=None, figsize=(3,3), alpha=0.5, hide_axis=True, cmap='viridis'):
+def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
+               hide_axis:bool=True, cmap:str='viridis'):
     ax1 = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap)
     if y is not None: _show_image(y, ax=ax1, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
     if hide_axis: ax1.axis('off')
 
-def _show(self, ax=None, y=None, **kwargs):
+def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
     if y is not None: y=y.data
     return show_image(self.data, ax=ax, y=y, **kwargs)
 
 Image.show = _show
 
 class DatasetTfm(Dataset):
-    def __init__(self, ds:Dataset, tfms:Collection[Callable]=None, tfm_y:bool=False, **kwargs):
-        self.ds,self.tfms,self.tfm_y,self.x_kwargs = ds,tfms,tfm_y,kwargs
-        self.y_kwargs = {**self.x_kwargs, 'do_resolve':False} # don't reset random vars
+    "a dataset that applies a list of transforms to every item drawn"
+    def __init__(self, ds:Dataset, tfms:TfmList=None, tfm_y:bool=False, **kwargs:Any):
+        "this dataset will apply `tfms` to `ds`"
+        self.ds,self.tfms,self.kwargs,self.tfm_y = ds,tfms,kwargs,tfm_y
+        self.y_kwargs = {**self.kwargs, 'do_resolve':False}
 
-    def __len__(self): return len(self.ds)
+    def __len__(self)->int: return len(self.ds)
 
-    def __getitem__(self,idx):
+    def __getitem__(self,idx:int)->Tuple[Image,Any]:
+        "returns tfms(x),y"
         x,y = self.ds[idx]
-
-        x = apply_tfms(self.tfms, x, **self.x_kwargs)
+        x = apply_tfms(self.tfms, x, **self.kwargs)
         if self.tfm_y: y = apply_tfms(self.tfms, y, **self.y_kwargs)
         return x, y
 
-    def __getattr__(self,k): return getattr(self.ds, k)
+    def __getattr__(self,k):
+        "passthrough access to wrapped dataset attributes"
+        return getattr(self.ds, k)
 
-import nb_002b,nb_005
+import nb_002b
 nb_002b.DatasetTfm = DatasetTfm
-nb_005.DatasetTfm  = DatasetTfm
 
-class MatchedFilesDataset(DatasetBase):
-    def __init__(self, x:Collection[Path], y:Collection[Path]):
+class SegmentationDataset(DatasetBase):
+    "A dataset for segmentation task"
+    def __init__(self, x:Collection[PathOrStr], y:Collection[PathOrStr]):
         assert len(x)==len(y)
         self.x,self.y = np.array(x),np.array(y)
 
-    def __getitem__(self, i):
+    def __getitem__(self, i:int) -> Tuple[Image,ImageMask]:
         return open_image(self.x[i]), open_mask(self.y[i])
 
-def normalize_batch(b, mean, std, do_y=False):
-    x,y = b
-    x = normalize(x,mean,std)
-    if do_y: y = normalize(y,mean,std)
-    return x,y
-
-def normalize_funcs(mean, std, do_y=False, device=None):
-    if device is None: device=default_device
-    return (partial(normalize_batch, mean=mean.to(device),std=std.to(device), do_y=do_y),
-            partial(denormalize,     mean=mean,           std=std))
-
-def show_xy_images(x,y,rows,figsize=(9,9)):
+def show_xy_images(x:Tensor,y:Tensor,rows:int,figsize:tuple=(9,9)):
+    "Shows a selection of images and targets from a given batch."
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()): show_image(x[i], y=y[i], ax=ax)
     plt.tight_layout()
 
 class Debugger(nn.Module):
-    def forward(self,x):
+    "A module to debug inside a model"
+    def forward(self,x:Tensor) -> Tensor:
         set_trace()
         return x
 
 class StdUpsample(nn.Module):
-    def __init__(self, nin, nout):
+    "Standard upsample module"
+    def __init__(self, n_in:int, n_out:int):
         super().__init__()
-        self.conv = conv2d_trans(nin, nout)
-        self.bn = nn.BatchNorm2d(nout)
+        self.conv = conv2d_trans(n_in, n_out)
+        self.bn = nn.BatchNorm2d(n_out)
 
-    def forward(self, x):
+    def forward(self, x:Tensor) -> Tensor:
         return self.bn(F.relu(self.conv(x)))
 
-def std_upsample_head(c, *nfs):
+def std_upsample_head(c, *nfs:Collection[int]) -> Model:
+    "Creates a sequence of upsample layers"
     return nn.Sequential(
         nn.ReLU(),
         *(StdUpsample(nfs[i],nfs[i+1]) for i in range(4)),
         conv2d_trans(nfs[-1], c)
     )
 
-def dice(input, targs):
-    "dice coefficient metric for binary target"
+def dice(input:Tensor, targs:Tensor) -> Rank0Tensor:
+    "Dice coefficient metric for binary target"
     n = targs.shape[0]
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
@@ -107,7 +107,8 @@ def dice(input, targs):
     union = (input+targs).sum().float()
     return 2. * intersect / union
 
-def accuracy(input, targs):
+def accuracy(input:Tensor, targs:Tensor) -> Rank0Tensor:
+    "Accuracy"
     n = targs.shape[0]
     input = input.argmax(dim=1).view(n,-1)
     targs = targs.view(n,-1)
@@ -115,6 +116,6 @@ def accuracy(input, targs):
 
 class CrossEntropyFlat(nn.CrossEntropyLoss):
     "Same as `nn.CrossEntropyLoss`, but flattens input and target"
-    def forward(self, input, target):
+    def forward(self, input:Tensor, target:Tensor) -> Rank0Tensor:
         n,c,*_ = input.shape
         return super().forward(input.view(n, c, -1), target.view(n, -1))
