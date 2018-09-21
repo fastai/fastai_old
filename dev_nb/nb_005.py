@@ -7,11 +7,13 @@
 from nb_004b import *
 import torchvision.models as tvm
 
-def uniform_int(low, high, size=None):
+def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOrTensor:
+    "generate int or tensor `size` of ints from uniform(`low`,`high`)"
     return random.randint(low,high) if size is None else torch.randint(low,high,size)
 
 @TfmPixel
 def dihedral(x, k:partial(uniform_int,0,8)):
+    "randomly flip `x` image based on k"
     flips=[]
     if k&1: flips.append(1)
     if k&2: flips.append(2)
@@ -19,8 +21,10 @@ def dihedral(x, k:partial(uniform_int,0,8)):
     if k&4: x = x.transpose(1,2)
     return x.contiguous()
 
-def get_transforms(do_flip=True, flip_vert=False, max_rotate=10., max_zoom=1.1, max_lighting=0.2, max_warp=0.2,
-                   p_affine=0.75, p_lighting=0.75, xtra_tfms=None):
+def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
+                   max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,
+                   p_lighting:float=0.75, xtra_tfms:float=None)->Collection[Transform]:
+    "utility func to easily create list of flip, rotate, zoom, warp, lighting transforms"
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
     if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
@@ -35,7 +39,7 @@ def get_transforms(do_flip=True, flip_vert=False, max_rotate=10., max_zoom=1.1, 
 imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
 imagenet_norm,imagenet_denorm = normalize_funcs(*imagenet_stats)
 
-def train_epoch(model, dl, opt, loss_func):
+def train_epoch(model:Model, dl:DataLoader, opt:optim.Optimizer, loss_func:LossFunction)->None:
     "Simple training of `model` for 1 epoch of `dl` using optim `opt` and loss function `loss_func`"
     model.train()
     for xb,yb in dl:
@@ -45,28 +49,35 @@ def train_epoch(model, dl, opt, loss_func):
         opt.zero_grad()
 
 class AdaptiveConcatPool2d(nn.Module):
-    def __init__(self, sz=None):
+    "layer that concats `AdaptiveAvgPool2d` and `AdaptiveMaxPool2d`"
+    def __init__(self, sz:Optional[int]=None):
+        "output will be 2*sz or 2 if sz is None"
         super().__init__()
         sz = sz or 1
         self.ap,self.mp = nn.AdaptiveAvgPool2d(sz), nn.AdaptiveMaxPool2d(sz)
     def forward(self, x): return torch.cat([self.mp(x), self.ap(x)], 1)
 
-def create_body(model, cut=None, body_fn=None):
+def create_body(model:Model, cut:Optional[int]=None, body_fn:Callable[[Model],Model]=None):
+    "cut off the body of a typically pretrained model at `cut` or as specified by `body_fn`"
     return (nn.Sequential(*list(model.children())[:cut]) if cut
             else body_fn(model) if body_fn else model)
 
-def num_features(m):
+def num_features(m:Model)->int:
+    "return the number of output features for a model"
     for l in reversed(flatten_model(m)):
         if hasattr(l, 'num_features'): return l.num_features
 
-def bn_drop_lin(n_in, n_out, bn=True, p=0., actn=None):
+def bn_drop_lin(n_in:int, n_out:int, bn:bool=True, p:float=0., actn:Optional[nn.Module]=None):
+    "`n_in`->bn->dropout->linear(`n_in`,`n_out`)->`actn`"
     layers = [nn.BatchNorm1d(n_in)] if bn else []
     if p != 0: layers.append(nn.Dropout(p))
     layers.append(nn.Linear(n_in, n_out))
     if actn is not None: layers.append(actn)
     return layers
 
-def create_head(nf, nc, lin_ftrs=None, ps=0.2):
+def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5):
+    """model head that takes `nf` features, runs through `lin_ftrs`, and about `nc` classes.
+       `ps` is for dropout and can be a single float or a list for each layer"""
     lin_ftrs = [nf, 512, nc] if lin_ftrs is None else [nf] + lin_ftrs + [nc]
     ps = listify(ps)
     if len(ps)==1: ps = [ps[0]/2] * (len(lin_ftrs)-2) + ps
@@ -76,33 +87,49 @@ def create_head(nf, nc, lin_ftrs=None, ps=0.2):
         layers += bn_drop_lin(ni,no,True,p,actn)
     return nn.Sequential(*layers)
 
-def cond_init(m, init_fn):
+
+LayerFunc = Callable[[nn.Module],None]
+
+def cond_init(m:nn.Module, init_fn:LayerFunc):
+    "initialize the non-batchnorm layers"
     if (not isinstance(m, bn_types)) and requires_grad(m):
         if hasattr(m, 'weight'): init_fn(m.weight)
         if hasattr(m, 'bias') and hasattr(m.bias, 'data'): m.bias.data.fill_(0.)
 
-def apply_leaf(m, f):
+def apply_leaf(m:nn.Module, f:LayerFunc):
+    "apply `f` to children of m"
     c = children(m)
     if isinstance(m, nn.Module): f(m)
     for l in c: apply_leaf(l,f)
 
-def apply_init(m, init_fn): apply_leaf(m, partial(cond_init, init_fn=init_fn))
+def apply_init(m, init_fn:LayerFunc):
+    "initialize all non-batchnorm layers of model with `init_fn`"
+    apply_leaf(m, partial(cond_init, init_fn=init_fn))
 
 def _init(learn, init): apply_init(learn.model, init)
 Learner.init = _init
 
-def _default_split(m): return split_model(m, m[1])
-def _resnet_split(m):  return split_model(m, (m[0][6],m[1]))
+def _default_split(m:Model):
+    "by default split models between first and second layer"
+    return split_model(m, m[1])
+
+def _resnet_split(m:Model):
+    "split a resnet style model"
+    return split_model(m, (m[0][6],m[1]))
+
 _default_meta = {'cut':-1, 'split':_default_split}
 _resnet_meta  = {'cut':-2, 'split':_resnet_split }
+
 model_meta = {
     tvm.resnet18 :{**_resnet_meta}, tvm.resnet34: {**_resnet_meta},
     tvm.resnet50 :{**_resnet_meta}, tvm.resnet101:{**_resnet_meta},
     tvm.resnet152:{**_resnet_meta}}
 
 class ConvLearner(Learner):
-    def __init__(self, data, arch, cut=None, pretrained=True, lin_ftrs=None, ps=0.5,
-                 custom_head=None, split_on=None, **kwargs):
+    "builds convnet style learners"
+    def __init__(self, data:DataBunch, arch:Callable, cut=None, pretrained:bool=True,
+                 lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5,
+                 custom_head:Optional[nn.Module]=None, split_on:Optional[SplitFuncOrIdxList]=None, **kwargs:Any)->None:
         meta = model_meta.get(arch, _default_meta)
         torch.backends.cudnn.benchmark = True
         body = create_body(arch(pretrained), ifnone(cut,meta['cut']))
