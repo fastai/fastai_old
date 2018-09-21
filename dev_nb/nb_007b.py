@@ -6,7 +6,8 @@
 
 from nb_007a import *
 
-def convert_weights(wgts, stoi_wgts, itos_new):
+def convert_weights(wgts:Dict[str,Tensor], stoi_wgts:Dict[str,int], itos_new:Collection[str]) -> wgts:Dict[str,Tensor]:
+    "Converts the model weights to go with a new vocabulary."
     dec_bias, enc_wgts = wgts['1.decoder.bias'], wgts['0.encoder.weight']
     bias_m, wgts_m = dec_bias.mean(0), enc_wgts.mean(0)
     new_w = enc_wgts.new_zeros((len(itos_new),enc_wgts.size(1))).zero_()
@@ -21,8 +22,8 @@ def convert_weights(wgts, stoi_wgts, itos_new):
     wgts['1.decoder.bias'] = new_b
     return wgts
 
-def lm_split(model):
-    "Splits a RNN model in groups."
+def lm_split(model:nn.Module) -> List[nn.Module]:
+    "Splits a RNN model in groups for differential learning rates."
     groups = [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
     groups.append(nn.Sequential(model[0].encoder, model[0].encoder_dp, model[1]))
     return groups
@@ -32,7 +33,7 @@ from torch.utils.data import Sampler, BatchSampler
 class SortSampler(Sampler):
     "Go through the text data by order of length"
 
-    def __init__(self, data_source, key): self.data_source,self.key = data_source,key
+    def __init__(self, data_source:, key): self.data_source,self.key = data_source,key
     def __len__(self): return len(self.data_source)
     def __iter__(self):
         return iter(sorted(range(len(self.data_source)), key=self.key, reverse=True))
