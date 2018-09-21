@@ -198,6 +198,8 @@ def even_mults(start:float, stop:float, n:int)->np.ndarray:
 default_lr = slice(3e-3)
 default_wd = 1e-2
 
+
+SplitFuncOrIdxList = Union[Callable, Collection[ModuleList]]
 @dataclass
 class Learner():
     "Object that wraps together some data, a model, a loss function and an optimizer"
@@ -246,7 +248,7 @@ class Learner():
         "create optimizer with `lr` learning rate and `wd` weight decay"
         self.opt = OptimWrapper.create(self.opt_fn, lr, self.layer_groups, wd=wd, true_wd=self.true_wd, bn_wd=self.bn_wd)
 
-    def split(self, split_on:Union[Callable, Collection[ModuleList]])->None:
+    def split(self, split_on:SplitFuncOrIdxList)->None:
         "split the model at `split_on`"
         if isinstance(split_on,Callable): self.layer_groups = split_on(self.model)
         else: self.layer_groups = split_model(self.model, split_on)
