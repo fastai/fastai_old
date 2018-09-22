@@ -24,9 +24,11 @@ def partition(a:Collection, sz:int) -> List[Collection]:
     return [a[i:i+sz] for i in range(0, len(a), sz)]
 
 def partition_by_cores(a:Collection, n_cpus:int) -> List[Collection]:
+    "Split data equally among CPU cores"
     return partition(a, len(a)//n_cpus + 1)
 
 def num_cpus() -> int:
+    "Return the number of CPUs in the system"
     try:
         return len(os.sched_getaffinity(0))
     except AttributeError:
@@ -42,7 +44,7 @@ class BaseTokenizer():
 
 #export
 class SpacyTokenizer(BaseTokenizer):
-    "Little wrapper around a spacy tokenizer"
+    "Little wrapper around a `spacy` tokenizer"
 
     def __init__(self, lang:str):
         self.tok = spacy.load(lang)
@@ -137,21 +139,21 @@ class Tokenizer():
             return sum(e.map(self.process_all_1, partition_by_cores(texts, self.n_cpus)), [])
 
 def get_chunk_length(csv_name:PathOrStr, chunksize:int) -> int:
-    "Reads the number of chunks in a pandas DataFrame"
+    "Reads the number of chunks in a pandas `DataFrame`"
     dfs = pd.read_csv(csv_name, header=None, chunksize=chunksize)
     l = 0
     for _ in dfs: l+=1
     return l
 
 def get_total_length(csv_name:PathOrStr, chunksize:int) -> int:
-    "Reads the the total length of a pandas DataFrame"
+    "Reads the the total length of a pandas `DataFrame`"
     dfs = pd.read_csv(csv_name, header=None, chunksize=chunksize)
     l = 0
     for df in dfs: l+=len(df)
     return l
 
 def maybe_copy(old_fnames:Collection[PathOrStr], new_fnames:Collection[PathOrStr]):
-    "Copies the old_fnames to new_fnames location if new_fnames don't exist or are less recent."
+    "Copies the `old_fnames` to `new_fnames` location if new_fnames don't exist or are less recent."
     os.makedirs(os.path.dirname(new_fnames[0]), exist_ok=True)
     for old_fname,new_fname in zip(old_fnames, new_fnames):
         if not os.path.isfile(new_fname) or os.path.getmtime(new_fname) < os.path.getmtime(old_fname):
@@ -377,11 +379,11 @@ class LanguageModelLoader():
         return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
 
 def standard_data(datasets:Collection[DatasetBase], path:PathOrStr, **kwargs) -> DataBunch:
-    "Simply creates a DataBunch from the datasets"
+    "Simply creates a `DataBunch` from the `datasets`"
     return DataBunch.create(*datasets, path=path, **kwargs)
 
 def lm_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
-    "Creates a DataBunch from the datasets for language modelling"
+    "Creates a `DataBunch` from the `datasets` for language modelling"
     dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
     return DataBunch(*dataloaders, path=path)
 
@@ -389,7 +391,7 @@ DataFunc = Callable[[Collection[DatasetBase], PathOrStr, KWArgs], DataBunch]
 
 def data_from_textids(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, itos:str='itos.pkl', **kwargs) -> DataBunch:
-    "Creates a DataBunch from ids, labels and a dictionary."
+    "Creates a `DataBunch` from ids, labels and a dictionary."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'id_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_ids(path, train, itos=itos, **txt_kwargs)
@@ -399,7 +401,7 @@ def data_from_textids(path:PathOrStr, train:str='train', valid:str='valid', test
 
 def data_from_texttokens(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                          data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
-    "Creates a DataBunch from tokens and labels."
+    "Creates a `DataBunch` from tokens and labels."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'tok_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_tokens(path, train, vocab=vocab, **txt_kwargs)
@@ -409,7 +411,7 @@ def data_from_texttokens(path:PathOrStr, train:str='train', valid:str='valid', t
 
 def data_from_textcsv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
-    "Creates a DataBunch from texts in csv files."
+    "Creates a `DataBunch` from texts in csv files."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_csv(path, tokenizer, train, vocab=vocab, **txt_kwargs)
@@ -419,7 +421,7 @@ def data_from_textcsv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', va
 
 def data_from_textfolder(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                          shuffle:bool=True, data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs):
-    "Creates a DataBunch from text files in folders."
+    "Creates a `DataBunch` from text files in folders."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)

@@ -37,7 +37,7 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
 Image.show = _show
 
 class DatasetTfm(Dataset):
-    "a dataset that applies a list of transforms to every item drawn"
+    "`Dataset` that applies a list of transforms to every item drawn"
     def __init__(self, ds:Dataset, tfms:TfmList=None, tfm_y:bool=False, **kwargs:Any):
         "this dataset will apply `tfms` to `ds`"
         self.ds,self.tfms,self.kwargs,self.tfm_y = ds,tfms,kwargs,tfm_y

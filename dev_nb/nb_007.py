@@ -38,7 +38,7 @@ class LanguageModelLoader():
         return LongTensor(data)
 
     def get_batch(self, i:int, seq_len:int) -> LongTensor:
-        "Gets a batch of length seq_len"
+        "Gets a batch of length `seq_len`"
         seq_len = min(seq_len, len(self.data) - 1 - i)
         return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
 
@@ -214,7 +214,7 @@ class GradientClipping(Callback):
 
 @dataclass
 class RNNTrainer(Callback):
-    "Callback that regroups lr adjustment to seq_len, AR and TAR"
+    "`Callback` that regroups lr adjustment to seq_len, AR and TAR"
     learn:Learner
     bptt:int
     alpha:float=0.
