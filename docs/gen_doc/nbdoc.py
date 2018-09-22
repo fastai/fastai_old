@@ -27,10 +27,46 @@ def format_ft_def(elt, full_name:str, ignore_first:bool=False) -> str:
         parsedargs += f'<em>{arg}</em>'
         if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
         if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
+        print('defaults' + str(defaults))
+        print('formatted types' + str(formatted_types))
         if i+1 < len(args): parsedargs += ', '
     parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
 
+
     return f'**{full_name}**({parsedargs}){parsedreturn}'
+
+def format_ft_decor(elt, full_name:str, ignore_first:bool=False) -> str:
+    """Formats and links function definition to show in documentation"""
+    args, defaults, formatted_types = get_arg_spec(elt)
+    if ignore_first: args = args[1:]
+
+    parsedargs = ''
+    diff = len(args) - len(defaults) if defaults is not None else len(args)
+    for i,arg in enumerate(args):
+        parsedargs += f'<em>{arg}</em>'
+        if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
+        if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
+        print('defaults' + str(defaults))
+        print('formatted types' + str(formatted_types))
+        if i+1 < len(args): parsedargs += ', '
+    parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
+
+
+    return f'**{full_name}**({parsedargs}){parsedreturn}'
+
+
+def is_decorated(elt):
+    """Checks if a function is decorated"""
+
+    call_val = ''
+    for name, value in inspect.getmembers(elt):
+        if name == '__call__':
+            call_val = value
+
+    if 'bound' in str(call_val):
+        return True
+    else:
+        return False
 
 def is_fastai_class(t):
     """checks if belongs to fastai module"""
@@ -43,8 +79,20 @@ def wrap_class(t):
     else: return str(t)
 
 def get_arg_spec(elt):
-    args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(elt)
-    formatted_types = {k:link_type(v) for k,v in annotations.items()}
+    args = []
+    defaults = []
+    formatted_types = {}
+    sig = inspect.signature(elt)
+    print(sig)
+    for param in sig.parameters:
+        print(sig.parameters[param]).strip()
+        param_info = str(sig.parameters[param]).strip().replace(':',' ').replace('=',' ').split()
+        args.append(param_info[0])
+        if len(param_info) > 1:
+            defaults.append(param_info[1])
+        if len(param_info) > 2:
+            print(param_info[2])
+            formatted_types[param_info[0]] = param_info[2]
     return (args, defaults, formatted_types)
 
 def get_enum_doc(elt, full_name:str) -> str:
@@ -62,15 +110,15 @@ def get_cls_doc(elt, full_name:str) -> str:
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}, alt_doc_string:str=''):
     """show doc for element. Supported types: class, function, method, and enum"""
-    if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
+    #if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
     if inspect.isclass(elt):
         if is_enum(elt.__class__): doc = get_enum_doc(elt, full_name)
         else:                      doc = get_cls_doc(elt, full_name)
     elif inspect.isfunction(elt):  doc = format_ft_def(elt, full_name)
     elif inspect.ismethod(elt):    doc = format_ft_def(elt, full_name)
+    elif is_decorated(elt): doc = format_ft_decor(elt, full_name)
     else: doc = f'doc definition not supported for {full_name}'
     link = f'<a id={full_name}></a>'
-
     if is_fastai_class(elt): doc += get_source_link(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string)
