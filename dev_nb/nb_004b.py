@@ -11,14 +11,14 @@ def to_half(b:Collection[Tensor])->Collection[Tensor]:
     return [b[0].half(), b[1]]
 
 def compose(*funcs:Callable)->Callable:
-    "compose list of funcs"
+    "Compose list of funcs"
     def compose_(funcs, x, *args, **kwargs):
         for f in listify(funcs): x = f(x, *args, **kwargs)
         return x
     return partial(compose_, funcs)
 
 def bn2float(module:nn.Module)->nn.Module:
-    "if a module is batchnorm don't use half precision"
+    "If a module is batchnorm don't use half precision"
     if isinstance(module, torch.nn.modules.batchnorm._BatchNorm): module.float()
     for child in module.children(): bn2float(child)
     return module
@@ -87,8 +87,7 @@ class MixedPrecision(Callback):
     def __post_init__(self): assert torch.backends.cudnn.enabled, "Mixed precision training requires cudnn."
 
     def on_train_begin(self, **kwargs:Any)->None:
-        "ensures everything is in half precision mode"
-        #Ensures the dataloaders are in half precision.
+        "Ensures everything is in half precision mode"
 #         self.learn.data.train_dl.half = True
         self.learn.data.train_dl.add_tfm(to_half)
         if hasattr(self.learn.data, 'valid_dl') and self.learn.data.valid_dl is not None:
@@ -105,17 +104,17 @@ class MixedPrecision(Callback):
         opt.mom,opt.wd,opt.beta = mom,wd,beta
 
     def on_train_end(self, **kwargs:Any)->None:
-        "removes half precision transforms added at `on_train_begin`"
+        "Removes half precision transforms added at `on_train_begin`"
         self.learn.data.train_dl.remove_tfm(to_half)
         if hasattr(self.learn.data, 'valid_dl') and self.learn.data.valid_dl is not None:
             self.learn.data.valid_dl.remove_tfm(to_half)
 
     def on_loss_begin(self, last_output:Tensor, **kwargs:Any) -> Tensor:
-        "converts half precision output to FP32 to avoid reduction overflow."
+        "Converts half precision output to FP32 to avoid reduction overflow."
         return last_output.float()
 
     def on_backward_begin(self, last_loss:Rank0Tensor, **kwargs:Any) -> Rank0Tensor:
-        "scale gradients up by `loss_scale` to prevent underflow"
+        "Scale gradients up by `loss_scale` to prevent underflow"
         #To avoid gradient underflow, we scale the gradients
         return last_loss * self.loss_scale
 

@@ -10,7 +10,7 @@ from nb_002c import *
 import operator
 
 def affine_mult(c:FlowField,m:AffineMatrix)->FlowField:
-    "multiply `c` by `m` - can adjust for rectangular shaped `c`"
+    "Multiply `c` by `m` - can adjust for rectangular shaped `c`"
     if m is None: return c
     size = c.size()
     _,h,w,_ = size
@@ -27,7 +27,7 @@ class TfmCrop(TfmPixel): order=99
 @TfmCrop
 def crop_pad(x, size, padding_mode='reflect',
              row_pct:uniform = 0.5, col_pct:uniform = 0.5):
-    "crop and pad tfm - `row_pct`,`col_pct` sets focal point"
+    "Crop and pad tfm - `row_pct`,`col_pct` sets focal point"
     if padding_mode=='zeros': padding_mode='constant'
     size = listify(size,2)
     if x.shape[1:] == size: return x
@@ -43,16 +43,16 @@ def crop_pad(x, size, padding_mode='reflect',
     return x.contiguous() # without this, get NaN later - don't know why
 
 def round_multiple(x:int, mult:int)->int:
-    "calc `x` to nearest multiple of `mult`"
+    "Calc `x` to nearest multiple of `mult`"
     return (int(x/mult+0.5)*mult)
 
 def get_crop_target(target_px:Union[int,Tuple[int,int]], mult:int=32)->Tuple[int,int]:
-    "calc crop shape of `target_px` to nearest multiple of `mult`"
+    "Calc crop shape of `target_px` to nearest multiple of `mult`"
     target_r,target_c = listify(target_px, 2)
     return round_multiple(target_r,mult),round_multiple(target_c,mult)
 
 def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
-    "calc size of `img` to fit in `crop_target` - adjust based on `do_crop`"
+    "Calc size of `img` to fit in `crop_target` - adjust based on `do_crop`"
     if crop_target is None: return None
     ch,r,c = img.shape
     target_r,target_c = crop_target
@@ -64,7 +64,7 @@ def is_listy(x:Any)->bool: return isinstance(x, (tuple,list))
 def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
                xtra:Optional[Dict[Transform,dict]]=None, size:Optional[Union[int,TensorImageSize]]=None,
                mult:int=32, do_crop:bool=True, padding_mode:str='reflect', **kwargs:Any)->TensorImage:
-    "apply all `tfms` to `x` - `do_resolve`: bind random args - size,mult used to crop/pad"
+    "Apply all `tfms` to `x` - `do_resolve`: bind random args - size,mult used to crop/pad"
     if tfms or xtra or size:
         if not xtra: xtra={}
         tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
@@ -87,13 +87,13 @@ import nb_002
 nb_002.apply_tfms = apply_tfms
 
 def rand_zoom(*args, **kwargs):
-    "random zoom tfm"
+    "Random zoom tfm"
     return zoom(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
 def rand_crop(*args, **kwargs):
-    "random crop and pad"
+    "Random crop and pad"
     return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
 def zoom_crop(scale, do_rand=False, p=1.0):
-    "randomly zoom and/or crop"
+    "Randomly zoom and/or crop"
     zoom_fn = rand_zoom if do_rand else zoom
     crop_fn = rand_crop if do_rand else crop_pad
     return [zoom_fn(scale=scale, p=p), crop_fn()]

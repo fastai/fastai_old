@@ -20,14 +20,14 @@ def normalize_batch(b:Tuple[Tensor,Tensor], mean:float, std:float, do_y:bool=Fal
     return x,y
 
 def normalize_funcs(mean:float, std, do_y=False, device=None)->[Callable,Callable]:
-    "create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`"
+    "Create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`"
     if device is None: device=default_device
     return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
             partial(denormalize,     mean=mean,           std=std))
 
 def transform_datasets(train_ds:Dataset, valid_ds:Dataset, test_ds:Optional[Dataset]=None,
                        tfms:Optional[Tuple[TfmList,TfmList]]=None, **kwargs:Any):
-    "create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)"
+    "Create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)"
     res = [DatasetTfm(train_ds, tfms[0],  **kwargs),
            DatasetTfm(valid_ds, tfms[1],  **kwargs)]
     if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
@@ -38,7 +38,7 @@ cifar_stats = (tensor([0.491, 0.482, 0.447]), tensor([0.247, 0.243, 0.261]))
 cifar_norm,cifar_denorm = normalize_funcs(*cifar_stats)
 
 def num_cpus()->int:
-    "get number of cpus"
+    "Get number of cpus"
     try:                   return len(os.sched_getaffinity(0))
     except AttributeError: return os.cpu_count()
 
@@ -80,10 +80,10 @@ class DeviceDataLoader():
                    device=device, tfms=tfms, collate_fn=collate_fn)
 
 class DataBunch():
-    "bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
+    "Bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
     def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, test_dl:Optional[DataLoader]=None,
                  device:torch.device=None, tfms:Optional[Collection[Callable]]=None, path:PathOrStr='.'):
-        "bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
+        "Bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
         self.device = default_device if device is None else device
         self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
         self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
@@ -104,7 +104,7 @@ class DataBunch():
 
     def __getattr__(self,k)->Any: return getattr(self.train_ds, k)
     def holdout(self, is_test:bool=False)->DeviceDataLoader:
-        "returns corect holdout `Dataset` for test vs validation (`is_test`)"
+        "Returns corect holdout `Dataset` for test vs validation (`is_test`)"
         return self.test_dl if is_test else self.valid_dl
 
     @property
@@ -123,7 +123,7 @@ def data_from_imagefolder(path:PathOrStr, train:PathOrStr='train', valid:PathOrS
     return DataBunch.create(*datasets, path=path, **kwargs)
 
 def conv_layer(ni:int, nf:int, ks:int=3, stride:int=1)->nn.Sequential:
-    "create Conv2d->BatchNorm2d->LeakyReLu layer: `ni` input, `nf` out filters, `ks` kernel, `stride`:stride"
+    "Create Conv2d->BatchNorm2d->LeakyReLu layer: `ni` input, `nf` out filters, `ks` kernel, `stride`:stride"
     return nn.Sequential(
         nn.Conv2d(ni, nf, kernel_size=ks, bias=False, stride=stride, padding=ks//2),
         nn.BatchNorm2d(nf),
