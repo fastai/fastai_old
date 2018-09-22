@@ -62,20 +62,20 @@ class DeviceDataLoader():
     def remove_tfm(self,tfm:Callable)->None: self.tfms.remove(tfm)
 
     def proc_batch(self,b:Tensor)->Tensor:
-        "proces batch `b` of `TensorImage`"
+        "Proces batch `b` of `TensorImage`"
         b = to_device(b, self.device)
         for f in listify(self.tfms): b = f(b)
         return b
 
     def __iter__(self):
-        "process and returns items from `DataLoader`"
+        "Process and returns items from `DataLoader`"
         self.gen = map(self.proc_batch, self.dl)
         return iter(self.gen)
 
     @classmethod
     def create(cls, dataset:Dataset, bs:int=1, shuffle:bool=False, device:torch.device=default_device,
                tfms:TfmList=tfms, num_workers:int=default_cpus, collate_fn:Callable=data_collate, **kwargs:Any):
-        "create DeviceDataLoader from `dataset` with `batch_size` and `shuffle`: processs using `num_workers`"
+        "Create DeviceDataLoader from `dataset` with `batch_size` and `shuffle`: processs using `num_workers`"
         return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, num_workers=num_workers, **kwargs),
                    device=device, tfms=tfms, collate_fn=collate_fn)
 
@@ -104,7 +104,7 @@ class DataBunch():
 
     def __getattr__(self,k)->Any: return getattr(self.train_ds, k)
     def holdout(self, is_test:bool=False)->DeviceDataLoader:
-        "Returns corect holdout `Dataset` for test vs validation (`is_test`)"
+        "Returns correct holdout `Dataset` for test vs validation (`is_test`)"
         return self.test_dl if is_test else self.valid_dl
 
     @property
@@ -147,7 +147,7 @@ class Darknet(nn.Module):
                ] + [(ResLayer(ch_in*2)) for i in range(num_blocks)]
 
     def __init__(self, num_blocks:int, num_classes:int, nf=32):
-        "create darknet with `nf` and `numblock` layers"
+        "create darknet with `nf` and `num_blocks` layers"
         super().__init__()
         layers = [conv_layer(3, nf, ks=3, stride=1)]
         for i,nb in enumerate(num_blocks):

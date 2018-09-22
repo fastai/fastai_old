@@ -22,7 +22,7 @@ import abc
 from abc import abstractmethod, abstractproperty
 
 def image2np(image:Tensor)->np.ndarray:
-    "Convert from torch style `image` to numpy/matplot style"
+    "Convert from torch style `image` to numpy/matplotlib style"
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
@@ -153,7 +153,7 @@ AffineFunc = Callable[[KWArgs], AffineMatrix]
 
 
 class ItemBase():
-    "All tranformable dataset items use this type"
+    "All transformable dataset items use this type"
     @property
     @abstractmethod
     def device(self): pass

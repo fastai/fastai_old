@@ -9,7 +9,7 @@ from nb_002b import *
 Point=Tuple[float,float]
 Points=Collection[Point]
 def find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
-    "Find 8 coeff mentioned here: https://web.archive.org/web/20150222120106/xenia.media.mit.edu/~cwren/interpolator/"
+    "Find 8 coeff mentioned [here](https://web.archive.org/web/20150222120106/xenia.media.mit.edu/~cwren/interpolator/)"
     matrix = []
     #The equations we'll need to solve.
     for p1, p2 in zip(targ_pts, orig_pts):
