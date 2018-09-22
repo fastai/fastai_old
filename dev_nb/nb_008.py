@@ -85,7 +85,7 @@ class EmbeddingDotBias(nn.Module):
 
 def get_collab_learner(n_factors:int, data:DataBunch, min_score:float=None, max_score:float=None,
                        loss_fn:LossFunction=F.mse_loss, **kwargs) -> Learner:
-    "Creates a learner for collaborative filtering"
+    "Creates a Learner for collaborative filtering"
     ds = data.train_ds
     model = EmbeddingDotBias(n_factors, ds.n_user, ds.n_item, min_score, max_score)
     return Learner(data, model, loss_fn=loss_fn, **kwargs)

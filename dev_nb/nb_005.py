@@ -24,7 +24,7 @@ def dihedral(x, k:partial(uniform_int,0,8)):
 def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
                    max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,
                    p_lighting:float=0.75, xtra_tfms:float=None)->Collection[Transform]:
-    "utility func to easily create list of flip, rotate, zoom, warp, lighting transforms"
+    "utility func to easily create list of `flip`, `rotate`, `zoom`, `warp`, `lighting` transforms"
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
     if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
