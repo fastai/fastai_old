@@ -22,13 +22,13 @@ import abc
 from abc import abstractmethod, abstractproperty
 
 def image2np(image:Tensor)->np.ndarray:
-    "convert from torch style `image` to numpy/matplot style"
+    "Convert from torch style `image` to numpy/matplot style"
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
 def show_image(img:Tensor, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True,
                title:Optional[str]=None, cmap:str='binary', alpha:Optional[float]=None)->plt.Axes:
-    "plot tensor `img` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
+    "Plot tensor `img` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
@@ -40,7 +40,7 @@ TensorImage = Tensor
 NPImage = np.ndarray
 
 def find_classes(folder:Path)->FilePathList:
-    "return class subdirectories in imagenet style train `folder`"
+    "Return class subdirectories in imagenet style train `folder`"
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
     assert(len(classes)>0)
@@ -49,20 +49,20 @@ def find_classes(folder:Path)->FilePathList:
 image_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('image/'))
 
 def get_image_files(c:Path, check_ext:bool=True)->FilePathList:
-    "return list of files in `c` that are images. `check_ext` will filter to `image_extensions`."
+    "Return list of files in `c` that are images. `check_ext` will filter to `image_extensions`."
     return [o for o in list(c.iterdir())
             if not o.name.startswith('.') and not o.is_dir()
             and (not check_ext or (o.suffix in image_extensions))]
 
 def pil2tensor(image:NPImage)->TensorImage:
-    "convert PIL style `image` array to torch style image tensor `get_image_files`"
+    "Convert PIL style `image` array to torch style image tensor `get_image_files`"
     arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
     return arr.permute(2,0,1)
 
 PathOrStr = Union[Path,str]
 def open_image(fn:PathOrStr):
-    "return `Image` object created from image in file `fn`"
+    "Return `Image` object created from image in file `fn`"
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
@@ -71,29 +71,29 @@ NPArrayMask = np.ndarray
 SplitArrayList = List[Tuple[np.ndarray,np.ndarray]]
 
 def arrays_split(mask:NPArrayMask, *arrs:NPArrayableList)->SplitArrayList:
-    "given `arrs` is [a,b,...] and `mask`index - return[(a[mask],a[~mask]),(b[mask],b[~mask]),...]"
+    "Given `arrs` is [a,b,...] and `mask`index - return[(a[mask],a[~mask]),(b[mask],b[~mask]),...]"
     mask = array(mask)
     return list(zip(*[(a[mask],a[~mask]) for a in map(np.array, arrs)]))
 
 def random_split(valid_pct:float, *arrs:NPArrayableList)->SplitArrayList:
-    "randomly `array_split` with `valid_pct` ratio. good for creating validation set."
+    "Randomly `array_split` with `valid_pct` ratio. good for creating validation set."
     is_train = np.random.uniform(size=(len(arrs[0]),)) > valid_pct
     return arrays_split(is_train, *arrs)
 
 class DatasetBase(Dataset):
-    "base class for all fastai datasets"
+    "Base class for all fastai datasets"
     def __len__(self): return len(self.x)
     @property
     def c(self):
-        "number of classes expressed by dataset y variable"
+        "Number of classes expressed by dataset y variable"
         return self.y.shape[-1] if len(self.y.shape)>1 else 1
     def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
 
 class LabelDataset(DatasetBase):
-    "base class for fastai datasets that do classification"
+    "Base class for fastai datasets that do classification"
     @property
     def c(self):
-        "number of classes expressed by dataset y variable"
+        "Number of classes expressed by dataset y variable"
         return len(self.classes)
 
 ImgLabel = str
@@ -112,20 +112,20 @@ class FilesDataset(LabelDataset):
 
     @staticmethod
     def _folder_files(folder:Path, label:ImgLabel, check_ext=True)->Tuple[FilePathList,ImgLabels]:
-        "from `folder` return image files and labels. The labels are all `label`. `check_ext` means only image files"
+        "From `folder` return image files and labels. The labels are all `label`. `check_ext` means only image files"
         fnames = get_image_files(folder, check_ext=check_ext)
         return fnames,[label]*len(fnames)
 
     @classmethod
     def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
-        "typically used for test set. label all images in `folder` with `classes[0]`"
+        "Typically used for test set. label all images in `folder` with `classes[0]`"
         fns,labels = cls._folder_files(folder, classes[0], check_ext=check_ext)
         return cls(fns, labels, classes=classes)
 
     @classmethod
     def from_folder(cls, folder:Path, classes:Optional[Classes]=None,
                     valid_pct:float=0., check_ext:bool=True) -> Union['FilesDataset', List['FilesDataset']]:
-        """dataset of `classes` labeled images in `folder`. Optional `valid_pct` split validation set."""
+        "Dataset of `classes` labeled images in `folder`. Optional `valid_pct` split validation set."
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
 
         fns,labels = [],[]
@@ -169,16 +169,16 @@ class ImageBase(ItemBase):
     def affine(self, func:AffineFunc, *args, **kwargs)->'ImageBase': return self
 
     def set_sample(self, **kwargs)->'ImageBase':
-        "set parameters that control how we `grid_sample` the image after transforms are applied"
+        "Set parameters that control how we `grid_sample` the image after transforms are applied"
         self.sample_kwargs = kwargs
         return self
 
     def clone(self)->'ImageBase':
-        "clones this item and its `data`"
+        "Clones this item and its `data`"
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    "supports appying transforms to image data"
+    "Supports appying transforms to image data"
     def __init__(self, px)->'Image':
         "create from raw tensor image data `px`"
         self._px = px
@@ -189,11 +189,11 @@ class Image(ImageBase):
 
     @property
     def shape(self)->Tuple[int,int,int]:
-        "returns (ch, h, w) for this image"
+        "Returns (ch, h, w) for this image"
         return self._px.shape
     @property
     def size(self)->Tuple[int,int]:
-        "returns (h, w) for this image"
+        "Returns (h, w) for this image"
         return self.shape[-2:]
     @property
     def device(self)->torch.device: return self._px.device
@@ -201,7 +201,7 @@ class Image(ImageBase):
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
     def refresh(self)->None:
-        "applies any logit or affine transfers that have been "
+        "Applies any logit or affine transfers that have been "
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
@@ -213,17 +213,17 @@ class Image(ImageBase):
 
     @property
     def px(self)->TensorImage:
-        "get the tensor pixel buffer"
+        "Get the tensor pixel buffer"
         self.refresh()
         return self._px
     @px.setter
     def px(self,v:TensorImage)->None:
-        "set the pixel buffer to `v`"
+        "Set the pixel buffer to `v`"
         self._px=v
 
     @property
     def flow(self)->FlowField:
-        "access the flow-field grid after applying queued affine transforms"
+        "Access the flow-field grid after applying queued affine transforms"
         if self._flow is None:
             self._flow = affine_grid(self.shape)
         if self._affine_mat is not None:
@@ -235,28 +235,28 @@ class Image(ImageBase):
     def flow(self,v:FlowField): self._flow=v
 
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image':
-        "equivalent to `image = sigmoid(func(logit(image)))`"
+        "Equivalent to `image = sigmoid(func(logit(image)))`"
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
 
     def pixel(self, func:PixelFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.px = func(image.px)`"
+        "Equivalent to `image.px = func(image.px)`"
         self.px = func(self.px, *args, **kwargs)
         return self
 
     def coord(self, func:CoordFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.flow = func(image.flow, image.size)`"
+        "Equivalent to `image.flow = func(image.flow, image.size)`"
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
     def affine(self, func:AffineFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.affine_mat = image.affine_mat @ func()`"
+        "Equivalent to `image.affine_mat = image.affine_mat @ func()`"
         m = tensor(func(*args, **kwargs)).to(self.device)
         self.affine_mat = self.affine_mat @ m
         return self
 
     def resize(self, size:Union[int,TensorImageSize])->'Image':
-        "resize the image to `size`, size can be a single int"
+        "Resize the image to `size`, size can be a single int"
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
         self.flow = affine_grid(size)
@@ -264,7 +264,7 @@ class Image(ImageBase):
 
     @property
     def affine_mat(self)->AffineMatrix:
-        "get the affine matrix that will be applied by `refresh`"
+        "Get the affine matrix that will be applied by `refresh`"
         if self._affine_mat is None:
             self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
@@ -273,34 +273,34 @@ class Image(ImageBase):
 
     @property
     def logit_px(self)->LogitTensorImage:
-        "get logit(image.px)"
+        "Get logit(image.px)"
         if self._logit_px is None: self._logit_px = logit_(self.px)
         return self._logit_px
     @logit_px.setter
     def logit_px(self,v:LogitTensorImage)->None: self._logit_px=v
 
     def show(self, ax:plt.Axes=None, **kwargs:Any)->None:
-        "plots the image into `ax`"
+        "Plots the image into `ax`"
         show_image(self.px, ax=ax, **kwargs)
 
     @property
     def data(self)->TensorImage:
-        "returns this images pixels as a tensor"
+        "Returns this images pixels as a tensor"
         return self.px
 
 FloatOrTensor = Union[float,Tensor]
 BoolOrTensor = Union[bool,Tensor]
 def uniform(low:Number, high:Number, size:List[int]=None)->FloatOrTensor:
-    "draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
+    "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
     return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
 def log_uniform(low, high, size=None)->FloatOrTensor:
-    "draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
+    "Draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
 def rand_bool(p:float, size=None)->BoolOrTensor:
-    "draw 1 or shape=`size` random booleans (True occuring probability p)"
+    "Draw 1 or shape=`size` random booleans (True occuring probability p)"
     return uniform(0,1,size)<p
 
 import inspect
@@ -327,7 +327,7 @@ class Transform():
     _wrap=None
     order=0
     def __init__(self, func:Callable, order:Optional[int]=None)->None:
-        "create a transform for `func` and assign it an priority `order`, attach to Image class"
+        "Create a transform for `func` and assign it an priority `order`, attach to Image class"
         if order is not None: self.order=order
         self.func=func
         self.params = copy(func.__annotations__)
@@ -336,12 +336,12 @@ class Transform():
                 lambda x, *args, **kwargs: self.calc(x, *args, **kwargs))
 
     def __call__(self, *args:Any, p:float=1., is_random:bool=True, **kwargs:Any)->Image:
-        "calc now if `args` passed; else create a transform called prob `p` if `random`"
+        "Calc now if `args` passed; else create a transform called prob `p` if `random`"
         if args: return self.calc(*args, **kwargs)
         else: return RandTransform(self, kwargs=kwargs, is_random=is_random, p=p)
 
     def calc(tfm, x:Image, *args:Any, **kwargs:Any)->Image:
-        "apply our `tfm` to image `x`, wrapping it if necessary"
+        "Apply our `tfm` to image `x`, wrapping it if necessary"
         if tfm._wrap: return getattr(x, tfm._wrap)(tfm.func, *args, **kwargs)
         else:          return tfm.func(x, *args, **kwargs)
 
@@ -356,7 +356,7 @@ class TfmLighting(Transform): order,_wrap = 8,'lighting'
 
 @dataclass
 class RandTransform():
-    "wraps `Transform` to add randomized execution"
+    "Wraps `Transform` to add randomized execution"
     tfm:Transform
     kwargs:dict
     p:int=1.0
@@ -365,7 +365,7 @@ class RandTransform():
     is_random:bool = True
 
     def resolve(self)->None:
-        "bind any random variables needed tfm calc"
+        "Bind any random variables needed tfm calc"
         if not self.is_random:
             self.resolved = {**self.tfm.def_args, **self.kwargs}
             return
@@ -392,7 +392,7 @@ class RandTransform():
     def order(self)->int: return self.tfm.order
 
     def __call__(self, x:Image, *args, **kwargs)->Image:
-        "randomly execute our tfm on `x`"
+        "Randomly execute our tfm on `x`"
         return self.tfm(x, *args, **{**self.resolved, **kwargs}) if self.do_run else x
 
 @TfmLighting
@@ -407,11 +407,11 @@ def contrast(x, scale:log_uniform):
 
 TfmList=Union[Transform, Collection[Transform]]
 def resolve_tfms(tfms:TfmList):
-    "resolve every tfm in `tfms`"
+    "Resolve every tfm in `tfms`"
     for f in listify(tfms): f.resolve()
 
 def apply_tfms(tfms:TfmList, x:Image, do_resolve:bool=True):
-    "apply all the `tfms` to `x`, if `do_resolve` refresh all the random args"
+    "Apply all the `tfms` to `x`, if `do_resolve` refresh all the random args"
     if not tfms: return x
     tfms = listify(tfms)
     if do_resolve: resolve_tfms(tfms)
@@ -420,7 +420,7 @@ def apply_tfms(tfms:TfmList, x:Image, do_resolve:bool=True):
     return x
 
 class DatasetTfm(Dataset):
-    "a dataset that applies a list of transforms to every item drawn"
+    "A `Dataset` that applies a list of transforms to every item drawn"
     def __init__(self, ds:Dataset, tfms:TfmList=None, **kwargs:Any):
         "this dataset will apply `tfms` to `ds`"
         self.ds,self.tfms,self.kwargs = ds,tfms,kwargs
@@ -441,12 +441,12 @@ nb_001b.DatasetTfm = DatasetTfm
 
 ItemsList = Collection[Union[Tensor,ItemBase,'ItemsList',float,int]]
 def to_data(b:ItemsList):
-    "recursively maps lists of items to their wrapped data"
+    "Recursively maps lists of items to their wrapped data"
     if is_listy(b): return [to_data(o) for o in b]
     return b.data if isinstance(b,ItemBase) else b
 
 def data_collate(batch:ItemsList)->Tensor:
-    "convert `batch` items to tensor data"
+    "Convert `batch` items to tensor data"
     return torch.utils.data.dataloader.default_collate(to_data(batch))
 
 @dataclass
@@ -473,13 +473,13 @@ nb_001b.DeviceDataLoader = DeviceDataLoader
 
 def show_image_batch(dl:DataLoader, classes:Collection[str],
                      rows:Optional[int]=None, figsize:Tuple[int,int]=(12,15))->None:
-    "show a batch of images from `dl` titled according to `classes`"
+    "Show a batch of images from `dl` titled according to `classes`"
     x,y = next(iter(dl))
     if rows is None: rows = int(math.sqrt(len(x)))
     show_images(x[:rows*rows],y[:rows*rows],rows, classes)
 
 def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
-    "plot images (`x[i]`) from `x` titled according to classes[y[i]]"
+    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
         show_image(x[i], ax)
@@ -487,7 +487,7 @@ def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], fig
     plt.tight_layout()
 
 def grid_sample_nearest(input:TensorImage, coords:FlowField, padding_mode:str='zeros')->TensorImage:
-    "grab pixels in `coords` from `input`. sample with nearest neighbor mode, pad with zeros by default"
+    "Grab pixels in `coords` from `input`. sample with nearest neighbor mode, pad with zeros by default"
     if padding_mode=='border': coords.clamp(-1,1)
     bs,ch,h,w = input.size()
     sz = tensor([w,h]).float()[None,None]
@@ -503,7 +503,7 @@ def grid_sample_nearest(input:TensorImage, coords:FlowField, padding_mode:str='z
     return result
 
 def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
-    "grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
+    "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
     if padding_mode=='reflect': padding_mode='reflection'
     if mode=='nearest': return grid_sample_nearest(x[None], coords, padding_mode)[0]
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
@@ -526,15 +526,15 @@ def affine_mult(c:FlowField, m:AffineMatrix)->FlowField:
     return c.view(size)
 
 class TfmAffine(Transform):
-    "wraps affine tfm funcs"
+    "Wraps affine tfm funcs"
     order,_wrap = 5,'affine'
 class TfmPixel(Transform):
-    "wraps pixel tfm funcs"
+    "Wraps pixel tfm funcs"
     order,_wrap = 10,'pixel'
 
 @TfmAffine
 def rotate(degrees:uniform):
-    "affine func that rotates the image"
+    "Affine func that rotates the image"
     angle = degrees * math.pi / 180
     return [[cos(angle), -sin(angle), 0.],
             [sin(angle),  cos(angle), 0.],
@@ -548,7 +548,7 @@ def get_zoom_mat(sw:float, sh:float, c:float, r:float)->AffineMatrix:
 
 @TfmAffine
 def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "zoom image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
+    "Zoom image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
     s = 1-1/scale
     col_c = s * (2*col_pct - 1)
     row_c = s * (2*row_pct - 1)
@@ -556,7 +556,7 @@ def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
 
 @TfmAffine
 def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "squish image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
+    "Squish image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
     if scale <= 1:
         col_c = (1-scale) * (2*col_pct - 1)
         return get_zoom_mat(scale, 1, col_c, 0.)
@@ -566,7 +566,7 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
 
 def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
                xtra:Optional[Dict[Transform,dict]]=None, size:TensorImageSize=None, **kwargs:Any)->TensorImage:
-    "apply `tfms` to x, resize to `size`. `do_resolve` rebind random params. `xtra` custom args for a tfm"
+    "Apply `tfms` to x, resize to `size`. `do_resolve` rebind random params. `xtra` custom args for a tfm"
     if not (tfms or size): return x
     if not xtra: xtra={}
     tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
@@ -590,12 +590,12 @@ def flip_lr(x): return x.flip(2)
 
 @partial(TfmPixel, order=-10)
 def pad(x, padding, mode='reflect'):
-    "pad `x` with `padding` pixels. `mode` fills in space ('reflect','zeros',etc)"
+    "Pad `x` with `padding` pixels. `mode` fills in space ('reflect','zeros',etc)"
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @TfmPixel
 def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "crop `x` to `size` pixels. `row_pct`,`col_pct` select focal point of crop"
+    "Crop `x` to `size` pixels. `row_pct`,`col_pct` select focal point of crop"
     size = listify(size,2)
     rows,cols = size
     row = int((x.size(1)-rows+1) * row_pct)
@@ -604,7 +604,7 @@ def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5):
 
 def compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
                    invert:bool, row_pct:float, col_pct:float)->AffineMatrix:
-    "utility routine to compute zoom/squish matrix"
+    "Utility routine to compute zoom/squish matrix"
     orig_ratio = math.sqrt(sz[2]/sz[1])
     for s,r,i in zip(scale,squish, invert):
         s,r = math.sqrt(s),math.sqrt(r)

@@ -12,19 +12,19 @@ ParamList = Collection[nn.Parameter]
 bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
 
 def requires_grad(l:nn.Module, b:Optional[bool]=None)->Optional[bool]:
-    "if b not note set requires_grad on all params in l, esle return requires_grad of first param"
+    "If b is not set requires_grad on all params in l, else return requires_grad of first param"
     ps = list(l.parameters())
     if not ps: return None
     if b is None: return ps[0].requires_grad
     for p in ps: p.requires_grad=b
 
 def trainable_params(m:nn.Module)->ParamList:
-    "return list of trainable params in `m`"
+    "Return list of trainable params in `m`"
     res = filter(lambda p: p.requires_grad, m.parameters())
     return res
 
 def split_bn_bias(layer_groups:ModuleList)->ModuleList:
-    "sort each layer in  `layer_groups` into batchnorm (`bn_types`) and non-batchnorm groups"
+    "Sort each layer in  `layer_groups` into batchnorm (`bn_types`) and non-batchnorm groups"
     split_groups = []
     for l in layer_groups:
         l1,l2 = [],[]
@@ -46,7 +46,7 @@ class OptimWrapper():
     @classmethod
     def create(cls, opt_fn:Union[type,Callable], lr:Union[float,Tuple,List],
                layer_groups:ModuleList, **kwargs:Any)->optim.Optimizer:
-        "create an optim.Optimizer from `opt_fn` with `lr`. Set lr on `layer_groups``"
+        "Create an optim.Optimizer from `opt_fn` with `lr`. Set lr on `layer_groups``"
         split_groups = split_bn_bias(layer_groups)
         opt = opt_fn([{'params': trainable_params(l), 'lr':0} for l in split_groups])
         opt = cls(opt, **kwargs)
@@ -58,7 +58,7 @@ class OptimWrapper():
 
     #Pytorch optimizer methods
     def step(self)->None:
-        "set weight decay and step optimizer"
+        "Set weight decay and step optimizer"
         # weight decay outside of optimizer step (AdamW)
         if self.true_wd:
             for lr,wd,pg1,pg2 in zip(self._lr,self._wd,self.opt.param_groups[::2],self.opt.param_groups[1::2]):
@@ -69,28 +69,28 @@ class OptimWrapper():
         self.opt.step()
 
     def zero_grad(self)->None:
-        "clear optimizer gradients"
+        "Clear optimizer gradients"
         self.opt.zero_grad()
 
     #Hyperparameters as properties
     @property
     def lr(self)->float:
-        "get learning rate"
+        "Get learning rate"
         return self._lr[-1]
 
     @lr.setter
     def lr(self, val:float)->None:
-        "set learning rate"
+        "Set learning rate"
         self._lr = self.set_val('lr', listify(val, self._lr))
 
     @property
     def mom(self)->float:
-        "get momentum"
+        "Get momentum"
         return self._mom[-1]
 
     @mom.setter
     def mom(self, val:float)->None:
-        "set momentump"
+        "Set momentum"
         if 'momentum' in self.opt_keys: self.set_val('momentum', listify(val, self._mom))
         elif 'betas' in self.opt_keys:  self.set_val('betas', (listify(val, self._mom), self._beta))
         self._mom = listify(val, self._mom)
@@ -102,7 +102,7 @@ class OptimWrapper():
 
     @beta.setter
     def beta(self, val:float)->None:
-        "set beta (or alpha as makes sense for give optimizer)"
+        "Set beta (or alpha as makes sense for give optimizer)"
         if val is None: return
         if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, listify(val, self._beta)))
         elif 'alpha' in self.opt_keys:  self.set_val('alpha', listify(val, self._beta))
@@ -110,12 +110,12 @@ class OptimWrapper():
 
     @property
     def wd(self)->float:
-        "get weight decay"
+        "Get weight decay"
         return self._wd[-1]
 
     @wd.setter
     def wd(self, val:float)->None:
-        "set weight decay"
+        "Set weight decay"
         if not self.true_wd: self.set_val('weight_decay', listify(val, self._wd), bn_groups=self.bn_wd)
         self._wd = listify(val, self._wd)
 
@@ -144,18 +144,18 @@ class OptimWrapper():
         return val
 
 def children(m:nn.Module)->ModuleList:
-    "get children of module"
+    "Get children of module"
     return list(m.children())
 def num_children(m:nn.Module)->int:
-    "get number of child modules in module"
+    "Get number of child modules in module"
     return len(children(m))
 def range_children(m:nn.Module)->Iterator[int]:
-    "return iterator of len of children of m"
+    "Return iterator of len of children of m"
     return range(num_children(m))
 
 flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if num_children(l) else [l]
 def first_layer(m:nn.Module)->nn.Module:
-    "retrieve first layer in a module"
+    "Retrieve first layer in a module"
     return flatten_model(m)[0]
 
 def split_model_idx(model:nn.Module, idxs:Collection[int])->ModuleList:
@@ -175,7 +175,7 @@ def split_model(model:nn.Module, splits:Collection[ModuleList], want_idxs:bool=F
 bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)
 
 def set_bn_eval(m:nn.Module)->None:
-    "set bn layers in eval mode for all recursive children of m"
+    "Set bn layers in eval mode for all recursive children of m"
     for l in m.children():
         if isinstance(l, bn_types) and not next(l.parameters()).requires_grad:
             l.eval()
@@ -183,14 +183,14 @@ def set_bn_eval(m:nn.Module)->None:
 
 @dataclass
 class BnFreeze(Callback):
-    "set all bntypes layers in `learn` to eval() on_epoch_begin"
+    "Set all bntypes layers in `learn` to eval() on_epoch_begin"
     learn:Learner
     def on_epoch_begin(self, **kwargs:Any)->None:
-        "put bn layers in eval mode on epoch_begin"
+        "Put bn layers in eval mode on epoch_begin"
         set_bn_eval(self.learn.model)
 
 def even_mults(start:float, stop:float, n:int)->np.ndarray:
-    "build evenly stepped schedule from start to stop in n steps"
+    "Build evenly stepped schedule from start to stop in n steps"
     mult = stop/start
     step = mult**(1/(n-1))
     return np.array([start*(step**i) for i in range(n)])
@@ -218,7 +218,7 @@ class Learner():
     callbacks:Collection[Callback]=field(default_factory=list)
     layer_groups:Collection[nn.Module]=None
     def __post_init__(self)->None:
-        "setup path,metrics, callbacks and ensure model directory exists"
+        "Setup path,metrics, callbacks and ensure model directory exists"
         self.path = Path(ifnone(self.path, self.data.path))
         (self.path/self.model_dir).mkdir(parents=True, exist_ok=True)
         self.model = self.model.to(self.data.device)
@@ -228,7 +228,7 @@ class Learner():
         self.callback_fns = [Recorder] + listify(self.callback_fns)
 
     def lr_range(self, lr:Union[float,slice])->np.ndarray:
-        "build learning rate schedule"
+        "Build learning rate schedule"
         if not isinstance(lr,slice): return lr
         if lr.start: res = even_mults(lr.start, lr.stop, len(self.layer_groups))
         else: res = [lr.stop/3]*(len(self.layer_groups)-1) + [lr.stop]
