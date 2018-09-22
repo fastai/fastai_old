@@ -8,12 +8,12 @@ from nb_004b import *
 import torchvision.models as tvm
 
 def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOrTensor:
-    "generate int or tensor `size` of ints from uniform(`low`,`high`)"
+    "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
     return random.randint(low,high) if size is None else torch.randint(low,high,size)
 
 @TfmPixel
 def dihedral(x, k:partial(uniform_int,0,8)):
-    "randomly flip `x` image based on k"
+    "Randomly flip `x` image based on k"
     flips=[]
     if k&1: flips.append(1)
     if k&2: flips.append(2)
@@ -24,7 +24,7 @@ def dihedral(x, k:partial(uniform_int,0,8)):
 def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
                    max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,
                    p_lighting:float=0.75, xtra_tfms:float=None)->Collection[Transform]:
-    "utility func to easily create list of `flip`, `rotate`, `zoom`, `warp`, `lighting` transforms"
+    "Utility func to easily create list of `flip`, `rotate`, `zoom`, `warp`, `lighting` transforms"
     res = [rand_crop()]
     if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
     if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
@@ -49,21 +49,21 @@ def train_epoch(model:Model, dl:DataLoader, opt:optim.Optimizer, loss_func:LossF
         opt.zero_grad()
 
 class AdaptiveConcatPool2d(nn.Module):
-    "layer that concats `AdaptiveAvgPool2d` and `AdaptiveMaxPool2d`"
+    "Layer that concats `AdaptiveAvgPool2d` and `AdaptiveMaxPool2d`"
     def __init__(self, sz:Optional[int]=None):
-        "output will be 2*sz or 2 if sz is None"
+        "Output will be 2*sz or 2 if sz is None"
         super().__init__()
         sz = sz or 1
         self.ap,self.mp = nn.AdaptiveAvgPool2d(sz), nn.AdaptiveMaxPool2d(sz)
     def forward(self, x): return torch.cat([self.mp(x), self.ap(x)], 1)
 
 def create_body(model:Model, cut:Optional[int]=None, body_fn:Callable[[Model],Model]=None):
-    "cut off the body of a typically pretrained model at `cut` or as specified by `body_fn`"
+    "Cut off the body of a typically pretrained model at `cut` or as specified by `body_fn`"
     return (nn.Sequential(*list(model.children())[:cut]) if cut
             else body_fn(model) if body_fn else model)
 
 def num_features(m:Model)->int:
-    "return the number of output features for a model"
+    "Return the number of output features for a model"
     for l in reversed(flatten_model(m)):
         if hasattr(l, 'num_features'): return l.num_features
 
@@ -76,7 +76,7 @@ def bn_drop_lin(n_in:int, n_out:int, bn:bool=True, p:float=0., actn:Optional[nn.
     return layers
 
 def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5):
-    """model head that takes `nf` features, runs through `lin_ftrs`, and about `nc` classes.
+    """Model head that takes `nf` features, runs through `lin_ftrs`, and about `nc` classes.
        `ps` is for dropout and can be a single float or a list for each layer"""
     lin_ftrs = [nf, 512, nc] if lin_ftrs is None else [nf] + lin_ftrs + [nc]
     ps = listify(ps)
@@ -91,30 +91,30 @@ def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floa
 LayerFunc = Callable[[nn.Module],None]
 
 def cond_init(m:nn.Module, init_fn:LayerFunc):
-    "initialize the non-batchnorm layers"
+    "Initialize the non-batchnorm layers"
     if (not isinstance(m, bn_types)) and requires_grad(m):
         if hasattr(m, 'weight'): init_fn(m.weight)
         if hasattr(m, 'bias') and hasattr(m.bias, 'data'): m.bias.data.fill_(0.)
 
 def apply_leaf(m:nn.Module, f:LayerFunc):
-    "apply `f` to children of m"
+    "Apply `f` to children of m"
     c = children(m)
     if isinstance(m, nn.Module): f(m)
     for l in c: apply_leaf(l,f)
 
 def apply_init(m, init_fn:LayerFunc):
-    "initialize all non-batchnorm layers of model with `init_fn`"
+    "Initialize all non-batchnorm layers of model with `init_fn`"
     apply_leaf(m, partial(cond_init, init_fn=init_fn))
 
 def _init(learn, init): apply_init(learn.model, init)
 Learner.init = _init
 
 def _default_split(m:Model):
-    "by default split models between first and second layer"
+    "By default split models between first and second layer"
     return split_model(m, m[1])
 
 def _resnet_split(m:Model):
-    "split a resnet style model"
+    "Split a resnet style model"
     return split_model(m, (m[0][6],m[1]))
 
 _default_meta = {'cut':-1, 'split':_default_split}
@@ -126,7 +126,7 @@ model_meta = {
     tvm.resnet152:{**_resnet_meta}}
 
 class ConvLearner(Learner):
-    "builds convnet style learners"
+    "Builds convnet style learners"
     def __init__(self, data:DataBunch, arch:Callable, cut=None, pretrained:bool=True,
                  lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5,
                  custom_head:Optional[nn.Module]=None, split_on:Optional[SplitFuncOrIdxList]=None, **kwargs:Any)->None:

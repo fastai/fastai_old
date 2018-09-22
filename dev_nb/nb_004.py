@@ -100,7 +100,7 @@ class OptimWrapper():
 class Callback():
     "Base class for callbacks that want to record values, dynamically change learner params, etc"
     def on_train_begin(self, **kwargs:Any)->None:
-        "To initiliaze constants in the callback."
+        "To initialize constants in the callback."
         pass
     def on_epoch_begin(self, **kwargs:Any)->None:
         "At the beginning of each epoch"
@@ -163,7 +163,7 @@ class CallbackHandler():
     beta:float=0.98
 
     def __post_init__(self)->None:
-        "Inititialize smoother and learning stats"
+        "InitInitializeitialize smoother and learning stats"
         self.smoothener = SmoothenValue(self.beta)
         self.state_dict:Dict[str,Union[int,float,Tensor]]=_get_init_state()
 
@@ -268,7 +268,7 @@ def loss_batch(model:Model, xb:Tensor, yb:Tensor, loss_fn:OptLossFunc=None,
 def validate(model:Model, dl:DataLoader, loss_fn:OptLossFunc=None,
              metrics:OptMetrics=None, cb_handler:OptCallbackHandler=None,
              pbar:Optional[PBar]=None)->Iterator[Tuple[Union[Tensor,int],...]]:
-    "Calculate loass and metrics for the validation set"
+    "Calculate loss and metrics for the validation set"
     model.eval()
     with torch.no_grad():
         return zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
@@ -499,7 +499,7 @@ class Stepper():
 
 @dataclass
 class OneCycleScheduler(Callback):
-    "Manages 1-Cycle style traing as outlined in Leslie Smith's paper https://arxiv.org/pdf/1803.09820.pdf"
+    "Manages 1-Cycle style traing as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
     learn:Learner
     lr_max:float
     moms:Floats=(0.95,0.85)
