@@ -12,12 +12,16 @@ class TabularTransform():
     cont_names:StrList
 
     def __call__(self, df:DataFrame, test:bool=False):
-        "Applies the correct function to df depending if it's the training dataframe or not"
+        "Applies the correct function to `df` depending if it's the training dataframe or not"
         func = self.apply_test if test else self.apply_train
         func(df)
 
-    def apply_train(self, df:DataFrame): raise NotImplementedError
-    def apply_test(self, df:DataFrame):  self.apply_train(df)
+    def apply_train(self, df:DataFrame):
+        "Function applied to `df` if it's the train set"
+        raise NotImplementedError
+    def apply_test(self, df:DataFrame):
+        "Function applied to `df` if it's the test set"
+        self.apply_train(df)
 
 class Categorify(TabularTransform):
     "Transforms the categorical variables to that type."
@@ -119,7 +123,7 @@ class TabularDataset(DatasetBase):
 def data_from_tabulardf(path, train_df:DataFrame, valid_df:DataFrame, dep_var:str, test_df:OptDataFrame=None,
                         tfms:OptTabTfms=None, cat_names:OptStrList=None, cont_names:OptStrList=None,
                         stats:OptStats=None, log_output:bool=False, **kwargs) -> DataBunch:
-    "Creates a DataBunch from train/valid/test dataframes."
+    "Creates a `DataBunch` from train/valid/test dataframes."
     train_ds = TabularDataset.from_dataframe(train_df, dep_var, tfms, cat_names, cont_names, stats, log_output)
     valid_ds = TabularDataset.from_dataframe(valid_df, dep_var, train_ds.tfms, train_ds.cat_names,
                                              train_ds.cont_names, train_ds.stats, log_output)

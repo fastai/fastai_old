@@ -29,13 +29,17 @@ class ImageBBox(ImageMask):
 from matplotlib import patches, patheffects
 from matplotlib.patches import Patch
 
-def bb2hw(a:Collection[int]) -> np.ndarray: return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
+def bb2hw(a:Collection[int]) -> np.ndarray:
+    "Converts bounding box points from (width,height,center) to (height,width,top,left)"
+    return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
 
 def draw_outline(o:Patch, lw:int):
+    "Outlines bounding box onto image `Patch`"
     o.set_path_effects([patheffects.Stroke(
         linewidth=lw, foreground='black'), patheffects.Normal()])
 
 def draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
+    "Draws bounding box on `ax`"
     patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
     draw_outline(patch, 4)
 
