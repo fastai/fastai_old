@@ -4,6 +4,8 @@
         #################################################
         # file to edit: dev_nb/009_rossmann.ipynb
 
+from nb_008 import *
+
 StrList = Collection[str]
 @dataclass
 class TabularTransform():

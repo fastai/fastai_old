@@ -1,63 +1,29 @@
-
-from .imports import *
-from torch import tensor, Tensor, FloatTensor
-
-import scipy.stats, scipy.special
-import numpy as np, torch.nn.functional as F
-import sys, PIL, matplotlib.pyplot as plt, math, random, torch
-from torch.utils.data import DataLoader
-
-from numpy import cos, sin, log, exp
-from pathlib import Path
-from numbers import Number
-from typing import Any, Collection, Callable, NewType, List, Union, Optional, Tuple, Dict
-from dataclasses import field, dataclass
-from abc import abstractmethod
-from collections import Iterable
-from functools import partial
-
-import inspect
-from copy import copy
+from ..torch_core import *
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
 
+def uniform(low:Number, high:Number, size:List[int]=None)->FloatOrTensor:
+    "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
+    return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
-__all__ = ['FlowField', 'LightingFunc', 'PixelFunc', 'CoordFunc', 'AffineFunc',
-           'pil2tensor', 'open_image', 'image2np', 'show_image', 'show_image_batch', 'show_images',
-           'ItemBase', 'Image', 'ImageBase',
-           'uniform', 'log_uniform', 'rand_bool',
-           'Transform', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmLighting', 'TfmList', 'TfmPixel',
-           'resolve_tfms', 'apply_tfms',
-           'brightness', 'contrast', 'zoom', 'flip_lr', 'pad', 'crop', 'jitter', 'zoom_squish', ]
+def log_uniform(low, high, size=None)->FloatOrTensor:
+    "Draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
+    res = uniform(log(low), log(high), size)
+    return exp(res) if size is None else res.exp_()
 
+def rand_bool(p:float, size=None)->BoolOrTensor:
+    "Draw 1 or shape=`size` random booleans (True occuring probability p)"
+    return uniform(0,1,size)<p
 
-TensorImage = Tensor
-NPImage = np.ndarray
+def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOrTensor:
+    "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
+    return random.randint(low,high) if size is None else torch.randint(low,high,size)
 
-FlowField = Tensor
-LogitTensorImage = TensorImage
-AffineMatrix = Tensor
-KWArgs = Dict[str,Any]
-ArgStar = Collection[Any]
-CoordSize = Tuple[int,int,int]
-TensorImageSize = Tuple[int,int,int]
-
-LightingFunc = Callable[[LogitTensorImage, ArgStar, KWArgs], LogitTensorImage]
-PixelFunc = Callable[[TensorImage, ArgStar, KWArgs], TensorImage]
-CoordFunc = Callable[[FlowField, CoordSize, ArgStar, KWArgs], LogitTensorImage]
-AffineFunc = Callable[[KWArgs], AffineMatrix]
-
-PathOrStr = Union[Path,str]
-
-class ItemBase():
-    "All tranformable dataset items use this type"
-    @property
-    @abstractmethod
-    def device(self): pass
-    @property
-    @abstractmethod
-    def data(self): pass
+def get_default_args(func:Callable):
+    return {k: v.default
+            for k, v in inspect.signature(func).parameters.items()
+            if v.default is not inspect.Parameter.empty}
 
 class ImageBase(ItemBase):
     "Img based `Dataset` items derive from this. Subclass to handle lighting, pixel, etc"
@@ -67,16 +33,16 @@ class ImageBase(ItemBase):
     def affine(self, func:AffineFunc, *args, **kwargs)->'ImageBase': return self
 
     def set_sample(self, **kwargs)->'ImageBase':
-        "set parameters that control how we `grid_sample` the image after transforms are applied"
+        "Set parameters that control how we `grid_sample` the image after transforms are applied"
         self.sample_kwargs = kwargs
         return self
 
     def clone(self)->'ImageBase':
-        "clones this item and its `data`"
+        "Clones this item and its `data`"
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    "supports appying transforms to image data"
+    "Supports appying transforms to image data"
     def __init__(self, px)->'Image':
         "create from raw tensor image data `px`"
         self._px = px
@@ -87,11 +53,11 @@ class Image(ImageBase):
 
     @property
     def shape(self)->Tuple[int,int,int]:
-        "returns (ch, h, w) for this image"
+        "Returns (ch, h, w) for this image"
         return self._px.shape
     @property
-    def size(self)->Tuple[int,int,int]:
-        "returns (h, w) for this image"
+    def size(self)->Tuple[int,int]:
+        "Returns (h, w) for this image"
         return self.shape[-2:]
     @property
     def device(self)->torch.device: return self._px.device
@@ -99,7 +65,7 @@ class Image(ImageBase):
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
     def refresh(self)->None:
-        "applies any logit or affine transfers that have been "
+        "Applies any logit or affine transfers that have been "
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
@@ -111,17 +77,17 @@ class Image(ImageBase):
 
     @property
     def px(self)->TensorImage:
-        "get the tensor pixel buffer"
+        "Get the tensor pixel buffer"
         self.refresh()
         return self._px
     @px.setter
     def px(self,v:TensorImage)->None:
-        "set the pixel buffer to `v`"
+        "Set the pixel buffer to `v`"
         self._px=v
 
     @property
     def flow(self)->FlowField:
-        "access the flow-field grid after applying queued affine transforms"
+        "Access the flow-field grid after applying queued affine transforms"
         if self._flow is None:
             self._flow = affine_grid(self.shape)
         if self._affine_mat is not None:
@@ -133,28 +99,28 @@ class Image(ImageBase):
     def flow(self,v:FlowField): self._flow=v
 
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image':
-        "equivalent to `image = sigmoid(func(logit(image)))`"
+        "Equivalent to `image = sigmoid(func(logit(image)))`"
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
 
     def pixel(self, func:PixelFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.px = func(image.px)`"
+        "Equivalent to `image.px = func(image.px)`"
         self.px = func(self.px, *args, **kwargs)
         return self
 
     def coord(self, func:CoordFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.flow = func(image.flow, image.size)`"
+        "Equivalent to `image.flow = func(image.flow, image.size)`"
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
     def affine(self, func:AffineFunc, *args, **kwargs)->'Image':
-        "equivalent to `image.affine_mat = image.affine_mat @ func()`"
+        "Equivalent to `image.affine_mat = image.affine_mat @ func()`"
         m = tensor(func(*args, **kwargs)).to(self.device)
         self.affine_mat = self.affine_mat @ m
         return self
 
-    def resize(self, size:Union[int,CoordSize])->'Image':
-        "resize the image to `size`, size can be a single int"
+    def resize(self, size:Union[int,TensorImageSize])->'Image':
+        "Resize the image to `size`, size can be a single int"
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
         self.flow = affine_grid(size)
@@ -162,7 +128,7 @@ class Image(ImageBase):
 
     @property
     def affine_mat(self)->AffineMatrix:
-        "get the affine matrix that will be applied by `refresh`"
+        "Get the affine matrix that will be applied by `refresh`"
         if self._affine_mat is None:
             self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
@@ -171,105 +137,57 @@ class Image(ImageBase):
 
     @property
     def logit_px(self)->LogitTensorImage:
-        "get logit(image.px)"
+        "Get logit(image.px)"
         if self._logit_px is None: self._logit_px = logit_(self.px)
         return self._logit_px
     @logit_px.setter
     def logit_px(self,v:LogitTensorImage)->None: self._logit_px=v
 
     def show(self, ax:plt.Axes=None, **kwargs:Any)->None:
-        "plots the image into `ax`"
+        "Plots the image into `ax`"
         show_image(self.px, ax=ax, **kwargs)
 
     @property
     def data(self)->TensorImage:
-        "returns this images pixels as a tensor"
+        "Returns this images pixels as a tensor"
         return self.px
 
-def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
-    "grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
-    if padding_mode=='reflect': padding_mode='reflection'
-    if mode=='nearest': return grid_sample_nearest(x[None], coords, padding_mode)[0]
-    return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
+class ImageMask(Image):
+    "Class for image segmentation target"
+    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image': return self
 
-def grid_sample_nearest(input:TensorImage, coords:FlowField, padding_mode:str='zeros')->TensorImage:
-    "grab pixels in `coords` from `input`. sample with nearest neighbor mode, pad with zeros by default"
-    if padding_mode=='border': coords.clamp(-1,1)
-    bs,ch,h,w = input.size()
-    sz = tensor([w,h]).float()[None,None]
-    coords.add_(1).mul_(sz/2)
-    coords = coords[0].round_().long()
-    if padding_mode=='zeros':
-        mask = (coords[...,0] < 0) + (coords[...,1] < 0) + (coords[...,0] >= w) + (coords[...,1] >= h)
-        mask.clamp_(0,1)
-    coords[...,0].clamp_(0,w-1)
-    coords[...,1].clamp_(0,h-1)
-    result = input[...,coords[...,1],coords[...,0]]
-    if padding_mode=='zeros': result[...,mask] = result[...,mask].zero_()
-    return result
+    def refresh(self):
+        self.sample_kwargs['mode'] = 'nearest'
+        return super().refresh()
 
-def affine_grid(size:TensorImageSize)->FlowField:
-    size = ((1,)+size)
-    N, C, H, W = size
-    grid = FloatTensor(N, H, W, 2)
-    linear_points = torch.linspace(-1, 1, W) if W > 1 else tensor([-1])
-    grid[:, :, :, 0] = torch.ger(torch.ones(H), linear_points).expand_as(grid[:, :, :, 0])
-    linear_points = torch.linspace(-1, 1, H) if H > 1 else tensor([-1])
-    grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
-    return grid
+class ImageBBox(ImageMask):
+    "Image class for bbox-style annotations"
+    def clone(self):
+        return self.__class__(self.px.clone())
 
-def affine_mult(c:FlowField, m:AffineMatrix)->FlowField:
-    if m is None: return c
-    size = c.size()
-    c = c.view(-1,2)
-    c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
-    return c.view(size)
+    @classmethod
+    def create(cls, bboxes:Collection[Collection[int]], h:int, w:int) -> 'ImageBBox':
+        "Creates an ImageBBox object from bboxes"
+        pxls = torch.zeros(len(bboxes),h, w).long()
+        for i,bbox in enumerate(bboxes):
+            pxls[i,bbox[0]:bbox[2]+1,bbox[1]:bbox[3]+1] = 1
+        return cls(pxls)
 
-def open_image(fn:PathOrStr):
-    "return `Image` object created from image in file `fn`"
-    x = PIL.Image.open(fn).convert('RGB')
-    return Image(pil2tensor(x).float().div_(255))
-
-def pil2tensor(image:NPImage)->TensorImage:
-    "convert PIL style `image` array to torch style image tensor `get_image_files`"
-    arr = torch.ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
-    arr = arr.view(image.size[1], image.size[0], -1)
-    return arr.permute(2,0,1)
-
-def show_image(img:Tensor, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True,
-               title:Optional[str]=None, cmap:str='binary', alpha:Optional[float]=None)->plt.Axes:
-    "plot tensor `img` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
-    if ax is None: fig,ax = plt.subplots(figsize=figsize)
-    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
-    if hide_axis: ax.axis('off')
-    if title: ax.set_title(title)
-    return ax
-
-def image2np(image:Tensor)->np.ndarray:
-    "convert from torch style `image` to numpy/matplot style"
-    res = image.cpu().permute(1,2,0).numpy()
-    return res[...,0] if res.shape[2]==1 else res
-
-def show_image_batch(dl:DataLoader, classes:Collection[str], rows:Optional[int]=None, figsize:Tuple[int,int]=(12,15))->None:
-    "show a batch of images from `dl` titled according to `classes`"
-    x,y = next(iter(dl))
-    if rows is None: rows = int(math.sqrt(len(x)))
-    show_images(x[:rows*rows],y[:rows*rows],rows, classes)
-
-def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
-    "plot images (`x[i]`) from `x` titled according to classes[y[i]]"
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()):
-        show_image(x[i], ax)
-        ax.set_title(classes[y[i]])
-    plt.tight_layout()
+    @property
+    def data(self) -> LongTensor:
+        bboxes = []
+        for i in range(self.px.size(0)):
+            idxs = torch.nonzero(self.px[i])
+            if len(idxs) != 0:
+                bboxes.append(torch.tensor([idxs[:,0].min(), idxs[:,1].min(), idxs[:,0].max(), idxs[:,1].max()])[None])
+        return torch.cat(bboxes, 0).squeeze()
 
 class Transform():
     "Utility class for adding probability and wrapping support to transform funcs"
     _wrap=None
     order=0
     def __init__(self, func:Callable, order:Optional[int]=None)->None:
-        "create a transform for `func` and assign it an priority `order`, attach to Image class"
+        "Create a transform for `func` and assign it an priority `order`, attach to Image class"
         if order is not None: self.order=order
         self.func=func
         self.params = copy(func.__annotations__)
@@ -278,12 +196,12 @@ class Transform():
                 lambda x, *args, **kwargs: self.calc(x, *args, **kwargs))
 
     def __call__(self, *args:Any, p:float=1., is_random:bool=True, **kwargs:Any)->Image:
-        "calc now if `args` passed; else create a transform called prob `p` if `random`"
+        "Calc now if `args` passed; else create a transform called prob `p` if `random`"
         if args: return self.calc(*args, **kwargs)
         else: return RandTransform(self, kwargs=kwargs, is_random=is_random, p=p)
 
     def calc(tfm, x:Image, *args:Any, **kwargs:Any)->Image:
-        "apply our `tfm` to image `x`, wrapping it if necessary"
+        "Apply our `tfm` to image `x`, wrapping it if necessary"
         if tfm._wrap: return getattr(x, tfm._wrap)(tfm.func, *args, **kwargs)
         else:          return tfm.func(x, *args, **kwargs)
 
@@ -292,9 +210,15 @@ class Transform():
 
     def __repr__(self)->str: return f'{self.name} ({self.func.__name__})'
 
+TfmList = Union[Transform, Collection[Transform]]
+Tfms = Optional[TfmList]
+
+class TfmLighting(Transform): order,_wrap = 8,'lighting'
+#"decorator for lighting transforms"
+
 @dataclass
 class RandTransform():
-    "wraps `Transform` to add randomized execution"
+    "Wraps `Transform` to add randomized execution"
     tfm:Transform
     kwargs:dict
     p:int=1.0
@@ -303,7 +227,7 @@ class RandTransform():
     is_random:bool = True
 
     def resolve(self)->None:
-        "bind any random variables needed tfm calc"
+        "Bind any random variables needed tfm calc"
         if not self.is_random:
             self.resolved = {**self.tfm.def_args, **self.kwargs}
             return
@@ -330,67 +254,8 @@ class RandTransform():
     def order(self)->int: return self.tfm.order
 
     def __call__(self, x:Image, *args, **kwargs)->Image:
-        "randomly execute our tfm on `x`"
+        "Randomly execute our tfm on `x`"
         return self.tfm(x, *args, **{**self.resolved, **kwargs}) if self.do_run else x
-
-# decorator for lighting transforms
-class TfmLighting(Transform): order,_wrap = 8,'lighting'
-
-class TfmCoord(Transform): order,_wrap = 4,'coord'
-
-class TfmAffine(Transform):
-    "wraps affine tfm funcs"
-    order,_wrap = 5,'affine'
-class TfmPixel(Transform):
-    "wraps pixel tfm funcs"
-    order,_wrap = 10,'pixel'
-
-def uniform(low:Number, high:Number, size:List[int]=None)->float:
-    "draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
-    return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
-
-def log_uniform(low, high, size=None):
-    "draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
-    res = uniform(log(low), log(high), size)
-    return exp(res) if size is None else res.exp_()
-
-def rand_bool(p:float, size=None):
-    "draw 1 or shape=`size` random booleans (True occuring probability p)"
-    return uniform(0,1,size)<p
-
-def get_default_args(func):
-    return {k: v.default
-            for k, v in inspect.signature(func).parameters.items()
-            if v.default is not inspect.Parameter.empty}
-
-def listify(p=None, q=None):
-    "Makes `p` same length as `q`"
-    if p is None: p=[]
-    elif not isinstance(p, Iterable): p=[p]
-    n = q if type(q)==int else len(p) if q is None else len(q)
-    if len(p)==1: p = p * n
-    assert len(p)==n, f'List len mismatch ({len(p)} vs {n})'
-    return list(p)
-
-TfmList=Collection[Transform]
-def resolve_tfms(tfms:TfmList):
-    "resolve every tfm in `tfms`"
-    for f in listify(tfms): f.resolve()
-
-def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
-               xtra:Optional[Dict[Transform,dict]]=None, size:TensorImageSize=None, **kwargs:Any)->TensorImage:
-    "apply `tfms` to x, resize to `size`. `do_resolve` rebind random params. `xtra` custom args for a tfm"
-    if not (tfms or size): return x
-    if not xtra: xtra={}
-    tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-    if do_resolve: resolve_tfms(tfms)
-    x = x.clone()
-    if kwargs: x.set_sample(**kwargs)
-    if size: x.resize(size)
-    for tfm in tfms:
-        if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
-        else:               x = tfm(x)
-    return x
 
 @TfmLighting
 def brightness(x, change:uniform):
@@ -402,21 +267,59 @@ def contrast(x, scale:log_uniform):
     "`scale` contrast of image `x`"
     return x.mul_(scale)
 
+def resolve_tfms(tfms:TfmList):
+    "Resolve every tfm in `tfms`"
+    for f in listify(tfms): f.resolve()
+
+def apply_tfms(tfms:TfmList, x:Image, do_resolve:bool=True):
+    "Apply all the `tfms` to `x`, if `do_resolve` refresh all the random args"
+    if not tfms: return x
+    tfms = listify(tfms)
+    if do_resolve: resolve_tfms(tfms)
+    x = x.clone()
+    for tfm in tfms: x = tfm(x)
+    return x
+
+def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
+    "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
+    if padding_mode=='reflect': padding_mode='reflection'
+    return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
+
+def affine_grid(size:TensorImageSize)->FlowField:
+    size = ((1,)+size)
+    N, C, H, W = size
+    grid = FloatTensor(N, H, W, 2)
+    linear_points = torch.linspace(-1, 1, W) if W > 1 else tensor([-1])
+    grid[:, :, :, 0] = torch.ger(torch.ones(H), linear_points).expand_as(grid[:, :, :, 0])
+    linear_points = torch.linspace(-1, 1, H) if H > 1 else tensor([-1])
+    grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
+    return grid
+
+def affine_mult(c:FlowField,m:AffineMatrix)->FlowField:
+    "Multiply `c` by `m` - can adjust for rectangular shaped `c`"
+    if m is None: return c
+    size = c.size()
+    _,h,w,_ = size
+    m[0,1] *= h/w
+    m[1,0] *= w/h
+    c = c.view(-1,2)
+    c = torch.addmm(m[:2,2], c,  m[:2,:2].t())
+    return c.view(size)
+
+class TfmAffine(Transform):
+    "Wraps affine tfm funcs"
+    order,_wrap = 5,'affine'
+class TfmPixel(Transform):
+    "Wraps pixel tfm funcs"
+    order,_wrap = 10,'pixel'
+
 @TfmAffine
 def rotate(degrees:uniform):
-    "affine func that rotates the image"
+    "Affine func that rotates the image"
     angle = degrees * math.pi / 180
     return [[cos(angle), -sin(angle), 0.],
             [sin(angle),  cos(angle), 0.],
             [0.        ,  0.        , 1.]]
-
-@TfmAffine
-def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "zoom image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
-    s = 1-1/scale
-    col_c = s * (2*col_pct - 1)
-    row_c = s * (2*row_pct - 1)
-    return get_zoom_mat(1/scale, 1/scale, col_c, row_c)
 
 def get_zoom_mat(sw:float, sh:float, c:float, r:float)->AffineMatrix:
     "`sw`,`sh` scale width,height - `c`,`r` focus col,row"
@@ -425,8 +328,16 @@ def get_zoom_mat(sw:float, sh:float, c:float, r:float)->AffineMatrix:
             [0,  0, 1.]]
 
 @TfmAffine
+def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
+    "Zoom image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
+    s = 1-1/scale
+    col_c = s * (2*col_pct - 1)
+    row_c = s * (2*row_pct - 1)
+    return get_zoom_mat(1/scale, 1/scale, col_c, row_c)
+
+@TfmAffine
 def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "squish image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
+    "Squish image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
     if scale <= 1:
         col_c = (1-scale) * (2*col_pct - 1)
         return get_zoom_mat(scale, 1, col_c, 0.)
@@ -434,38 +345,202 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
         row_c = (1-1/scale) * (2*row_pct - 1)
         return get_zoom_mat(1, 1/scale, 0., row_c)
 
+class TfmCoord(Transform): order,_wrap = 4,'coord'
+
+@TfmCoord
+def jitter(c, size, magnitude:uniform):
+    return c.add_((torch.rand_like(c)-0.5)*magnitude*2)
+
 @TfmPixel
 def flip_lr(x): return x.flip(2)
 
+@TfmPixel
+def dihedral(x, k:partial(uniform_int,0,8)):
+    "Randomly flip `x` image based on k"
+    flips=[]
+    if k&1: flips.append(1)
+    if k&2: flips.append(2)
+    if flips: x = torch.flip(x,flips)
+    if k&4: x = x.transpose(1,2)
+    return x.contiguous()
+
 @partial(TfmPixel, order=-10)
 def pad(x, padding, mode='reflect'):
-    "pad `x` with `padding` pixels. `mode` fills in space ('reflect','zeros',etc)"
+    "Pad `x` with `padding` pixels. `mode` fills in space ('reflect','zeros',etc)"
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @TfmPixel
 def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5):
-    "crop `x` to `size` pixels. `row_pct`,`col_pct` select focal point of crop"
+    "Crop `x` to `size` pixels. `row_pct`,`col_pct` select focal point of crop"
     size = listify(size,2)
     rows,cols = size
     row = int((x.size(1)-rows+1) * row_pct)
     col = int((x.size(2)-cols+1) * col_pct)
     return x[:, row:row+rows, col:col+cols].contiguous()
 
-@TfmCoord
-def jitter(c, size, magnitude:uniform):
-    return c.add_((torch.rand_like(c)-0.5)*magnitude*2)
+class TfmCrop(TfmPixel): order=99
+
+@TfmCrop
+def crop_pad(x, size, padding_mode='reflect',
+             row_pct:uniform = 0.5, col_pct:uniform = 0.5):
+    "Crop and pad tfm - `row_pct`,`col_pct` sets focal point"
+    if padding_mode=='zeros': padding_mode='constant'
+    size = listify(size,2)
+    if x.shape[1:] == size: return x
+    rows,cols = size
+    if x.size(1)<rows or x.size(2)<cols:
+        row_pad = max((rows-x.size(1)+1)//2, 0)
+        col_pad = max((cols-x.size(2)+1)//2, 0)
+        x = F.pad(x[None], (col_pad,col_pad,row_pad,row_pad), mode=padding_mode)[0]
+    row = int((x.size(1)-rows+1)*row_pct)
+    col = int((x.size(2)-cols+1)*col_pct)
+
+    x = x[:, row:row+rows, col:col+cols]
+    return x.contiguous() # without this, get NaN later - don't know why
+
+def round_multiple(x:int, mult:int)->int:
+    "Calc `x` to nearest multiple of `mult`"
+    return (int(x/mult+0.5)*mult)
+
+def get_crop_target(target_px:Union[int,Tuple[int,int]], mult:int=32)->Tuple[int,int]:
+    "Calc crop shape of `target_px` to nearest multiple of `mult`"
+    target_r,target_c = listify(target_px, 2)
+    return round_multiple(target_r,mult),round_multiple(target_c,mult)
+
+def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
+    "Calc size of `img` to fit in `crop_target` - adjust based on `do_crop`"
+    if crop_target is None: return None
+    ch,r,c = img.shape
+    target_r,target_c = crop_target
+    ratio = (min if do_crop else max)(r/target_r, c/target_c)
+    return ch,round(r/ratio),round(c/ratio)
+
+def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
+               xtra:Optional[Dict[Transform,dict]]=None, size:Optional[Union[int,TensorImageSize]]=None,
+               mult:int=32, do_crop:bool=True, padding_mode:str='reflect', **kwargs:Any)->TensorImage:
+    "Apply all `tfms` to `x` - `do_resolve`: bind random args - size,mult used to crop/pad"
+    if tfms or xtra or size:
+        if not xtra: xtra={}
+        tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
+        if do_resolve: resolve_tfms(tfms)
+        x = x.clone()
+        x.set_sample(padding_mode=padding_mode, **kwargs)
+        if size:
+            crop_target = get_crop_target(size, mult=mult)
+            target = get_resize_target(x, crop_target, do_crop=do_crop)
+            x.resize(target)
+
+        size_tfms = [o for o in tfms if isinstance(o.tfm,TfmCrop)]
+        for tfm in tfms:
+            if tfm.tfm in xtra: x = tfm(x, **xtra[tfm.tfm])
+            elif tfm in size_tfms: x = tfm(x, size=size, padding_mode=padding_mode)
+            else: x = tfm(x)
+    return x
+
+def rand_zoom(*args, **kwargs):
+    "Random zoom tfm"
+    return zoom(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
+def rand_crop(*args, **kwargs):
+    "Random crop and pad"
+    return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
+def zoom_crop(scale, do_rand=False, p=1.0):
+    "Randomly zoom and/or crop"
+    zoom_fn = rand_zoom if do_rand else zoom
+    crop_fn = rand_crop if do_rand else crop_pad
+    return [zoom_fn(scale=scale, p=p), crop_fn()]
+
+def find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
+    "Find 8 coeff mentioned [here](https://web.archive.org/web/20150222120106/xenia.media.mit.edu/~cwren/interpolator/)"
+    matrix = []
+    #The equations we'll need to solve.
+    for p1, p2 in zip(targ_pts, orig_pts):
+        matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0]*p1[0], -p2[0]*p1[1]])
+        matrix.append([0, 0, 0, p1[0], p1[1], 1, -p2[1]*p1[0], -p2[1]*p1[1]])
+
+    A = FloatTensor(matrix)
+    B = FloatTensor(orig_pts).view(8)
+    #The 8 scalars we seek are solution of AX = B
+    return torch.gesv(B,A)[0][:,0]
+
+def apply_perspective(coords:FlowField, coeffs:Points)->FlowField:
+    "Transform `coords` with `coeffs`"
+    size = coords.size()
+    #compress all the dims expect the last one ang adds ones, coords become N * 3
+    coords = coords.view(-1,2)
+    #Transform the coeffs in a 3*3 matrix with a 1 at the bottom left
+    coeffs = torch.cat([coeffs, FloatTensor([1])]).view(3,3)
+    coords = torch.addmm(coeffs[:,2], coords, coeffs[:,:2].t())
+    coords.mul_(1/coords[:,2].unsqueeze(1))
+    return coords[:,:2].view(size)
+
+_orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
+
+def _perspective_warp(c:FlowField, targ_pts:Points):
+    "Apply warp to `targ_pts` from `_orig_pts` to `c` `FlowField`"
+    return apply_perspective(c, find_coeffs(_orig_pts, targ_pts))
 
 @TfmCoord
-def zoom_squish(c, size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_bool=False,
-                row_pct:uniform=0.5, col_pct:uniform=0.5):
-    #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
-    #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
-    m = compute_zs_mat(size, scale, squish, invert, row_pct, col_pct)
-    return affine_mult(c, FloatTensor(m))
+def perspective_warp(c, img_size, magnitude:partial(uniform,size=8)=0):
+    "Apply warp to `c` and with size `img_size` with `magnitude` amount"
 
+    magnitude = magnitude.view(4,2)
+    targ_pts = [[x+m for x,m in zip(xs, ms)] for xs, ms in zip(_orig_pts, magnitude)]
+    return _perspective_warp(c, targ_pts)
+
+@TfmCoord
+def symmetric_warp(c, img_size, magnitude:partial(uniform,size=4)=0):
+    "Apply warp to `c` with size `img_size` and `magnitude` amount"
+    m = listify(magnitude, 4)
+    targ_pts = [[-1-m[3],-1-m[1]], [-1-m[2],1+m[1]], [1+m[3],-1-m[0]], [1+m[2],1+m[0]]]
+    return _perspective_warp(c, targ_pts)
+
+def rand_int(low:int,high:int)->int: return random.randint(low, high)
+
+@TfmCoord
+def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
+    "Tilt `c` field and resize to`img_size` with random `direction` and `magnitude`"
+    orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
+    if direction == 0:   targ_pts = [[-1,-1], [-1,1], [1,-1-magnitude], [1,1+magnitude]]
+    elif direction == 1: targ_pts = [[-1,-1-magnitude], [-1,1+magnitude], [1,-1], [1,1]]
+    elif direction == 2: targ_pts = [[-1,-1], [-1-magnitude,1], [1,-1], [1+magnitude,1]]
+    elif direction == 3: targ_pts = [[-1-magnitude,-1], [-1,1], [1+magnitude,-1], [1,1]]
+    coeffs = find_coeffs(orig_pts, targ_pts)
+    return apply_perspective(c, coeffs)
+
+@TfmCoord
+def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
+    "Skew `c` field and resize to`img_size` with random `direction` and `magnitude`"
+    orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
+    if direction == 0:   targ_pts = [[-1-magnitude,-1], [-1,1], [1,-1], [1,1]]
+    elif direction == 1: targ_pts = [[-1,-1-magnitude], [-1,1], [1,-1], [1,1]]
+    elif direction == 2: targ_pts = [[-1,-1], [-1-magnitude,1], [1,-1], [1,1]]
+    elif direction == 3: targ_pts = [[-1,-1], [-1,1+magnitude], [1,-1], [1,1]]
+    elif direction == 4: targ_pts = [[-1,-1], [-1,1], [1+magnitude,-1], [1,1]]
+    elif direction == 5: targ_pts = [[-1,-1], [-1,1], [1,-1-magnitude], [1,1]]
+    elif direction == 6: targ_pts = [[-1,-1], [-1,1], [1,-1], [1+magnitude,1]]
+    elif direction == 7: targ_pts = [[-1,-1], [-1,1], [1,-1], [1,1+magnitude]]
+    coeffs = find_coeffs(orig_pts, targ_pts)
+    return apply_perspective(c, coeffs)
+
+def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
+                   max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,
+                   p_lighting:float=0.75, xtra_tfms:float=None)->Collection[Transform]:
+    "Utility func to easily create list of `flip`, `rotate`, `zoom`, `warp`, `lighting` transforms"
+    res = [rand_crop()]
+    if do_flip:    res.append(dihedral() if flip_vert else flip_lr(p=0.5))
+    if max_warp:   res.append(symmetric_warp(magnitude=(-max_warp,max_warp), p=p_affine))
+    if max_rotate: res.append(rotate(degrees=(-max_rotate,max_rotate), p=p_affine))
+    if max_zoom>1: res.append(rand_zoom(scale=(1.,max_zoom), p=p_affine))
+    if max_lighting:
+        res.append(brightness(change=(0.5*(1-max_lighting), 0.5*(1+max_lighting)), p=p_lighting))
+        res.append(contrast(scale=(1-max_lighting, 1/(1-max_lighting)), p=p_lighting))
+    #       train                   , valid
+    return (res + listify(xtra_tfms), [crop_pad()])
+
+#To keep?
 def compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
                    invert:bool, row_pct:float, col_pct:float)->AffineMatrix:
-    "utility routine to compute zoom/squish matrix"
+    "Utility routine to compute zoom/squish matrix"
     orig_ratio = math.sqrt(sz[2]/sz[1])
     for s,r,i in zip(scale,squish, invert):
         s,r = math.sqrt(s),math.sqrt(r)
@@ -480,3 +555,11 @@ def compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
     #Fallback, hack to emulate a center crop without cropping anything yet.
     if orig_ratio > 1: return get_zoom_mat(1/orig_ratio**2, 1, 0, 0.)
     else:              return get_zoom_mat(1, orig_ratio**2, 0, 0.)
+
+@TfmCoord
+def zoom_squish(c, size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_bool=False,
+                row_pct:uniform=0.5, col_pct:uniform=0.5):
+    #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
+    #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
+    m = compute_zs_mat(size, scale, squish, invert, row_pct, col_pct)
+    return affine_mult(c, FloatTensor(m))
