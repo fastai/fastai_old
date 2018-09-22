@@ -4,6 +4,8 @@
         #################################################
         # file to edit: dev_nb/006b_pascal.ipynb
 
+from nb_006a import *
+
 class ImageBBox(ImageMask):
     "Image class for bbox-style annotations"
     def clone(self):
