@@ -24,7 +24,7 @@ def is_listy(x:Any)->bool: return isinstance(x, (tuple,list))
 
 def loss_batch(model:Model, xb:Tensor, yb:Tensor,
                loss_fn:LossFunction, opt:optim.Optimizer=None):
-    "calculate loss for the batch `xb,yb` and learn from the gradients with `opt`"
+    "Calculate loss for the batch `xb,yb` and backprop with `opt`"
     if not is_listy(xb): xb = [xb]
     if not is_listy(yb): yb = [yb]
     loss = loss_fn(model(*xb), *yb)
@@ -38,7 +38,7 @@ def loss_batch(model:Model, xb:Tensor, yb:Tensor,
 
 def fit(epochs:int, model:Model, loss_fn:LossFunction,
         opt:optim.Optimizer, train_dl:DataLoader, valid_dl:DataLoader):
-    "train `model` on `train_dl` with `optim` then validate against `valid_dl`"
+    "Train `model` on `train_dl` with `optim` then validate against `valid_dl`"
     for epoch in range(epochs):
         model.train()
         for xb,yb in train_dl: loss,_ = loss_batch(model, xb, yb, loss_fn, opt)
@@ -53,7 +53,7 @@ def fit(epochs:int, model:Model, loss_fn:LossFunction,
 
 LambdaFunc = Callable[[Tensor],Tensor]
 class Lambda(nn.Module):
-    "an easy way to create a pytorch layer for a simple `func`"
+    "An easy way to create a pytorch layer for a simple `func`"
     def __init__(self, func:Callable[[Tensor],Tensor]):
         "create a layer that simply calls `func` with `x`"
         super().__init__()
@@ -67,26 +67,26 @@ def ResizeBatch(*size:int) -> Tensor:
     "Layer that resizes x to `size`, good for connecting mismatched layers"
     return Lambda(lambda x: x.view((-1,)+size))
 def Flatten()->Tensor:
-    "flattens `x` to a single dimension, often used at the end of a model"
+    "Flattens `x` to a single dimension, often used at the end of a model"
     return Lambda(lambda x: x.view((x.size(0), -1)))
 def PoolFlatten()->nn.Sequential:
-    "apply `nn.AdaptiveAvgPool2d` to `x` and then flatten the result"
+    "Apply `nn.AdaptiveAvgPool2d` to `x` and then flatten the result"
     return nn.Sequential(nn.AdaptiveAvgPool2d(1), Flatten())
 
 def conv2d(ni:int, nf:int, ks:int=3, stride:int=1, padding:int=None, bias=False) -> nn.Conv2d:
-    "create `nn.Conv2d` layer: `ni` inputs, `nf` outputs, `ks` kernel size. `padding` defaults to `k//2`"
+    "Create `nn.Conv2d` layer: `ni` inputs, `nf` outputs, `ks` kernel size. `padding` defaults to `k//2`"
     if padding is None: padding = ks//2
     return nn.Conv2d(ni, nf, kernel_size=ks, stride=stride, padding=padding, bias=bias)
 
 def conv2d_relu(ni:int, nf:int, ks:int=3, stride:int=1,
                 padding:int=None, bn:bool=False) -> nn.Sequential:
-    "create a `conv2d` layer with `nn.ReLU` activation and optional(`bn`) `nn.BatchNorm2d`"
+    "Create a `conv2d` layer with `nn.ReLU` activation and optional(`bn`) `nn.BatchNorm2d`"
     layers = [conv2d(ni, nf, ks=ks, stride=stride, padding=padding), nn.ReLU()]
     if bn: layers.append(nn.BatchNorm2d(nf))
     return nn.Sequential(*layers)
 
 def conv2d_trans(ni:int, nf:int, ks:int=2, stride:int=2, padding:int=0) -> nn.ConvTranspose2d:
-    "create `nn.nn.ConvTranspose2d` layer: `ni` inputs, `nf` outputs, `ks` kernel size. `padding` defaults to 0"
+    "Create `nn.nn.ConvTranspose2d` layer: `ni` inputs, `nf` outputs, `ks` kernel size. `padding` defaults to 0"
     return nn.ConvTranspose2d(ni, nf, kernel_size=ks, stride=stride, padding=padding)
 
 @dataclass
@@ -119,7 +119,7 @@ default_device = torch.device('cuda') if torch.cuda.is_available() else torch.de
 Tensors = Union[Tensor, Collection['Tensors']]
 
 def to_device(b:Tensors, device:torch.device):
-    "ensure `b` is on `device`"
+    "Ensure `b` is on `device`"
     device = ifnone(device, default_device)
     if is_listy(b): return [to_device(o, device) for o in b]
     return b.to(device)
@@ -134,7 +134,7 @@ class DeviceDataLoader():
     def proc_batch(self,b:Tensors): return to_device(b, self.device)
 
     def __iter__(self)->Tensors:
-        "ensure batches from `dl` are on `device` as we iterate"
+        "Ensure batches from `dl` are on `device` as we iterate"
         self.gen = map(self.proc_batch, self.dl)
         return iter(self.gen)
 
@@ -143,7 +143,7 @@ class DeviceDataLoader():
 
 def fit(epochs:int, model:Model, loss_fn:LossFunction,
         opt:optim.Optimizer, train_dl:DataLoader, valid_dl:DataLoader) -> None:
-    "train `model` for `epochs` with `loss_fun` and `optim`"
+    "Train `model` for `epochs` with `loss_fun` and `optim`"
     for epoch in range(epochs):
         model.train()
         for xb,yb in train_dl: loss,_ = loss_batch(model, xb, yb, loss_fn, opt)
@@ -163,7 +163,7 @@ Tfms = Optional[TfmList]
 
 @dataclass
 class DataBunch():
-    "bind `train_dl`, `valid_dl` to `device`"
+    "Bind `train_dl`, `valid_dl` to `device`"
     train_dl:DataLoader
     valid_dl:DataLoader
     device:torch.device=None
@@ -176,7 +176,7 @@ class DataBunch():
                    device=device)
 
 class Learner():
-    "train `model` on `data` for `epochs` using learning rate `lr` and `opt_fn` to optimize training"
+    "Train `model` on `data` for `epochs` using learning rate `lr` and `opt_fn` to optimize training"
     def __init__(self, data:DataBunch, model:Model):
         self.data,self.model = data,to_device(model, data.device)
 
