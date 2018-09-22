@@ -1,24 +1,59 @@
 from .callbacks import *
 from .basic_train import *
+from .tta import *
 
-__all__ = ['lr_find','fit_one_cycle','to_fp16']
+def one_cycle_scheduler(lr_max:float, **kwargs:Any)->OneCycleScheduler:
+    return partial(OneCycleScheduler, lr_max=lr_max, **kwargs)
 
-def lr_find(learn:Learner, start_lr:float=1e-5, end_lr:float=10., num_it:int=100):
-    "Launches the LR Range test"
-    #TODO: add model.save and model.load.
-    learn.create_opt(start_lr)
-    cbs = [LRFinder(learn.opt, learn.data, start_lr, end_lr, num_it)]
-    a = int(np.ceil(num_it/len(learn.data.train_dl)))
-    learn.fit(a, start_lr, callbacks=cbs)
-
-def fit_one_cycle(learn:Learner, max_lr:float, cyc_len:int, moms:Tuple[float,float]=(0.95,0.85), div_factor:float=10.,
-                 pct_end:float=0.1, wd:float=0.):
+def fit_one_cycle(learn:Learner, cyc_len:int,
+                  max_lr:Union[Floats,slice]=default_lr, moms:Tuple[float,float]=(0.95,0.85),
+                  div_factor:float=25., pct_start:float=0.3, wd:float=None, **kwargs)->None:
     "Fits a model following the 1cycle policy"
-    cbs = [OneCycleScheduler(learn, max_lr, cyc_len, moms, div_factor, pct_end)]
-    learn.fit(cyc_len, max_lr/div_factor, wd=wd, callbacks=cbs)
+    max_lr = learn.lr_range(max_lr)
+    cbs = [OneCycleScheduler(learn, max_lr, moms=moms, div_factor=div_factor,
+                             pct_start=pct_start, **kwargs)]
+    learn.fit(cyc_len, max_lr, wd=wd, callbacks=cbs)
 
-def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False):
+def lr_find(learn:Learner, start_lr:float=1e-5, end_lr:float=10, num_it:int=100, **kwargs:Any):
+    "Explore lr from `start_lr` to `end_lr` over `num_it` iterations of `learn`"
+    cb = LRFinder(learn, start_lr, end_lr, num_it)
+    a = int(np.ceil(num_it/len(learn.data.train_dl)))
+    learn.fit(a, start_lr, callbacks=[cb], **kwargs)
+
+def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False)->Learner:
     "Transforms the learner in FP16 precision"
-    learn.model = cb.model2half(learn.model)
-    learn.callbacks.append(MixedPrecision(learn, loss_scale=loss_scale, flat_master=flat_master))
+    learn.model = model2half(learn.model)
+    learn.mp_cb = MixedPrecision(learn, loss_scale=loss_scale, flat_master=flat_master)
+    learn.callbacks.append(learn.mp_cb)
+    return learn
 
+Learner.fit_one_cycle = fit_one_cycle
+Learner.lr_find = lr_find
+Learner.to_fp16 = to_fp16
+
+class ShowGraph(LearnerCallback):
+    "Updates a graph of learner stats and metrics after each epoch"
+    def on_epoch_end(self, n_epochs:int, last_metrics:MetricsList, **kwargs)->bool:
+        "If we have metrics plot them in our pbar graph"
+        if last_metrics is not None:
+            rec = self.learn.recorder
+            iters = list(range(len(rec.losses)))
+            val_iter = np.array(rec.nb_batches).cumsum()
+            x_bounds = (0, (n_epochs - len(rec.nb_batches)) * rec.nb_batches[-1] + len(rec.losses))
+            y_bounds = (0, max((max(Tensor(rec.losses)), max(Tensor(rec.val_losses)))))
+            rec.pbar.update_graph([(iters, rec.losses), (val_iter, rec.val_losses)], x_bounds, y_bounds)
+            return False
+
+class BnFreeze(LearnerCallback):
+    "Set all bntypes layers in `learn` to eval() on_epoch_begin"
+    def on_epoch_begin(self, **kwargs:Any)->None:
+        "Put bn layers in eval mode on epoch_begin"
+        set_bn_eval(self.learn.model)
+
+@dataclass
+class GradientClipping(LearnerCallback):
+    "To do gradient clipping during training."
+    clip:float
+
+    def on_backward_end(self, **kwargs):
+        if self.clip:  nn.utils.clip_grad_norm_(self.learn.model.parameters(), self.clip)

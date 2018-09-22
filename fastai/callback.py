@@ -1,68 +1,93 @@
 from .data import *
 from .torch_core import *
 
-__all__ = ['OptimWrapper', 'Callback', 'CallbackHandler', 'Recorder', 'Stepper']
-
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
-    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False):
-        self.opt,self.true_wd = opt,true_wd
+    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False, bn_wd:bool=True)->None:
+        self.opt,self.true_wd,self.bn_wd = opt,true_wd,bn_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
         self.read_defaults()
-        self._wd = self.listify(wd, self.opt.param_groups)
+        self.wd = wd
 
-    def __repr__(self) -> str:
+    @classmethod
+    def create(cls, opt_fn:Union[type,Callable], lr:Union[float,Tuple,List],
+               layer_groups:ModuleList, **kwargs:Any)->optim.Optimizer:
+        "Create an optim.Optimizer from `opt_fn` with `lr`. Set lr on `layer_groups``"
+        split_groups = split_bn_bias(layer_groups)
+        opt = opt_fn([{'params': trainable_params(l), 'lr':0} for l in split_groups])
+        opt = cls(opt, **kwargs)
+        opt.lr = listify(lr, layer_groups)
+        return opt
+
+    def __repr__(self)->str:
         return f'OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}'
 
     #Pytorch optimizer methods
-    def step(self):
-        "Delegate to the optimizer step"
+    def step(self)->None:
+        "Set weight decay and step optimizer"
         # weight decay outside of optimizer step (AdamW)
         if self.true_wd:
-            for lr,wd,pg in zip(self._lr,self._wd,self.opt.param_groups):
-                for p in pg['params']: p.data.mul_(1 - wd*lr)
-            self.set_val('weight_decay', self.listify(0, self._wd))
+            for lr,wd,pg1,pg2 in zip(self._lr,self._wd,self.opt.param_groups[::2],self.opt.param_groups[1::2]):
+                for p in pg1['params']: p.data.mul_(1 - wd*lr)
+                if self.bn_wd:
+                    for p in pg2['params']: p.data.mul_(1 - wd*lr)
+            self.set_val('weight_decay', listify(0, self._wd))
         self.opt.step()
 
-    def zero_grad(self): self.opt.zero_grad()
+    def zero_grad(self)->None:
+        "Clear optimizer gradients"
+        self.opt.zero_grad()
 
     #Hyperparameters as properties
     @property
-    def lr(self) -> float: return self._lr[-1]
+    def lr(self)->float:
+        "Get learning rate"
+        return self._lr[-1]
 
     @lr.setter
-    def lr(self, val:Floats): self._lr = self.set_val('lr', self.listify(val, self._lr))
+    def lr(self, val:float)->None:
+        "Set learning rate"
+        self._lr = self.set_val('lr', listify(val, self._lr))
 
     @property
-    def mom(self) -> float: return self._mom[-1]
+    def mom(self)->float:
+        "Get momentum"
+        return self._mom[-1]
 
     @mom.setter
-    def mom(self, val:Floats):
-        if 'momentum' in self.opt_keys: self.set_val('momentum', self.listify(val, self._mom))
-        elif 'betas' in self.opt_keys:  self.set_val('betas', (self.listify(val, self._mom), self._beta))
-        self._mom = self.listify(val, self._mom)
+    def mom(self, val:float)->None:
+        "Set momentum"
+        if 'momentum' in self.opt_keys: self.set_val('momentum', listify(val, self._mom))
+        elif 'betas' in self.opt_keys:  self.set_val('betas', (listify(val, self._mom), self._beta))
+        self._mom = listify(val, self._mom)
 
     @property
-    def beta(self) -> float: return None if self._beta is None else self._beta[-1]
+    def beta(self)->float:
+        "get beta"
+        return None if self._beta is None else self._beta[-1]
 
     @beta.setter
-    def beta(self, val:Floats):
+    def beta(self, val:float)->None:
+        "Set beta (or alpha as makes sense for give optimizer)"
         if val is None: return
-        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, self.listify(val, self._beta)))
-        elif 'alpha' in self.opt_keys:  self.set_val('alpha', self.listify(val, self._beta))
-        self._beta = self.listify(val, self._beta)
+        if 'betas' in self.opt_keys:    self.set_val('betas', (self._mom, listify(val, self._beta)))
+        elif 'alpha' in self.opt_keys:  self.set_val('alpha', listify(val, self._beta))
+        self._beta = listify(val, self._beta)
 
     @property
-    def wd(self) -> float: return self._wd[-1]
+    def wd(self)->float:
+        "Get weight decay"
+        return self._wd[-1]
 
     @wd.setter
-    def wd(self, val:Floats):
-        if not self.true_wd: self.set_val('weight_decay', self.listify(val, self._wd))
-        self._wd = self.listify(val, self._wd)
+    def wd(self, val:float)->None:
+        "Set weight decay"
+        if not self.true_wd: self.set_val('weight_decay', listify(val, self._wd), bn_groups=self.bn_wd)
+        self._wd = listify(val, self._wd)
 
     #Helper functions
-    def read_defaults(self):
+    def read_defaults(self)->None:
         "Read the values inside the optimizer for the hyper-parameters"
         self._beta = None
         if 'lr' in self.opt_keys: self._lr = self.read_val('lr')
@@ -71,93 +96,118 @@ class OptimWrapper():
         if 'betas' in self.opt_keys: self._mom,self._beta = self.read_val('betas')
         if 'weight_decay' in self.opt_keys: self._wd = self.read_val('weight_decay')
 
-    def set_val(self, key:str, val:Union[Floats, Tuple[Floats, Floats]]):
+    def set_val(self, key:str, val:Any, bn_groups:bool=True)->Any:
         "Set the values inside the optimizer dictionary at the key"
         if is_tuple(val): val = [(v1,v2) for v1,v2 in zip(*val)]
-        for v,pg in zip(val,self.opt.param_groups): pg[key] = v
+        for v,pg1,pg2 in zip(val,self.opt.param_groups[::2],self.opt.param_groups[1::2]):
+            pg1[key] = v
+            if bn_groups: pg2[key] = v
         return val
 
-    def read_val(self, key:str) -> Union[Floats, Tuple[Floats, Floats]]:
+    def read_val(self, key:str) -> Union[List[float],Tuple[List[float],List[float]]]:
         "Read a hyper-parameter key in the optimizer dictionary."
-        val = [pg[key] for pg in self.opt.param_groups]
+        val = [pg[key] for pg in self.opt.param_groups[::2]]
         if is_tuple(val[0]): val = [o[0] for o in val], [o[1] for o in val]
         return val
 
-    def listify(self, p, q) -> List[Any]:
-        "Wrap listify with an assert."
-        if is_listy(p): assert len(p) == len(q), f'Passing {len(p)} hyperparameters when we have {len(q)} groups.'
-        return listify(p,q)
-
 class Callback():
-    "Basic definition of a callback"
+    "Base class for callbacks that want to record values, dynamically change learner params, etc"
+    def on_train_begin(self, **kwargs:Any)->None:
+        "To initialize constants in the callback."
+        pass
+    def on_epoch_begin(self, **kwargs:Any)->None:
+        "At the beginning of each epoch"
+        pass
+    def on_batch_begin(self, **kwargs:Any)->None:
+        """To set HP before the step is done.
+           Returns xb, yb (which can allow us to modify the input at that step if needed)"""
+        pass
+    def on_loss_begin(self, **kwargs:Any)->None:
+        """Called after the forward pass but before the loss has been computed.
+           Returns the output (which can allow us to modify it)"""
+        pass
+    def on_backward_begin(self, **kwargs:Any)->None:
+        """Called after the forward pass and the loss has been computed, but before the back propagation.
+           Returns the loss (which can allow us to modify it, for instance for reg functions)"""
+        pass
+    def on_backward_end(self, **kwargs:Any)->None:
+        """Called after the back propagation had been done (and the gradients computed) but before the step of the optimizer.
+           Useful for true weight decay in AdamW"""
+        pass
+    def on_step_end(self, **kwargs:Any)->None:
+        "Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful)"
+        pass
+    def on_batch_end(self, **kwargs:Any)->None:
+        "Called at the end of the batch"
+        pass
+    def on_epoch_end(self, **kwargs:Any)->bool:
+        "Called at the end of an epoch"
+        return False
+    def on_train_end(self, **kwargs:Any)->None:
+        "Useful for cleaning up things and saving files/models"
+        pass
 
-    def on_train_begin(self, **kwargs): pass
-        #To initiliaze constants in the callback.
-    def on_epoch_begin(self, **kwargs): pass
-        #At the beginning of each epoch
-    def on_batch_begin(self, **kwargs) -> Tuple[Tensor, Tensor]: pass
-        #To set HP before the step is done.
-        #Returns xb, yb (which can allow us to modify the input at that step if needed)
-    def on_loss_begin(self, **kwargs) -> Tensor: pass
-        #Called after the forward pass but before the loss has been computed.
-        #Returns the output (which can allow us to modify it)
-    def on_backward_begin(self, **kwargs) -> Rank0Tensor: pass
-        #Called after the forward pass and the loss has been computed, but before the back propagation.
-        #Returns the loss (which can allow us to modify it, for instance for reg functions)
-    def on_backward_end(self, **kwargs): pass
-        #Called after the back propagation had been done (and the gradients computed) but before the step of the optimizer.
-        #Useful for true weight decay in AdamW
-    def on_step_end(self, **kwargs): pass
-        #Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful)
-    def on_batch_end(self, **kwargs) -> bool: pass
-        #Called at the end of the batch
-    def on_epoch_end(self, **kwargs) -> bool: pass
-        #Called at the end of an epoch
-    def on_train_end(self, **kwargs): pass
-        #Useful for cleaning up things and saving files/models
+class SmoothenValue():
+    "Creates a smooth moving average for a value (loss, etc)"
+    def __init__(self, beta:float)->None:
+        "Create smoother for value, beta should be 0<beta<1"
+        self.beta,self.n,self.mov_avg = beta,0,0
+
+    def add_value(self, val:float)->None:
+        "Add current value to calculate updated smoothed value "
+        self.n += 1
+        self.mov_avg = self.beta * self.mov_avg + (1 - self.beta) * val
+        self.smooth = self.mov_avg / (1 - self.beta ** self.n)
+
+CallbackList = Collection[Callback]
+OptCallbackList = Optional[CallbackList]
+
+def _get_init_state(): return {'epoch':0, 'iteration':0, 'num_batch':0}
 
 @dataclass
 class CallbackHandler():
-    "Class actually called by the training loop and responsible for dispatching to callbacks"
+    "Manages all of the registered callback objects, beta is for smoothing loss"
+    callbacks:CallbackList
+    beta:float=0.98
 
-    callbacks:Collection[Callback]
-    beta:float = 0.98
-
-    def __post_init__(self):
-        self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
+    def __post_init__(self)->None:
+        "InitInitializeitialize smoother and learning stats"
         self.smoothener = SmoothenValue(self.beta)
+        self.state_dict:Dict[str,Union[int,float,Tensor]]=_get_init_state()
 
-    def __call__(self, cb_name:str):
-        return [getattr(cb, f'on_{cb_name}')(**self.state_dict) for cb in self.callbacks]
+    def __call__(self, cb_name, **kwargs)->None:
+        "Call through to all of the callback handlers"
+        return [getattr(cb, f'on_{cb_name}')(**self.state_dict, **kwargs) for cb in self.callbacks]
 
-    def __repr__(self) -> str:
-        res = ''
-        for cb in self.callbacks: res += repr(cb)
-        return res
-
-    def on_train_begin(self):
-        self.state_dict:Dict[str,Union[int,float,Tensor]] = {'epoch': 0, 'iteration': 0, 'num_batch': 0}
+    def on_train_begin(self, epochs:int, pbar:PBar, metrics:MetricFuncList)->None:
+        "About to start learning"
+        self.state_dict = _get_init_state()
+        self.state_dict['n_epochs'],self.state_dict['pbar'],self.state_dict['metrics'] = epochs,pbar,metrics
         self('train_begin')
 
-    def on_epoch_begin(self):
+    def on_epoch_begin(self)->None:
+        "Handle new epoch"
         self.state_dict['num_batch'] = 0
         self('epoch_begin')
 
-    def on_batch_begin(self, xb:Tensor, yb:Tensor) -> Tuple[Tensor, Tensor]:
+    def on_batch_begin(self, xb:Tensor, yb:Tensor)->None:
+        "Handle new batch `xb`,`yb`"
         self.state_dict['last_input'], self.state_dict['last_target'] = xb, yb
         for cb in self.callbacks:
             a = cb.on_batch_begin(**self.state_dict)
             if a is not None: self.state_dict['last_input'], self.state_dict['last_target'] = a
         return self.state_dict['last_input'], self.state_dict['last_target']
 
-    def on_loss_begin(self, out:Tensor) -> Tensor:
+    def on_loss_begin(self, out:Tensor)->None:
+        "Handle start of loss calculation with model output `out`"
         self.state_dict['last_output'] = out
         for cb in self.callbacks:
             a = cb.on_loss_begin(**self.state_dict)
             if a is not None: self.state_dict['last_output'] = a
         return self.state_dict['last_output']
 
-    def on_backward_begin(self, loss) -> Rank0Tensor:
+    def on_backward_begin(self, loss:Tensor)->None:
+        "Handle gradient calculation on `loss`"
         self.smoothener.add_value(loss.detach())
         self.state_dict['last_loss'], self.state_dict['smooth_loss'] = loss, self.smoothener.smooth
         for cb in self.callbacks:
@@ -165,111 +215,69 @@ class CallbackHandler():
             if a is not None: self.state_dict['last_loss'] = a
         return self.state_dict['last_loss']
 
-    def on_backward_end(self):        self('backward_end')
-    def on_step_end(self):            self('step_end')
+    def on_backward_end(self)->None:
+        "Handle end of gradient calc"
+        self('backward_end')
+    def on_step_end(self)->None:
+        "Handle end of optimization step"
+        self('step_end')
 
-    def on_batch_end(self, loss) -> bool:
+    def on_batch_end(self, loss:Tensor)->None:
+        "Handle end of processing one batch with `loss`"
         self.state_dict['last_loss'] = loss
         stop = np.any(self('batch_end'))
         self.state_dict['iteration'] += 1
         self.state_dict['num_batch'] += 1
         return stop
 
-    def on_epoch_end(self, val_metrics) -> bool:
+    def on_epoch_end(self, val_metrics:MetricsList)->bool:
+        "Epoch is done, process `val_metrics`"
         self.state_dict['last_metrics'] = val_metrics
         stop = np.any(self('epoch_end'))
         self.state_dict['epoch'] += 1
         return stop
 
-    def on_train_end(self): self('train_end')
+    def on_train_end(self, exception:Union[bool,Exception])->None:
+        "Handle end of training, `exception` is an `Exception` or False if no exceptions during training"
+        self('train_end', exception=exception)
 
-@dataclass
-class Recorder(Callback):
-    "Callback present in every learner to record basic stats"
+def annealing_no(start:Number, end:Number, pct:float)->Number:
+    "No annealing, always return `start`"
+    return start
+def annealing_linear(start:Number, end:Number, pct:float)->Number:
+    "Linearly anneal from `start` to `end` as pct goes from 0.0 to 1.0"
+    return start + pct * (end-start)
+def annealing_exp(start:Number, end:Number, pct:float)->Number:
+    "Exponentially anneal from `start` to `end` as pct goes from 0.0 to 1.0"
+    return start * (end/start) ** pct
+def annealing_cos(start:Number, end:Number, pct:float)->Number:
+    "Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0"
+    cos_out = np.cos(np.pi * pct) + 1
+    return end + (start-end)/2 * cos_out
 
-    opt:OptimWrapper
-    nb_epoch:int
-    train_dl:DeviceDataLoader=None
-    pbar:Callable=None
-
-    def __repr__(self) -> str:
-        return f'Recorder\n  internal optimizer:{repr(self.opt)}\n  internal dataloader:{repr(self.train_dl)}'
-
-    def on_train_begin(self, **kwargs):
-        self.losses,self.val_losses,self.lrs,self.moms,self.metrics,self.nb_batches = [],[],[],[],[],[]
-
-    def on_batch_begin(self, **kwargs):
-        self.lrs.append(self.opt.lr)
-        self.moms.append(self.opt.mom)
-
-    def on_backward_begin(self, smooth_loss:float, **kwargs):
-        #We record the loss here before any other callback has a chance to modify it.
-        self.losses.append(smooth_loss)
-        if self.pbar is not None and hasattr(self.pbar,'child'):
-            self.pbar.child.comment = f'{smooth_loss:.4f}'
-
-    def on_epoch_end(self, epoch, num_batch, smooth_loss, last_metrics, **kwargs):
-        self.nb_batches.append(num_batch)
-        if last_metrics is not None:
-            self.val_losses.append(last_metrics[0])
-            if len(last_metrics) > 1: self.metrics.append(last_metrics[1:])
-            self.format_stats([epoch, smooth_loss] + last_metrics)
-        else:  self.format_stats([epoch, smooth_loss])
-
-    def plot_lr(self, show_moms:bool=False):
-        iterations = list(range(len(self.lrs)))
-        if show_moms:
-            _, axs = plt.subplots(1,2, figsize=(12,4))
-            axs[0].plot(iterations, self.lrs)
-            axs[1].plot(iterations, self.moms)
-        else: plt.plot(iterations, self.lrs)
-
-    def plot(self, skip_start:int=10, skip_end:int=5):
-        lrs = self.lrs[skip_start:-skip_end] if skip_end > 0 else self.lrs[skip_start:]
-        losses = self.losses[skip_start:-skip_end] if skip_end > 0 else self.losses[skip_start:]
-        _, ax = plt.subplots(1,1)
-        ax.plot(lrs, losses)
-        ax.set_xscale('log')
-
-    def plot_losses(self):
-        _, ax = plt.subplots(1,1)
-        iterations = list(range(len(self.losses)))
-        ax.plot(iterations, self.losses)
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        ax.plot(val_iter, self.val_losses)
-
-    def plot_metrics(self):
-        assert len(self.metrics) != 0, "There is no metrics to plot."
-        _, axes = plt.subplots(len(self.metrics[0]),1,figsize=(6, 4*len(self.metrics[0])))
-        val_iter = self.nb_batches
-        val_iter = np.cumsum(val_iter)
-        axes = axes.flatten() if len(self.metrics[0]) != 1 else [axes]
-        for i, ax in enumerate(axes):
-            values = [met[i] for met in self.metrics]
-            ax.plot(val_iter, values)
-
-    def send_graphs(self):
-        iters = list(range(len(self.losses)))
-        val_iter = np.array(self.nb_batches).cumsum()
-        x_bounds = (0, (self.nb_epoch - len(self.nb_batches)) * self.nb_batches[-1] + len(self.losses))
-        y_bounds = (0, max((max(self.losses), max(self.val_losses))))
-        return [(iters, self.losses), (val_iter, self.val_losses)], x_bounds, y_bounds
+def do_annealing_poly(start:Number, end:Number, pct:float, degree:Number)->Number:
+    "Helper function for `anneal_poly`"
+    return end + (start-end) * (1-pct)**degree
+def annealing_poly(degree:Number)->Number:
+    "Anneal polynomically from `start` to `end` as pct goes from 0.0 to 1.0"
+    return functools.partial(do_annealing_poly, degree=degree)
 
 class Stepper():
-    def __init__(self, vals:Union[float,Tuple[float,float]], num_it:int, ft:AnnealingFt=None):
+    "Used to \"step\" from start,end (`vals`) over `n_iter` iterations on a schedule defined by `func` (defaults to linear)"
+    def __init__(self, vals:StartOptEnd, n_iter:int, func:Optional[AnnealFunc]=None):
         self.start,self.end = (vals[0],vals[1]) if is_tuple(vals) else (vals,0)
-        self.num_it = num_it
-        if ft is None: self.ft = annealing_linear if is_tuple(vals) else annealing_no
-        else:          self.ft = ft
+        self.n_iter = n_iter
+        if func is None: self.func = annealing_linear if is_tuple(vals) else annealing_no
+        else:          self.func = func
         self.n = 0
 
-    def step(self) -> float:
+    def step(self)->Number:
+        "Return next value along annealed schedule"
         self.n += 1
-        return self.ft(self.start, self.end, self.n/self.num_it)
-
-    def repr(self) -> str:
-        return f'Stepper from {self.start} to {self.end} with {self.ft.__name__}. Current step: {self.n/self.num_it}'
+        return self.func(self.start, self.end, self.n/self.n_iter)
 
     @property
-    def is_done(self) -> bool:  return self.n >= self.num_it
+    def is_done(self)->bool:
+        "Schedule completed"
+        return self.n >= self.n_iter
+
