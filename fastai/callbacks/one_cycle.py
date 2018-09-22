@@ -1,32 +1,42 @@
-from ..imports.core import *
-from ..callback import Callback, Stepper
+from ..core import *
+from ..callback import *
 from ..basic_train import Learner
 
+@dataclass
 class OneCycleScheduler(Callback):
-    "Callback that implements the 1cycle policy"
+    "Manages 1-Cycle style traing as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
+    learn:Learner
+    lr_max:float
+    moms:Floats=(0.95,0.85)
+    div_factor:float=25.
+    pct_start:float=0.5
 
-    def __init__(self, learn:Learner, lr_max:float, epochs:int, moms:Tuple[float,float]=(0.95,0.85), div_factor:float=10., pct_end:float=0.1):
-        self.learn = learn
-        a = int(len(learn.data.train_dl) * epochs * (1 - pct_end) / 2)
-        b = len(learn.data.train_dl) * epochs - 2*a
-        self.lr_scheds = [Stepper((lr_max/div_factor, lr_max), a),
-                          Stepper((lr_max, lr_max/div_factor), a),
-                          Stepper((lr_max/div_factor, lr_max/(div_factor*100)), b)]
-        self.mom_scheds = [Stepper(moms, a), Stepper((moms[1], moms[0]), a), Stepper(moms[0], b)]
-        self.rep = f'OneCycleScheduler on {repr(learn)}\nEpochs: {epochs}, lr_max: {lr_max}, moms: {str(moms)},'
-        self.rep += f'div_factor: {div_factor}, pct_end: {pct_end}'
-    
-    def __repr__(self) -> str:
-        return self.rep
+    def __post_init__(self): self.moms=tuple(listify(self.moms,2))
 
-    def on_train_begin(self, **kwargs):
+    def steps(self, *steps_cfg:StartOptEnd):
+        "Build anneal schedule for all of the parameters"
+        return [Stepper(step, n_iter, func=func)
+                for (step,(n_iter,func)) in zip(steps_cfg, self.phases)]
+
+    def on_train_begin(self, n_epochs:int, **kwargs:Any)->None:
+        "Initialize our optimization params based on our annealing schedule"
+        n = len(self.learn.data.train_dl) * n_epochs
+        a1 = int(n * self.pct_start)
+        a2 = n-a1
+        self.phases = ((a1, annealing_linear), (a2, annealing_cos))
+        low_lr = self.lr_max/self.div_factor
+        self.lr_scheds = self.steps((low_lr, self.lr_max), (self.lr_max, low_lr/1e4))
+        self.mom_scheds = self.steps(self.moms, (self.moms[1], self.moms[0]))
         self.opt = self.learn.opt
-        self.opt.lr, self.opt.mom = self.lr_scheds[0].start, self.mom_scheds[0].start
+        self.opt.lr,self.opt.mom = self.lr_scheds[0].start,self.mom_scheds[0].start
         self.idx_s = 0
-    
-    def on_batch_end(self, **kwargs) -> bool:
+
+    def on_batch_end(self, **kwargs:Any)->None:
+        "Take one step forward on the annealing schedule for the optim params"
         if self.idx_s >= len(self.lr_scheds): return True
         self.opt.lr = self.lr_scheds[self.idx_s].step()
         self.opt.mom = self.mom_scheds[self.idx_s].step()
+        # when the current schedule is complete we move onto the next
+        # schedule. (in 1-cycle there are two schedules)
         if self.lr_scheds[self.idx_s].is_done:
             self.idx_s += 1

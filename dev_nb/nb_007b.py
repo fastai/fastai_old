@@ -76,7 +76,7 @@ def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tup
     return res, LongTensor([s[1] for s in samples]).squeeze()
 
 def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
-    "Function that transform the datasets in a DataBunch for classification"
+    "Function that transform the `datasets` in a `DataBunch` for classification"
     bs = kwargs.pop('bs') if 'bs' in kwargs else 64
     pad_idx = kwargs.pop('pad_idx') if 'pad_idx' in kwargs else 1
     train_sampler = SortishSampler(datasets[0].ids, key=lambda x: len(datasets[0].ids[x]), bs=bs//2)
@@ -184,7 +184,7 @@ class RNNLearner(Learner):
     def language_model(cls, data:DataBunch, bptt:int=70, emb_sz:int=400, nh:int=1150, nl:int=3, pad_token:int=1,
                        drop_mult:float=1., tie_weights:bool=True, bias:bool=True, qrnn:bool=False,
                        pretrained_fnames:OptStrTuple=None, **kwargs) -> 'RNNLearner':
-        "Creates a Learner with a language model."
+        "Creates a `Learner` with a language model."
         dps = np.array([0.25, 0.1, 0.2, 0.02, 0.15]) * drop_mult
         vocab_size = len(data.train_ds.vocab.itos)
         model = get_language_model(vocab_size, emb_sz, nh, nl, pad_token, input_p=dps[0], output_p=dps[1],
