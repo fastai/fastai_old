@@ -6,4 +6,7 @@ from .data import *
 from .metrics import *
 from .torch_core import *
 from .train import *
+from .rnn_learner import *
+from .conv_learner import *
+from .colab import *
 
