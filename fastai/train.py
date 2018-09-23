@@ -29,9 +29,16 @@ def to_fp16(learn:Learner, loss_scale:float=512., flat_master:bool=False)->Learn
     learn.callbacks.append(learn.mp_cb)
     return learn
 
+def mixup(learn:Learner, alpha:float=0.4, stack_x:bool=False, stack_y:bool=True) -> Learner:
+    "Adds mixup https://arxiv.org/abs/1710.09412 to the learner"
+    if stack_y: learn.loss_fn = MixUpLoss(learn.loss_fn)
+    learn.callback_fns.append(partial(MixUpCallback, alpha=alpha, stack_x=stack_x, stack_y=stack_y))
+    return learn
+
 Learner.fit_one_cycle = fit_one_cycle
 Learner.lr_find = lr_find
 Learner.to_fp16 = to_fp16
+Learner.mixup = mixup
 
 class ShowGraph(LearnerCallback):
     "Updates a graph of learner stats and metrics after each epoch"
