@@ -1,6 +1,7 @@
 import pkgutil, inspect, sys,os, importlib,json,enum,warnings,nbformat,re
 from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
+import nbformat.sign
 from pathlib import Path
 from .core import *
 
@@ -60,7 +61,6 @@ def get_inner_fts(elt):
         if inspect.isclass(ft): fts += [f'{elt.__name__}.{n}' for n in get_inner_fts(ft)]
     return fts
 
-
 def get_global_vars(mod):
     """Returns globally assigned variables"""
     # https://stackoverflow.com/questions/8820276/docstring-for-variable/31764368#31764368
@@ -80,7 +80,6 @@ def get_exports(mod):
     public_names = mod.__all__ if hasattr(mod, '__all__') else dir(mod)
     public_names.sort(key=str.lower)
     return public_names
-
 
 def get_source_link(mod, lineno) -> str:
     "Returns link to line number in source code"
@@ -107,15 +106,16 @@ def execute_nb(fname):
     "Execute notebook `fname`"
     # Any module used in the notebook that isn't inside must be in the same directory as this script
 
-    with open(fname) as f:
-        nb = nbformat.read(f, as_version=4)
+    with open(fname) as f: nb = nbformat.read(f, as_version=4)
     ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
     ep.preprocess(nb, {})
-    with open(fname, 'wt') as f:
-        nbformat.write(nb, f)
+    with open(fname, 'wt') as f: nbformat.write(nb, f)
+    nbformat.sign.NotebookNotary().sign(nb)
 
-def create_module_page(mod, dest_path):
-    "Creates the documentation notebook of a given module"
+def _symbol_skeleton(name): return [get_doc_cell(name), get_md_cell(f"`{name}`")]
+
+def create_module_page(mod, dest_path, force=False):
+    "Creates the documentation notebook for module `mod_name` in path `dest_path`"
     nb = get_empty_notebook()
     mod_name = mod.__name__
     strip_name = strip_fastai(mod_name)
@@ -131,16 +131,17 @@ def create_module_page(mod, dest_path):
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {strip_name} doesn't have a function named {ft_name}.")
             continue
-        cells += [get_doc_cell(ft_name), get_empty_cell()]
+        cells += _symbol_skeleton(ft_name)
         elt = getattr(mod, ft_name)
         if inspect.isclass(elt) and not is_enum(elt.__class__):
             in_ft_names = get_inner_fts(elt)
             in_ft_names.sort(key = str.lower)
             for name in in_ft_names:
-                cells += [get_doc_cell(name), get_empty_cell()]
+                cells += _symbol_skeleton(name)
     nb['cells'] = init_cell + cells
-    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),'x'))
-    #execute_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
+    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),
+                       'w' if force else 'x'))
+    execute_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
 
 _default_exclude = ['.ipynb_checkpoints', '__pycache__']
 
@@ -156,7 +157,7 @@ def get_module_names(path_dir, exclude=None):
     return res
 
 def generate_all(pkg_name, dest_path, exclude=None):
-    "Generate the documentation for all the modules in a given package"
+    "Generate the documentation for all the modules in `pkg_name`"
     if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)
     for mod_name in mod_files:
@@ -183,7 +184,6 @@ def read_nb_types(cells):
             match = re.match(r"^`?(\w*)\s*=\s*", cell['source'])
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
-
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -241,9 +241,9 @@ def update_module_page(mod, dest_path):
     json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),'w'))
     #execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
 
-def update_all(mod_name, dest_path, exclude=['.ipynb_checkpoints', '__pycache__']):
-    "Updates all the notebooks in a given package"
-    mod_files = get_module_names(Path(mod_name), exclude)
+def update_all(pkg_name, dest_path, exclude=('.ipynb_checkpoints', '__pycache__')):
+    "Updates all the notebooks in `pkg_name`"
+    mod_files = get_module_names(Path(pkg_name), exclude)
     for f in mod_files:
         print(f'Updating module page of {f}')
         update_module_page(f, dest_path)
