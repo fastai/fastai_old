@@ -1,4 +1,4 @@
-import inspect,importlib,enum,os,re
+import inspect,importlib,enum,os,re,stringcase
 from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
@@ -27,8 +27,6 @@ def format_ft_def(elt, full_name:str, ignore_first:bool=False) -> str:
         parsedargs += f'<em>{arg}</em>'
         if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
         if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
-        print('defaults' + str(defaults))
-        print('formatted types' + str(formatted_types))
         if i+1 < len(args): parsedargs += ', '
     parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
 
@@ -46,8 +44,6 @@ def format_ft_decor(elt, full_name:str, ignore_first:bool=False) -> str:
         parsedargs += f'<em>{arg}</em>'
         if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
         if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
-        print('defaults' + str(defaults))
-        print('formatted types' + str(formatted_types))
         if i+1 < len(args): parsedargs += ', '
     parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
 
@@ -83,15 +79,12 @@ def get_arg_spec(elt):
     defaults = []
     formatted_types = {}
     sig = inspect.signature(elt)
-    print(sig)
     for param in sig.parameters:
-        print(sig.parameters[param]).strip()
         param_info = str(sig.parameters[param]).strip().replace(':',' ').replace('=',' ').split()
         args.append(param_info[0])
         if len(param_info) > 1:
             defaults.append(param_info[1])
         if len(param_info) > 2:
-            print(param_info[2])
             formatted_types[param_info[0]] = param_info[2]
     return (args, defaults, formatted_types)
 
@@ -156,12 +149,11 @@ def link_docstring(elt, docstring:str) -> str:
 def import_mod(mod_name:str):
     """returns module from `mod_name`"""
     splits = str.split(mod_name, '.')
-    try: 
+    try:
         if len(splits) > 1 : mod = importlib.import_module('.' + '.'.join(splits[1:]), splits[0])
         else: mod = importlib.import_module(mod_name)
         return mod
-    except: 
-        print(f"Module {mod_name} doesn't exist.")
+    except: print(f"Module {mod_name} doesn't exist.")
 
 def show_doc_from_name(mod_name, ft_name:str, doc_string:bool=True, arg_comments:dict={}, alt_doc_string:str=''):
     """shows documentation for `ft_name`. see `show_doc`"""
@@ -215,7 +207,7 @@ def get_class_toc(mod_name:str, cls_name:str):
     """displays table of contents for `cls_name`"""
     splits = str.split(mod_name, '.')
     try: mod = importlib.import_module('.' + '.'.join(splits[1:]), splits[0])
-    except: 
+    except:
         print(f"Module {mod_name} doesn't exist.")
         return
     splits = str.split(cls_name, '.')
@@ -255,6 +247,9 @@ def get_source_link(ft) -> str:
     link = f"{relpath}#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
-def create_anchor(name):
-    display(Markdown(f'<a id={name}></a>'))
+def create_anchor(text, title_level=0, name=None):
+    if name is None: name=stringcase.snakecase(text)
+    res = '#' * title_level
+    if title_level: res += ' '
+    display(Markdown(f'{res}<a id={name}></a>{text}'))
 
