@@ -54,7 +54,7 @@ def fit(epochs:int, model:Model, loss_fn:LossFunction,
 LambdaFunc = Callable[[Tensor],Tensor]
 class Lambda(nn.Module):
     "An easy way to create a pytorch layer for a simple `func`"
-    def __init__(self, func:Callable[[Tensor],Tensor]):
+    def __init__(self, func:LambdaFunc):
         "create a layer that simply calls `func` with `x`"
         super().__init__()
         self.func=func
