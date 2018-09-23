@@ -81,7 +81,7 @@ class RNNCore(nn.Module):
         self.encoder_dp = EmbeddingDropout(self.encoder, embed_p)
         if self.qrnn:
             #Using QRNN requires cupy: https://github.com/cupy/cupy
-            from qrnn import QRNNLayer
+            from .qrnn.qrnn import QRNNLayer
             self.rnns = [QRNNLayer(emb_sz if l == 0 else n_hid, (n_hid if l != n_layers - 1 else emb_sz)//self.ndir,
                                    save_prev_x=True, zoneout=0, window=2 if l == 0 else 1, output_gate=True,
                                    use_cuda=torch.cuda.is_available()) for l in range(n_layers)]
