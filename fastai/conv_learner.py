@@ -1,5 +1,9 @@
+from .torch_core import *
 from .basic_train import *
+from .data import *
 from .layers import *
+
+__all__ = ['ConvLearner', 'create_body', 'create_head', 'num_features']
 
 def create_body(model:Model, cut:Optional[int]=None, body_fn:Callable[[Model],Model]=None):
     "Cut off the body of a typically pretrained model at `cut` or as specified by `body_fn`"

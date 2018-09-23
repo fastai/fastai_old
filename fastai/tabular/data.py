@@ -1,7 +1,9 @@
 from ..torch_core import *
 from .transform import *
-from .data import *
+from ..data import *
 from pandas.api.types import is_numeric_dtype, is_categorical_dtype
+
+__all__ = ['TabularDataset', 'data_from_tabulardf']
 
 OptTabTfms = Optional[Collection[TabularTransform]]
 

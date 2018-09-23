@@ -1,5 +1,9 @@
 from ..torch_core import *
 
+__all__ = ['BaseTokenizer', 'SpacyTokenizer', 'Tokenizer', 'Vocab', 'deal_caps', 'fixup', 'replace_rep', 'replace_wrep', 
+           'rm_useless_spaces', 'spec_add_spaces', 'sub_br', 'BOS', 'FLD', 'UNK', 'PAD', 'TK_UP', 'TK_REP', 'TK_REP',
+           'TK_WREP', 'default_rules', 'default_spec_tok']
+
 BOS,FLD,UNK,PAD = 'xxbos','xxfld','xxunk','xxpad'
 TK_UP,TK_REP,TK_WREP = 'xxup','xxrep','xxwrep'
 

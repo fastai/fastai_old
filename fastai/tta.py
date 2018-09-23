@@ -1,5 +1,8 @@
+from .torch_core import *
 from .basic_train import *
 from .vision.transform import *
+
+__all__ = ['get_preds', 'pred_batch']
 
 def pred_batch(learn:Learner, is_valid:bool=True) -> Tuple[Tensors, Tensors, Tensors]:
     "Returns input, target and output of the model on a batch"

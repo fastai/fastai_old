@@ -1,4 +1,8 @@
+from ..torch_core import *
 from ..layers import *
+
+__all__ = ['EmbeddingDropout', 'LinearDecoder', 'MultiBatchRNNCore', 'PoolingLinearClassifier', 'RNNCore', 'RNNDropout', 
+           'SequentialRNN', 'WeightDropout', 'dropout_mask', 'get_language_model', 'get_rnn_classifier', 'repackage_var']
 
 def dropout_mask(x:Tensor, sz:Collection[int], p:float):
     "Returns a dropout mask of the same type as x, size sz, with probability p to cancel an element."

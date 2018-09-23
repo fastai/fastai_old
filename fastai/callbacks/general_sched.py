@@ -2,6 +2,8 @@ from ..core import *
 from ..callback import *
 from ..basic_train import Learner
 
+__all__ = ['GeneralScheduler', 'TrainingPhase']
+
 @dataclass
 class TrainingPhase():
     "Schedule lr,mom according to `lr_anneal` and `mom_anneal` across a `length` schedule"

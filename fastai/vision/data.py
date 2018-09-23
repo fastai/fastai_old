@@ -1,6 +1,13 @@
 from ..torch_core import *
 from .transform import *
-from ..data import *
+from ..data import DataBunch
+
+__all__ = ['CoordTargetDataset', 'DatasetTfm', 'FilesDataset', 'SegmentationDataset', 'bb2hw', 'data_from_imagefolder', 'denormalize', 
+           'draw_outline', 'draw_rect', 'get_image_files', 'image2np', 'normalize', 'normalize_batch', 'normalize_funcs', 
+           'open_image', 'open_mask', 'pil2tensor', 'show_image', 'show_image_batch', 'show_images', 'show_xy_images',
+           'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 'imagenet_denorm']
+
+TfmList = Collection[Transform]
 
 image_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('image/'))
 
@@ -149,6 +156,34 @@ class CoordTargetDataset(Dataset):
         x = open_image(self.x_fns[i])
         return x, ImageBBox.create(self.bbs[i], *x.size)
 
+class DatasetTfm(Dataset):
+    "`Dataset` that applies a list of transforms to every item drawn"
+    def __init__(self, ds:Dataset, tfms:TfmList=None, tfm_y:bool=False, **kwargs:Any):
+        "this dataset will apply `tfms` to `ds`"
+        self.ds,self.tfms,self.kwargs,self.tfm_y = ds,tfms,kwargs,tfm_y
+        self.y_kwargs = {**self.kwargs, 'do_resolve':False}
+
+    def __len__(self)->int: return len(self.ds)
+
+    def __getitem__(self,idx:int)->Tuple[ItemBase,Any]:
+        "returns tfms(x),y"
+        x,y = self.ds[idx]
+        x = apply_tfms(self.tfms, x, **self.kwargs)
+        if self.tfm_y: y = apply_tfms(self.tfms, y, **self.y_kwargs)
+        return x, y
+
+    def __getattr__(self,k):
+        "passthrough access to wrapped dataset attributes"
+        return getattr(self.ds, k)
+
+def transform_datasets(train_ds:Dataset, valid_ds:Dataset, test_ds:Optional[Dataset]=None,
+                       tfms:Optional[Tuple[TfmList,TfmList]]=None, **kwargs:Any):
+    "Create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)"
+    res = [DatasetTfm(train_ds, tfms[0],  **kwargs),
+           DatasetTfm(valid_ds, tfms[1],  **kwargs)]
+    if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
+    return res
+
 def normalize(x:TensorImage, mean:float,std:float)->TensorImage:   return (x-mean[...,None,None]) / std[...,None,None]
 def denormalize(x:TensorImage, mean:float,std:float)->TensorImage: return x*std[...,None,None] + mean[...,None,None]
 
@@ -169,6 +204,19 @@ cifar_stats = (tensor([0.491, 0.482, 0.447]), tensor([0.247, 0.243, 0.261]))
 cifar_norm,cifar_denorm = normalize_funcs(*cifar_stats)
 imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
 imagenet_norm,imagenet_denorm = normalize_funcs(*imagenet_stats)
+
+def _create_with_tfm(train_ds, valid_ds, test_ds=None,
+               path='.', bs=64, ds_tfms=None, num_workers=default_cpus,
+               tfms=None, device=None, size=None, **kwargs)->'DataBunch':
+        "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`"
+        datasets = [train_ds,valid_ds]
+        if test_ds is not None: datasets.append(test_ds)
+        if ds_tfms: datasets = transform_datasets(*datasets, tfms=ds_tfms, size=size, **kwargs)
+        dls = [DataLoader(*o, num_workers=num_workers) for o in
+               zip(datasets, (bs,bs*2,bs*2), (True,False,False))]
+        return DataBunch(*dls, path=path, device=device, tfms=tfms)
+
+DataBunch.create = _create_with_tfm
 
 def data_from_imagefolder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
                           test:Optional[PathOrStr]=None, **kwargs:Any):
