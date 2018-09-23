@@ -1,5 +1,6 @@
 from ..torch_core import *
 from .transform import *
+from .data import *
 
 TextMtd = IntEnum('TextMtd', 'CSV TOK IDS')
 
@@ -213,3 +214,68 @@ def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tup
     res = torch.zeros(max_len, len(samples)).long() + pad_idx
     for i,s in enumerate(samples): res[-len(s[0]):,i] = LongTensor(s[0])
     return res, LongTensor([s[1] for s in samples]).squeeze()
+
+DataFunc = Callable[[Collection[DatasetBase], PathOrStr, KWArgs], DataBunch]
+
+def standard_data(datasets:Collection[DatasetBase], path:PathOrStr, **kwargs) -> DataBunch:
+    "Simply creates a `DataBunch` from the `datasets`"
+    return DataBunch.create(*datasets, path=path, **kwargs)
+
+def lm_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
+    "Creates a `DataBunch` from the `datasets` for language modelling"
+    dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
+    return DataBunch(*dataloaders, path=path)
+
+def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
+    "Function that transform the `datasets` in a `DataBunch` for classification"
+    bs = kwargs.pop('bs') if 'bs' in kwargs else 64
+    pad_idx = kwargs.pop('pad_idx') if 'pad_idx' in kwargs else 1
+    train_sampler = SortishSampler(datasets[0].ids, key=lambda x: len(datasets[0].ids[x]), bs=bs//2)
+    train_dl = DeviceDataLoader.create(datasets[0], bs//2, sampler=train_sampler, collate_fn=pad_collate)
+    dataloaders = [train_dl]
+    for ds in datasets[1:]:
+        sampler = SortSampler(ds.ids, key=lambda x: len(ds.ids[x]))
+        dataloaders.append(DeviceDataLoader.create(ds, bs,  sampler=sampler, collate_fn=pad_collate))
+    return DataBunch(*dataloaders, path=path)
+
+def data_from_textids(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
+                      data_func:DataFunc=standard_data, itos:str='itos.pkl', **kwargs) -> DataBunch:
+    "Creates a `DataBunch` from ids, labels and a dictionary."
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'id_suff', 'lbl_suff'], kwargs)
+    train_ds = TextDataset.from_ids(path, train, itos=itos, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_ids(path, valid, itos=itos, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_ids(path, test, itos=itos, **txt_kwargs))
+    return data_func(datasets, path, **kwargs)
+
+def data_from_texttokens(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
+                         data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
+    "Creates a `DataBunch` from tokens and labels."
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'tok_suff', 'lbl_suff'], kwargs)
+    train_ds = TextDataset.from_tokens(path, train, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_tokens(path, valid, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_tokens(path, test, vocab=train_ds.vocab, **txt_kwargs))
+    return data_func(datasets, path, **kwargs)
+
+def data_from_textcsv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
+                      data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
+    "Creates a `DataBunch` from texts in csv files."
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
+    train_ds = TextDataset.from_csv(path, tokenizer, train, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_csv(path, tokenizer, valid, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_csv(path, tokenizer, test, vocab=train_ds.vocab, **txt_kwargs))
+    return data_func(datasets, path, **kwargs)
+
+def data_from_textfolder(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
+                         shuffle:bool=True, data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs):
+    "Creates a `DataBunch` from text files in folders."
+    path=Path(path)
+    txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
+    train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)
+    datasets = [train_ds, TextDataset.from_folder(path, tokenizer, valid, classes=train_ds.classes,
+                                        shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs)]
+    if test: datasets.append(TextDataset.from_folder(path, tokenizer, test, classes=train_ds.classes,
+                                        shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs))
+    return data_func(datasets, path, **kwargs)

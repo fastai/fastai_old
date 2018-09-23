@@ -1,5 +1,6 @@
 from ..torch_core import *
 from .transform import *
+from ..data import *
 
 image_extensions = set(k for k,v in mimetypes.types_map.items() if v.startswith('image/'))
 
@@ -148,30 +149,34 @@ class CoordTargetDataset(Dataset):
         x = open_image(self.x_fns[i])
         return x, ImageBBox.create(self.bbs[i], *x.size)
 
-class DatasetTfm(Dataset):
-    "`Dataset` that applies a list of transforms to every item drawn"
-    def __init__(self, ds:Dataset, tfms:TfmList=None, tfm_y:bool=False, **kwargs:Any):
-        "this dataset will apply `tfms` to `ds`"
-        self.ds,self.tfms,self.kwargs,self.tfm_y = ds,tfms,kwargs,tfm_y
-        self.y_kwargs = {**self.kwargs, 'do_resolve':False}
+def normalize(x:TensorImage, mean:float,std:float)->TensorImage:   return (x-mean[...,None,None]) / std[...,None,None]
+def denormalize(x:TensorImage, mean:float,std:float)->TensorImage: return x*std[...,None,None] + mean[...,None,None]
 
-    def __len__(self)->int: return len(self.ds)
+def normalize_batch(b:Tuple[Tensor,Tensor], mean:float, std:float, do_y:bool=False)->Tuple[Tensor,Tensor]:
+    "`b` = `x`,`y` - normalize `x` array of imgs and `do_y` optionally `y`"
+    x,y = b
+    x = normalize(x,mean,std)
+    if do_y: y = normalize(y,mean,std)
+    return x,y
 
-    def __getitem__(self,idx:int)->Tuple[Image,Any]:
-        "returns tfms(x),y"
-        x,y = self.ds[idx]
-        x = apply_tfms(self.tfms, x, **self.kwargs)
-        if self.tfm_y: y = apply_tfms(self.tfms, y, **self.y_kwargs)
-        return x, y
+def normalize_funcs(mean:float, std, do_y=False, device=None)->[Callable,Callable]:
+    "Create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`"
+    if device is None: device=default_device
+    return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
+            partial(denormalize,     mean=mean,           std=std))
 
-    def __getattr__(self,k):
-        "passthrough access to wrapped dataset attributes"
-        return getattr(self.ds, k)
+cifar_stats = (tensor([0.491, 0.482, 0.447]), tensor([0.247, 0.243, 0.261]))
+cifar_norm,cifar_denorm = normalize_funcs(*cifar_stats)
+imagenet_stats = tensor([0.485, 0.456, 0.406]), tensor([0.229, 0.224, 0.225])
+imagenet_norm,imagenet_denorm = normalize_funcs(*imagenet_stats)
 
-def transform_datasets(train_ds:Dataset, valid_ds:Dataset, test_ds:Optional[Dataset]=None,
-                       tfms:Optional[Tuple[TfmList,TfmList]]=None, **kwargs:Any):
-    "Create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)"
-    res = [DatasetTfm(train_ds, tfms[0],  **kwargs),
-           DatasetTfm(valid_ds, tfms[1],  **kwargs)]
-    if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
-    return res
+def data_from_imagefolder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
+                          test:Optional[PathOrStr]=None, **kwargs:Any):
+    "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
+    path=Path(path)
+    train_ds = FilesDataset.from_folder(path/train)
+    datasets = [train_ds, FilesDataset.from_folder(path/valid, classes=train_ds.classes)]
+    if test: datasets.append(FilesDataset.from_single_folder(
+        path/test,classes=train_ds.classes))
+    return DataBunch.create(*datasets, path=path, **kwargs)
+
