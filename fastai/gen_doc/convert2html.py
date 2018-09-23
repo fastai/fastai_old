@@ -16,6 +16,8 @@ class HandleLinksPreprocessor(Preprocessor):
         return cell, resources
 
 exporter = HTMLExporter(Config())
+exporter.exclude_input_prompt=True
+exporter.exclude_output_prompt=True
 #Loads the template to deal with hidden cells.
 exporter.template_file = 'nbextensions.tpl'
 exporter.template_path.append(os.path.join(jupyter_contrib_nbextensions.__path__[0], 'templates'))

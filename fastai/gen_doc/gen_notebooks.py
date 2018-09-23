@@ -2,6 +2,7 @@ import pkgutil, inspect, sys,os, importlib,json,enum,warnings,nbformat,re
 from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
 from pathlib import Path
+from .core import *
 
 __all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
 
@@ -113,12 +114,13 @@ def execute_nb(fname):
     with open(fname, 'wt') as f:
         nbformat.write(nb, f)
 
-def create_module_page(mod_name, dest_path):
+def create_module_page(mod, dest_path):
     "Creates the documentation notebook of a given module"
     nb = get_empty_notebook()
-    init_cell = [get_md_cell(f'# {mod_name}'), get_md_cell('Type an introduction of the package here.')]
-    mod = importlib.import_module(mod_name)
-    cells = [get_code_cell('from gen_doc.nbdoc import * ', True), get_code_cell(f'from {mod_name} import * ', True), get_code_cell(f'get_module_toc("{mod_name}")', True)]
+    mod_name = mod.__name__
+    strip_name = strip_fastai(mod_name)
+    init_cell = [get_md_cell(f'# {strip_name}'), get_md_cell('Type an introduction of the package here.')]
+    cells = [get_code_cell(f'from fastai.gen_doc.nbdoc import *\nfrom {mod_name} import * ', True)]
 
     gvar_map = get_global_vars(mod)
     if gvar_map: cells.append(get_md_cell('### Global Variable Definitions:'))
@@ -127,7 +129,7 @@ def create_module_page(mod_name, dest_path):
 
     for ft_name in get_ft_names(mod):
         if not hasattr(mod, ft_name):
-            warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
+            warnings.warn(f"Module {strip_name} doesn't have a function named {ft_name}.")
             continue
         cells += [get_doc_cell(ft_name), get_empty_cell()]
         elt = getattr(mod, ft_name)
@@ -137,8 +139,8 @@ def create_module_page(mod_name, dest_path):
             for name in in_ft_names:
                 cells += [get_doc_cell(name), get_empty_cell()]
     nb['cells'] = init_cell + cells
-    json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
-    execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
+    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),'x'))
+    #execute_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
 
 _default_exclude = ['.ipynb_checkpoints', '__pycache__']
 
@@ -206,11 +208,10 @@ def insert_cells(cells, pos_dict, ft_name):
         pos_dict = update_pos(pos_dict, ft_name, 2)
     return cells, pos_dict
 
-def update_module_page(mod_name, dest_path):
+def update_module_page(mod, dest_path):
     "Updates the documentation notebook of a given module"
-    nb = read_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
-    mod = importlib.import_module(mod_name)
-    mod = importlib.reload(mod)
+    strip_name = strip_fastai(mod.__name__)
+    nb = read_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
     cells = nb['cells']
 
     type_dict = read_nb_types(cells)
@@ -221,10 +222,10 @@ def update_module_page(mod_name, dest_path):
         if name in type_dict: cells[type_dict[name]] = get_md_cell(code)
         else: cells.append(get_md_cell(code))
 
-    pos_dict = read_nb_content(cells, mod_name)
+    pos_dict = read_nb_content(cells, strip_name)
     for ft_name in get_ft_names(mod):
         if not hasattr(mod, ft_name):
-            warnings.warn(f"Module {mod_name} doesn't have a function named {ft_name}.")
+            warnings.warn(f"Module {strip_name} doesn't have a function named {ft_name}.")
             continue
 
         if ft_name not in pos_dict.keys():
@@ -237,8 +238,8 @@ def update_module_page(mod_name, dest_path):
                 if name not in pos_dict.keys():
                     cells, pos_dict = insert_cells(cells, pos_dict, name)
     nb['cells'] = cells
-    json.dump(nb, open(os.path.join(dest_path,f'{mod_name}.ipynb'),'w'))
-    execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
+    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),'w'))
+    #execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
 
 def update_all(mod_name, dest_path, exclude=['.ipynb_checkpoints', '__pycache__']):
     "Updates all the notebooks in a given package"
