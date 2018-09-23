@@ -1,5 +1,6 @@
 from ..torch_core import *
 from .transform import *
+from .data import *
 from pandas.api.types import is_numeric_dtype, is_categorical_dtype
 
 OptTabTfms = Optional[Collection[TabularTransform]]
@@ -50,3 +51,16 @@ class TabularDataset(DatasetBase):
         ds = cls(df, dep_var, cat_names, cont_names, stats, log_output)
         ds.tfms,ds.cat_names,ds.cont_names = tfms,cat_names,cont_names
         return ds
+
+def data_from_tabulardf(path, train_df:DataFrame, valid_df:DataFrame, dep_var:str, test_df:OptDataFrame=None,
+                        tfms:OptTabTfms=None, cat_names:OptStrList=None, cont_names:OptStrList=None,
+                        stats:OptStats=None, log_output:bool=False, **kwargs) -> DataBunch:
+    "Creates a `DataBunch` from train/valid/test dataframes."
+    train_ds = TabularDataset.from_dataframe(train_df, dep_var, tfms, cat_names, cont_names, stats, log_output)
+    valid_ds = TabularDataset.from_dataframe(valid_df, dep_var, train_ds.tfms, train_ds.cat_names,
+                                             train_ds.cont_names, train_ds.stats, log_output)
+    datasets = [train_ds, valid_ds]
+    if test_df:
+        datasets.appendTabularDataset.from_dataframe(valid_df, dep_var, train_ds.tfms, train_ds.cat_names,
+                                                     train_ds.cont_names, train_ds.stats, log_output)
+    return DataBunch.create(*datasets, path=path, **kwargs)

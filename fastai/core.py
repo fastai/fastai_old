@@ -96,14 +96,6 @@ def camel2snake(name:str)->str:
     s1 = re.sub(_camel_re1, r'\1_\2', name)
     return re.sub(_camel_re2, r'\1_\2', s1).lower()
 
-_punc_trans = str.maketrans(dict.fromkeys(string.punctuation))
-def remove_punc(s:str)->str:
-    "Remove all punctuation from `s`"
-    return s.translate(_punc_trans)
-def str2id(s:str)->str:
-    "Replace `s` with a snake_case lowercase str without punctuation"
-    return '_'.join(map(str.lower, remove_punc(s).split(' ')))
-
 def even_mults(start:float, stop:float, n:int)->np.ndarray:
     "Build evenly stepped schedule from start to stop in n steps"
     mult = stop/start
