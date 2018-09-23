@@ -1,4 +1,7 @@
+from ..torch_core import *
 from ..layers import *
+
+__all__ = ['TabularModel']
 
 class TabularModel(nn.Module):
     "Basic model for tabular data"

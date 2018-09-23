@@ -1,6 +1,10 @@
 from ..torch_core import *
 from ..callback import *
 from ..basic_train import *
+from ..data import *
+
+__all__ = ['ActivationStats', 'ClassificationInterpretation', 'Hook', 'HookCallback', 'Hooks', 'hook_output', 'hook_outputs', 
+           'model_sizes']
 
 class Hook():
     "Creates a hook"

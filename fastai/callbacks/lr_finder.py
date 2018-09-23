@@ -3,6 +3,8 @@ from ..data import DataBunch
 from ..callback import *
 from ..basic_train import Learner, LearnerCallback
 
+__all__ = ['LRFinder']
+
 class LRFinder(LearnerCallback):
     "Explore lr vs loss relationship for a learner"
     def __init__(self, learn:Learner, start_lr:float=1e-5, end_lr:float=10, num_it:int=200)->None:
