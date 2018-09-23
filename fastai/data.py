@@ -1,5 +1,4 @@
 from .torch_core import *
-from .tabular.data import *
 
 TfmList = Collection[Callable]
 
