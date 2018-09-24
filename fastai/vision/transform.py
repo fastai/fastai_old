@@ -1,5 +1,6 @@
 from ..torch_core import *
 from ..data import *
+import functools
 
 __all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting', 
            'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_perspective', 'apply_tfms', 'brightness', 'compute_zs_mat', 
