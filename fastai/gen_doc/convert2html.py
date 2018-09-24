@@ -19,16 +19,16 @@ exporter = HTMLExporter(Config())
 exporter.exclude_input_prompt=True
 exporter.exclude_output_prompt=True
 #Loads the template to deal with hidden cells.
-exporter.template_file = 'nbextensions.tpl'
-exporter.template_path.append(os.path.join(jupyter_contrib_nbextensions.__path__[0], 'templates'))
+exporter.template_file = 'jekyll.tpl'
+path = Path(__file__).parent
+exporter.template_path.append(str(path))
 #Preprocesser that converts the .ipynb links in .html
 exporter.register_preprocessor(HandleLinksPreprocessor, enabled=True)
 
 __all__ = ['convert_nb', 'convert_all']
 
 def read_nb(fname):
-    with open(fname,'r') as f:
-        return nbformat.reads(f.read(), as_version=4)
+    with open(fname,'r') as f: return nbformat.reads(f.read(), as_version=4)
 
 def convert_nb(fname, dest_path='.'):
     """

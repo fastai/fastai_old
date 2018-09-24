@@ -18,7 +18,7 @@ entries:
           output: web
           url: /foo.html
     - title: convert2html
-      url: /mydoc_introduction.html
+      url: /gen_doc.gen_notebooks.html
       output: web
 
   - title: vision
