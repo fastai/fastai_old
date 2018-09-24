@@ -68,7 +68,7 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
     if y is not None:
         is_bb = isinstance(y, ImageBBox)
         y=y.data
-    if y is not None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
+    if y is None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
     ax = _show_image(self.data, ax=ax)
     if len(y.size()) == 1: draw_rect(ax, bb2hw(y))
     else:
