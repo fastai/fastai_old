@@ -2,21 +2,28 @@
 
 entries:
 - title: Sidebar
-  levels: one
   folders:
 
-  - title: Products
+  - title: gen_doc
     output: web
     folderitems:
-    - title: News
-      url: /news.html
+    - title: gen_notebooks
+      url: /index.html
       output: web
-    - title: Theme instructions
+      subfolders:
+      - title: Some subfolder
+        output: web
+        subfolderitems:
+        - title: some item
+          output: web
+          url: /foo.html
+    - title: convert2html
       url: /mydoc_introduction.html
       output: web
-    - title: Product 1
-      url: /p1_landing_page.html
-      output: web
-    - title: Product 2
-      url: /p2_landing_page.html
+
+  - title: vision
+    output: web
+    folderitems:
+    - title: transforms
+      url: /index.html
       output: web

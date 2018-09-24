@@ -11,7 +11,7 @@ class HandleLinksPreprocessor(Preprocessor):
     """
     def preprocess_cell(self, cell, resources, index):
         if 'source' in cell and cell.cell_type == "markdown":
-            cell.source = re.sub(r"\((.*)\.ipynb(.*)\)",r"(\1.html\2)",cell.source)
+            cell.source = re.sub(r"\((.*)\.ipynb(.*)\)",r"(\1.html\2)",cell.source).replace('¶','')
 
         return cell, resources
 
@@ -30,22 +30,22 @@ def read_nb(fname):
     with open(fname,'r') as f:
         return nbformat.reads(f.read(), as_version=4)
 
-def convert_nb(fname):
+def convert_nb(fname, dest_path='.'):
     """
     Converts a given notebook in an html page.
     """
     nb = read_nb(fname)
     new_name = re.sub(r"(.*)\.ipynb",r"\1.html",str(fname))
-    with open(new_name,'w') as f:
+    with open(f'{dest_path}/{new_name}','w') as f:
         f.write(exporter.from_notebook_node(nb)[0])
 
-def convert_all(folder):
+def convert_all(folder, dest_path='.'):
     """
     Converts all the notebooks in a given folder in a html pages.
     """
     path = Path(folder)
     nb_files = path.glob('*.ipynb')
     print(nb_files)
-    for file in nb_files: convert_nb(file)
+    for file in nb_files: convert_nb(file, dest_path=dest_path)
 
 if __name__ == 'main': fire.Fire(convert_all)
