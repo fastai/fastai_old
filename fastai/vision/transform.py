@@ -198,6 +198,7 @@ class Transform():
         "Create a transform for `func` and assign it an priority `order`, attach to Image class"
         if order is not None: self.order=order
         self.func=func
+        functools.update_wrapper(self, self.func)
         self.params = copy(func.__annotations__)
         self.def_args = get_default_args(func)
         setattr(Image, func.__name__,
@@ -208,10 +209,10 @@ class Transform():
         if args: return self.calc(*args, **kwargs)
         else: return RandTransform(self, kwargs=kwargs, is_random=is_random, p=p)
 
-    def calc(tfm, x:Image, *args:Any, **kwargs:Any)->Image:
-        "Apply our `tfm` to image `x`, wrapping it if necessary"
-        if tfm._wrap: return getattr(x, tfm._wrap)(tfm.func, *args, **kwargs)
-        else:          return tfm.func(x, *args, **kwargs)
+    def calc(self, x:Image, *args:Any, **kwargs:Any)->Image:
+        "Apply to image `x`, wrapping it if necessary"
+        if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
+        else:          return self.func(x, *args, **kwargs)
 
     @property
     def name(self)->str: return self.__class__.__name__
@@ -233,6 +234,7 @@ class RandTransform():
     resolved:dict = field(default_factory=dict)
     do_run:bool = True
     is_random:bool = True
+    def __post_init__(self): functools.update_wrapper(self, self.tfm)
 
     def resolve(self)->None:
         "Bind any random variables needed tfm calc"
