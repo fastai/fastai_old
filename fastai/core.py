@@ -81,15 +81,6 @@ def listify(p:OptListOrItem=None, q:OptListOrItem=None):
     assert len(p)==n, f'List len mismatch ({len(p)} vs {n})'
     return list(p)
 
-class ItemBase():
-    "All transformable dataset items use this type"
-    @property
-    @abstractmethod
-    def device(self): pass
-    @property
-    @abstractmethod
-    def data(self): pass
-
 _camel_re1 = re.compile('(.)([A-Z][a-z]+)')
 _camel_re2 = re.compile('([a-z0-9])([A-Z])')
 def camel2snake(name:str)->str:
@@ -143,3 +134,12 @@ def maybe_copy(old_fnames:Collection[PathOrStr], new_fnames:Collection[PathOrStr
 def series2cat(df:DataFrame, *col_names):
     "Categorifies the columns in `df`."
     for c in listify(col_names): df[c] = df[c].astype('category').cat.as_ordered()
+
+class ItemBase():
+    "All transformable dataset items use this type"
+    @property
+    @abstractmethod
+    def device(self): pass
+    @property
+    @abstractmethod
+    def data(self): pass

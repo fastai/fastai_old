@@ -2,8 +2,8 @@ from ..torch_core import *
 from .transform import *
 from ..data import *
 
-__all__ = ['LanguageModelLoader', 'SortSampler', 'SortishSampler', 'TextDataset', 'TextMtd', 'classifier_data', 'data_from_textcsv', 
-           'data_from_textfolder', 'data_from_textids', 'data_from_texttokens', 'lm_data', 'pad_collate', 'standard_data']
+__all__ = ['LanguageModelLoader', 'SortSampler', 'SortishSampler', 'TextDataset', 'TextMtd', 'classifier_data', 'lm_data', 'pad_collate', 
+           'standard_data', 'text_data_from_csv', 'text_data_from_folder', 'text_data_from_ids', 'text_data_from_tokens',]
 
 TextMtd = IntEnum('TextMtd', 'CSV TOK IDS')
 
@@ -241,7 +241,7 @@ def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) 
         dataloaders.append(DeviceDataLoader.create(ds, bs,  sampler=sampler, collate_fn=pad_collate))
     return DataBunch(*dataloaders, path=path)
 
-def data_from_textids(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
+def text_data_from_ids(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, itos:str='itos.pkl', **kwargs) -> DataBunch:
     "Creates a `DataBunch` from ids, labels and a dictionary."
     path=Path(path)
@@ -251,7 +251,7 @@ def data_from_textids(path:PathOrStr, train:str='train', valid:str='valid', test
     if test: datasets.append(TextDataset.from_ids(path, test, itos=itos, **txt_kwargs))
     return data_func(datasets, path, **kwargs)
 
-def data_from_texttokens(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
+def text_data_from_tokens(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                          data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
     "Creates a `DataBunch` from tokens and labels."
     path=Path(path)
@@ -261,7 +261,7 @@ def data_from_texttokens(path:PathOrStr, train:str='train', valid:str='valid', t
     if test: datasets.append(TextDataset.from_tokens(path, test, vocab=train_ds.vocab, **txt_kwargs))
     return data_func(datasets, path, **kwargs)
 
-def data_from_textcsv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
+def text_data_from_csv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
     "Creates a `DataBunch` from texts in csv files."
     path=Path(path)
@@ -271,7 +271,7 @@ def data_from_textcsv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', va
     if test: datasets.append(TextDataset.from_csv(path, tokenizer, test, vocab=train_ds.vocab, **txt_kwargs))
     return data_func(datasets, path, **kwargs)
 
-def data_from_textfolder(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
+def text_data_from_folder(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                          shuffle:bool=True, data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs):
     "Creates a `DataBunch` from text files in folders."
     path=Path(path)

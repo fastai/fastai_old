@@ -1,6 +1,22 @@
 from .torch_core import *
 
-__all__ = ['DataBunch', 'DeviceDataLoader']
+__all__ = ['DataBunch', 'DatasetBase', 'DeviceDataLoader', 'LabelDataset']
+
+class DatasetBase(Dataset):
+    "Base class for all fastai datasets"
+    def __len__(self): return len(self.x)
+    @property
+    def c(self):
+        "Number of classes expressed by dataset y variable"
+        return self.y.shape[-1] if len(self.y.shape)>1 else 1
+    def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
+
+class LabelDataset(DatasetBase):
+    "Base class for fastai datasets that do classification"
+    @property
+    def c(self):
+        "Number of classes expressed by dataset y variable"
+        return len(self.classes)
 
 @dataclass
 class DeviceDataLoader():

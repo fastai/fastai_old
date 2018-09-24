@@ -1,9 +1,9 @@
 from ..torch_core import *
 from .transform import *
-from ..data import DataBunch
+from ..data import *
 
-__all__ = ['CoordTargetDataset', 'DatasetTfm', 'FilesDataset', 'SegmentationDataset', 'bb2hw', 'data_from_imagefolder', 'denormalize', 
-           'draw_outline', 'draw_rect', 'get_image_files', 'image2np', 'normalize', 'normalize_batch', 'normalize_funcs', 
+__all__ = ['CoordTargetDataset', 'DatasetTfm', 'FilesDataset', 'SegmentationDataset', 'bb2hw', 'denormalize', 'draw_outline', 'draw_rect', 
+           'get_image_files', 'image2np', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
            'open_image', 'open_mask', 'pil2tensor', 'show_image', 'show_image_batch', 'show_images', 'show_xy_images',
            'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 'imagenet_denorm']
 
@@ -218,7 +218,7 @@ def _create_with_tfm(train_ds, valid_ds, test_ds=None,
 
 DataBunch.create = _create_with_tfm
 
-def data_from_imagefolder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
+def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
                           test:Optional[PathOrStr]=None, **kwargs:Any):
     "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
     path=Path(path)

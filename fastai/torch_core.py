@@ -159,19 +159,3 @@ def calc_loss(y_pred:Tensor, y_true:Tensor, loss_class:type=nn.CrossEntropyLoss)
     loss_dl = DataLoader(TensorDataset(tensor(y_pred),tensor(y_true)), bs)
     with torch.no_grad():
         return torch.cat([loss_class(reduction='none')(*b) for b in loss_dl])
-
-class DatasetBase(Dataset):
-    "Base class for all fastai datasets"
-    def __len__(self): return len(self.x)
-    @property
-    def c(self):
-        "Number of classes expressed by dataset y variable"
-        return self.y.shape[-1] if len(self.y.shape)>1 else 1
-    def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
-
-class LabelDataset(DatasetBase):
-    "Base class for fastai datasets that do classification"
-    @property
-    def c(self):
-        "Number of classes expressed by dataset y variable"
-        return len(self.classes)
