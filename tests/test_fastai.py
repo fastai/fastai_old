@@ -5,9 +5,12 @@
 
 import pytest
 
+import fastai
 
-from fastai import fastai
-
+def test_basic():
+    print("basic test")
+    assert 1 == 1
+#print(fastai.__version__)
 
 @pytest.fixture
 def response():
