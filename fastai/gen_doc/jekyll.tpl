@@ -1,13 +1,12 @@
-{%- extends 'basic.tpl' -%}{% block body %}---
+{%- extends 'hide.tpl' -%}{% block body %}---
 title: {{resources.title}}
 keywords: {{resources.keywords}}
-tags: {{resources.tags}}
 sidebar: home_sidebar
+tags: {{resources.tags}}
 summary: {{resources.summary}}
 ---
 
-    <div class="container" id="notebook-container">
-{{ super() }}
-    </div>
+<div class="container" id="notebook-container">
+    {{ super()  }}
+</div>
 {%- endblock body %}
-

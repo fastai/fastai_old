@@ -1,13 +1,13 @@
 ---
-title: gen_doc.gen_notebooks
-keywords: docs
-tags: [docs]
+title: 
+keywords: 
 sidebar: home_sidebar
-summary: scripts and API to auto-generate or update a documentation notebook skeleton
+tags: 
+summary: 
 ---
 
-    <div class="container" id="notebook-container">
-
+<div class="container" id="notebook-container">
+    
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="gen_doc.gen_notebooks">gen_doc.gen_notebooks<a class="anchor-link" href="#gen_doc.gen_notebooks">&#182;</a></h1>
@@ -33,19 +33,6 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai</span> <span class="k">import</span> <span class="n">gen_doc</span>
-<span class="kn">from</span> <span class="nn">fastai.gen_doc</span> <span class="k">import</span> <span class="n">nbdoc</span>
-<span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">fastai.gen_doc.gen_notebooks</span> <span class="k">import</span> <span class="o">*</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
@@ -102,19 +89,6 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">create_module_page</span><span class="p">,</span> <span class="n">arg_comments</span><span class="o">=</span><span class="p">{</span>
-    <span class="s1">&#39;mod&#39;</span><span class="p">:</span> <span class="s1">&#39;the module&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;dest_path&#39;</span><span class="p">:</span> <span class="s1">&#39;the folder in which to generate the notebook&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;force&#39;</span><span class="p">:</span> <span class="s1">&#39;if False, will raise an exception if the notebook is already present&#39;</span><span class="p">})</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -123,7 +97,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=create_module_page></a><strong>create_module_page</strong>(<em>mod</em>, <em>dest_path</em>, <em>force</em>=False)</h4>
+<h4><a id=create_module_page></a><code>create_module_page</code>(<code>mod</code>, <code>dest_path</code>, <code>force</code>=<code>False</code>)</h4>
 <p>Creates the documentation notebook for module <code>mod_name</code> in path <code>dest_path</code></p>
 <ul>
 <li><em>mod</em>: the module</li>
@@ -140,18 +114,6 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">update_module_page</span><span class="p">,</span> <span class="n">arg_comments</span><span class="o">=</span><span class="p">{</span>
-    <span class="s1">&#39;mod&#39;</span><span class="p">:</span> <span class="s1">&#39;the module&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;dest_path&#39;</span><span class="p">:</span> <span class="s1">&#39;the folder in which to generate the notebook&#39;</span><span class="p">})</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -160,7 +122,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=update_module_page></a><strong>update_module_page</strong>(<em>mod</em>, <em>dest_path</em>)</h4>
+<h4><a id=update_module_page></a><code>update_module_page</code>(<code>mod</code>, <code>dest_path</code>)</h4>
 <p>Updates the documentation notebook of a given module</p>
 <ul>
 <li><em>mod</em>: the module</li>
@@ -224,7 +186,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=generate_all></a><strong>generate_all</strong>(<em>pkg_name</em>, <em>dest_path</em>, <em>exclude</em>=None)</h4>
+<h4><a id=generate_all></a><code>generate_all</code>(<code>pkg_name</code>, <code>dest_path</code>, <code>exclude</code>=<code>None</code>)</h4>
 <p>Generate the documentation for all the modules in <code>pkg_name</code></p>
 <ul>
 <li><em>pkg_name</em>: name of the package to document</li>
@@ -241,19 +203,6 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">update_all</span><span class="p">,</span> <span class="n">arg_comments</span><span class="o">=</span><span class="p">{</span>
-    <span class="s1">&#39;mod_name&#39;</span><span class="p">:</span> <span class="s1">&#39;name of the package to document&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;dest_path&#39;</span><span class="p">:</span> <span class="s1">&#39;the folder in which to generate the notebooks&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;exclude&#39;</span><span class="p">:</span> <span class="s1">&#39;names of subdirectories to ignore&#39;</span><span class="p">})</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -262,7 +211,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=update_all></a><strong>update_all</strong>(<em>pkg_name</em>, <em>dest_path</em>, <em>exclude</em>: '<strong>pycache</strong>')=('.ipynb_checkpoints',)</h4>
+<h4><a id=update_all></a><code>update_all</code>(<code>pkg_name</code>, <code>dest_path</code>, <code>exclude</code>=<code>('.ipynb_checkpoints', '__pycache__')</code>)</h4>
 <p>Updates all the notebooks in <code>pkg_name</code></p>
 <ul>
 <li><em>dest_path</em>: the folder in which to generate the notebooks</li>
@@ -300,7 +249,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The same button can show you the hidden input from a cell. This used in conjunction with the helper functions from <a href="gen_doc.nbdoc.ipynb">nbdoc</a> should allow you to easily add any content you need.</p>
+<p>The same button can show you the hidden input from a cell. This used in conjunction with the helper functions from <a href="gen_doc.nbdoc.html">nbdoc</a> should allow you to easily add any content you need.</p>
 
 </div>
 </div>
@@ -352,7 +301,7 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>For more information see the <a href="gen_doc.convert2html.ipynb">documentation of convert2html</a>.</p>
+<p>For more information see the <a href="gen_doc.convert2html.html">documentation of convert2html</a>.</p>
 
 </div>
 </div>
@@ -386,6 +335,6 @@ summary: scripts and API to auto-generate or update a documentation notebook ske
 </div>
 
 </div>
-    </div>
+</div>
  
 
