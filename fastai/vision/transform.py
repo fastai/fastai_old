@@ -200,6 +200,7 @@ class Transform():
         if order is not None: self.order=order
         self.func=func
         functools.update_wrapper(self, self.func)
+        self.func.__annotations__['return'] = Image
         self.params = copy(func.__annotations__)
         self.def_args = get_default_args(func)
         setattr(Image, func.__name__,
@@ -257,7 +258,7 @@ class RandTransform():
             if k not in self.resolved: self.resolved[k]=v
         # anything left over must be callable without params
         for k,v in self.tfm.params.items():
-            if k not in self.resolved: self.resolved[k]=v()
+            if k not in self.resolved and k!='return': self.resolved[k]=v()
 
         self.do_run = rand_bool(self.p)
 
