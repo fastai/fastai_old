@@ -19,8 +19,7 @@ def link_type(argtype, include_bt:bool=False):
 def is_fastai_class(t):
     "checks if belongs to fastai module"
     if not inspect.getmodule(t): return False
-    base_module = inspect.getmodule(t).__name__.split('.')[0]
-    return base_module in ['fastai_v1', 'gen_doc', 'dev_nb']
+    return inspect.getmodule(t).__name__.startswith('fastai')
 
 def wrap_class(t):
     if hasattr(t, '__name__'): return t.__name__
