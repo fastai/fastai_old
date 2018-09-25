@@ -1,10 +1,4 @@
-{%- extends 'basic.tpl' -%}{% block body %}---
-title: {{resources.title}}
-keywords: {{resources.keywords}}
-sidebar: home_sidebar
-tags: {{resources.tags}}
-summary: {{resources.summary}}
----
+{%- extends 'basic.tpl' -%}
 
 {% block input_group -%}
 {%- if cell.metadata.hide_input or nb.metadata.hide_input -%}
@@ -22,13 +16,8 @@ summary: {{resources.summary}}
 
 {% block output_area_prompt %}
 {%- if cell.metadata.hide_input or nb.metadata.hide_input -%}
-    <div class="prompt"> </div>
+   <div class="prompt"> </div>
 {%- else -%}
     {{ super()  }}
 {%- endif -%}
 {% endblock output_area_prompt %}
-
-<div class="container" id="notebook-container">
-    {{ super()  }}
-</div>
-{%- endblock body %}

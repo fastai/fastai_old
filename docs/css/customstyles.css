@@ -1,3 +1,7 @@
+.anchor-link{
+    display: none;
+}
+
 body {
     font-size:15px;
 }
@@ -81,6 +85,32 @@ h6[id],
 dt[id]{
 padding-top: 60px;
 margin-top: -40px
+}
+
+.output_html a{
+        background-color: DodgerBlue;
+            border: none;
+                color: white;
+                    padding: 12px 30px;
+                        cursor: pointer;
+                            font-size: 20px;
+                            box-sizing: 15px;
+                            position: absolute;
+                }
+
+.output_html a::before{                                 
+                     background:url('https://image.flaticon.com/icons/svg/25/25407.svg');
+                     content: '';
+                    background-size:cover;
+                    position:absolute;
+                }
+
+
+
+/* Darker background on mouse-over */
+.output_html a:hover {
+        background-color: RoyalBlue;
+
 }
 
 .post-content img {
