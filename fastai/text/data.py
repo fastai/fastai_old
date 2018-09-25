@@ -67,7 +67,7 @@ class TextDataset():
             lbls = df.iloc[:,range(self.n_labels)].values.astype(np.int64)
             texts = f'\n{BOS} {FLD} 1 ' + df[self.n_labels].astype(str)
             for i in range(self.n_labels+1, len(df.columns)):
-                texts += f' {FLD} {i-n_lbls} ' + df[i].astype(str)
+                texts += f' {FLD} {i-n_lbls+1} ' + df[i].astype(str)
             toks = self.tokenizer.process_all(texts)
             tokens += toks
             labels += list(np.squeeze(lbls))
