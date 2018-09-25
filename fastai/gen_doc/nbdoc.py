@@ -9,7 +9,7 @@ __all__ = ['get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_d
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
-def link_type(argtype, include_bt:bool=False):
+def link_type(argtype, include_bt:bool=True):
     "creates link to documentation"
     arg_name = wrap_class(argtype)
     if include_bt: arg_name = f'`{arg_name}`'
@@ -23,21 +23,20 @@ def is_fastai_class(t):
 
 def wrap_class(t):
     if hasattr(t, '__name__'): return t.__name__
+    if hasattr(t.__class__, '__name__'): return t.__class__.__name__
     else: return str(t)
 
 def code_esc(s): return f'`{s}`'
 
 def type_repr(t):
-    if hasattr(t, '__forward_arg__'): return code_esc(t.__forward_arg__)
+    if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
     elif hasattr(t, '__args__'):
         args = t.__args__
         if len(args)==2 and args[1] == type(None):
             return f'`Optional`[{type_repr(args[0])}]'
         reprs = ', '.join([type_repr(o) for o in t.__args__])
-        t_name = t.__name__ if hasattr(t,'__name__') else t.__class__.__name__
-        return f'{code_esc(t_name)}[{reprs}]'
-    elif hasattr(t, '__name__'): return code_esc(t.__name__)
-    else: return code_esc(t.__class__.__name__)
+        return f'{link_type(t)}[{reprs}]'
+    else: return link_type(t)
 
 def anno_repr(a): return type_repr(a)
 
@@ -57,7 +56,7 @@ def format_ft_def(func, full_name:str=None)->str:
     if sig.return_annotation != sig.empty:
         arg_str += f" -> {anno_repr(sig.return_annotation)}"
     if type(func).__module__.startswith('fastai'):
-        arg_str += f" :: {code_esc(type(func).__name__)}"
+        arg_str += f" :: {link_type(type(func))}"
     if len(arg_str)>80: res += "\n"
     return res + arg_str
 
@@ -224,7 +223,7 @@ def get_fn_link(ft) -> str:
 def get_source_link(ft) -> str:
     "returns link to  line in source code"
     lineno = inspect.getsourcelines(ft)[1]
-    fpath = os.path.realpath(inspect.getfile(ft))
+    fpath = os.path.realpath(inspect.getfile(inspect.getmodule(ft)))
     relpath = os.path.relpath(fpath, os.getcwd())
     link = f"{relpath}#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
