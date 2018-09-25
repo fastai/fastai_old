@@ -14,7 +14,7 @@ def create_version_file(version):
         f.write("__version__ = '{}'\n".format(version))
 
 # version
-version = '1.0.0.b1'
+version = '1.0.0b1'
 create_version_file(version)
 
 with open('README.md') as readme_file:
@@ -23,7 +23,10 @@ with open('README.md') as readme_file:
 with open('HISTORY.md') as history_file:
     history = history_file.read()
 
-requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.5', 'torchvision>=0.2.1', 'traitlets', 'typing']
+# pip doesn't think that 0.5.0a0+1637729 >=0.5.0, must use >=0.4.9 instead
+# XXX: change to torch>=0.5.0 once it's available as a pip wheel
+requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.9', 'torchvision>=0.2.1', 'traitlets', 'typing']
+
 
 setup_requirements = ['pytest-runner', ]
 
