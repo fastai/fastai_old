@@ -11,8 +11,8 @@ def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
 def link_type(argtype, include_bt:bool=True):
     "creates link to documentation"
-    arg_name = wrap_class(argtype)
-    if include_bt: arg_name = f'`{arg_name}`'
+    arg_name = fn_name(argtype)
+    if include_bt: arg_name = code_esc(arg_name)
     if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
     return arg_name
 
@@ -21,12 +21,7 @@ def is_fastai_class(t):
     if not inspect.getmodule(t): return False
     return inspect.getmodule(t).__name__.startswith('fastai')
 
-def wrap_class(t):
-    if hasattr(t, '__name__'): return t.__name__
-    if hasattr(t.__class__, '__name__'): return t.__class__.__name__
-    else: return str(t)
-
-def code_esc(s): return f'`{s}`'
+def code_esc(s): return f'<code>{s}</code>'
 
 def type_repr(t):
     if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
@@ -213,6 +208,7 @@ def show_video_from_youtube(code, start=0):
 
 def fn_name(ft)->str:
     if hasattr(ft, '__name__'):   return ft.__name__
+    elif hasattr(ft,'_name'): return ft._name
     elif hasattr(ft,'__class__'): return ft.__class__.__name__
     else:                         return str(ft)
 
