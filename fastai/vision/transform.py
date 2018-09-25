@@ -1,9 +1,9 @@
 from ..torch_core import *
 from .image import *
 
-_all__ = ['apply_perspective', 'brightness', 'compute_zs_mat', 'contrast', 'crop', 'crop_pad', 'dihedral', 'find_coeffs', 'flip_lr', 
-          'get_transforms', 'get_zoom_mat', 'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_zoom', 'rotate', 'skew', 
-          'squish', 'symmetric_warp', 'tilt', 'zoom', 'zoom_crop', 'zoom_squish']
+_all__ = ['apply_perspective', 'brightness', 'contrast', 'crop', 'crop_pad', 'dihedral', 'flip_lr', 'get_transforms', 
+          'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_zoom', 'rotate', 'skew', 'squish', 'symmetric_warp', 'tilt', 
+          'zoom', 'zoom_crop', 'zoom_squish']
 
 @TfmLighting
 def brightness(x, change:uniform):
@@ -23,7 +23,7 @@ def rotate(degrees:uniform):
             [sin(angle),  cos(angle), 0.],
             [0.        ,  0.        , 1.]]
 
-def get_zoom_mat(sw:float, sh:float, c:float, r:float)->AffineMatrix:
+def _get_zoom_mat(sw:float, sh:float, c:float, r:float)->AffineMatrix:
     "`sw`,`sh` scale width,height - `c`,`r` focus col,row"
     return [[sw, 0,  c],
             [0, sh,  r],
@@ -35,17 +35,17 @@ def zoom(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
     s = 1-1/scale
     col_c = s * (2*col_pct - 1)
     row_c = s * (2*row_pct - 1)
-    return get_zoom_mat(1/scale, 1/scale, col_c, row_c)
+    return _get_zoom_mat(1/scale, 1/scale, col_c, row_c)
 
 @TfmAffine
 def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
     "Squish image by `scale`. `row_pct`,`col_pct` select focal point of zoom"
     if scale <= 1:
         col_c = (1-scale) * (2*col_pct - 1)
-        return get_zoom_mat(scale, 1, col_c, 0.)
+        return _get_zoom_mat(scale, 1, col_c, 0.)
     else:
         row_c = (1-1/scale) * (2*row_pct - 1)
-        return get_zoom_mat(1, 1/scale, 0., row_c)
+        return _get_zoom_mat(1, 1/scale, 0., row_c)
 
 @TfmCoord
 def jitter(c, img_size, magnitude:uniform):
@@ -108,7 +108,7 @@ def zoom_crop(scale:float, do_rand:bool=False, p:float=1.0):
     crop_fn = rand_crop if do_rand else crop_pad
     return [zoom_fn(scale=scale, p=p), crop_fn()]
 
-def find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
+def _find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
     "Find 8 coeff mentioned [here](https://web.archive.org/web/20150222120106/xenia.media.mit.edu/~cwren/interpolator/)"
     matrix = []
     #The equations we'll need to solve.
@@ -121,7 +121,7 @@ def find_coeffs(orig_pts:Points, targ_pts:Points)->Tensor:
     #The 8 scalars we seek are solution of AX = B
     return torch.gesv(B,A)[0][:,0]
 
-def apply_perspective(coords:FlowField, coeffs:Points)->FlowField:
+def _apply_perspective(coords:FlowField, coeffs:Points)->FlowField:
     "Transform `coords` with `coeffs`"
     size = coords.size()
     #compress all the dims expect the last one ang adds ones, coords become N * 3
@@ -136,7 +136,7 @@ _orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
 
 def _perspective_warp(c:FlowField, targ_pts:Points):
     "Apply warp to `targ_pts` from `_orig_pts` to `c` `FlowField`"
-    return apply_perspective(c, find_coeffs(_orig_pts, targ_pts))
+    return _apply_perspective(c, _find_coeffs(_orig_pts, targ_pts))
 
 @TfmCoord
 def perspective_warp(c, img_size, magnitude:partial(uniform,size=8)=0):
@@ -195,7 +195,7 @@ def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10.
     return (res + listify(xtra_tfms), [crop_pad()])
 
 #To keep?
-def compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
+def _compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
                    invert:bool, row_pct:float, col_pct:float)->AffineMatrix:
     "Utility routine to compute zoom/squish matrix"
     orig_ratio = math.sqrt(sz[2]/sz[1])
@@ -218,5 +218,5 @@ def zoom_squish(c, size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_bool
                 row_pct:uniform=0.5, col_pct:uniform=0.5):
     #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
     #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
-    m = compute_zs_mat(size, scale, squish, invert, row_pct, col_pct)
+    m = _compute_zs_mat(size, scale, squish, invert, row_pct, col_pct)
     return affine_mult(c, FloatTensor(m))
