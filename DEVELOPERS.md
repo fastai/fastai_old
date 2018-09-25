@@ -3,6 +3,48 @@
 
 == Project Build
 
+=== Development Install
+
+For working with the project files while being able to edit them:
+
+    python setup.py develop
+
+or
+
+    pip install -e .
+
+
+
+=== Build Source distribution / Source Release
+
+* provides metadata + source files
+
+needed for installing
+
+    python setup.py sdist
+
+=== Build Built Distribution
+
+* provides metadata + pre-built files
+
+only need to be moved (usually by pip) to the correct locations on the target system
+
+    python setup.py bdist
+
+=== Build Wheel
+
+* this is a Built Distribution
+
+It's a ZIP-format archive with .whl extension
+
+    {distribution}-{version}(-{build tag})?-{python tag}-{abi tag}-{platform tag}.whl
+
+    python setup.py bdist_wheel
+
+To build all the requirements wheels (not needed for the release):
+
+    pip wheel . -w dist
+
 === Creating requirements.txt file by analyzing the code base
 
 We will use 2 tools, each not finding all packages, but together they get it mostly right. So we run both and combine their results.
