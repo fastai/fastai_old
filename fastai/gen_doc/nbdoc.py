@@ -57,7 +57,7 @@ def format_ft_def(func, full_name:str=None)->str:
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty:
         arg_str += f" -> {anno_repr(sig.return_annotation)}"
-    if func.__module__.startswith('fastai'):
+    if type(func).__module__.startswith('fastai'):
         arg_str += f" :: {code_esc(type(func).__name__)}"
     if len(arg_str)>80: res += "\n"
     return res + arg_str
