@@ -360,7 +360,7 @@ def squish(scale:uniform=1.0, row_pct:uniform=0.5, col_pct:uniform=0.5):
 class TfmCoord(Transform): order,_wrap = 4,'coord'
 
 @TfmCoord
-def jitter(c, size, magnitude:uniform):
+def jitter(c, img_size, magnitude:uniform):
     return c.add_((torch.rand_like(c)-0.5)*magnitude*2)
 
 @TfmPixel
@@ -378,7 +378,7 @@ def dihedral(x, k:partial(uniform_int,0,8)):
 
 @partial(TfmPixel, order=-10)
 def pad(x, padding, mode='reflect'):
-    "Pad `x` with `padding` pixels. `mode` fills in space ('reflect','zeros',etc)"
+    "Pad `x` with `padding` pixels. `mode` fills in space ('constant','reflect','replicate')"
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @TfmPixel
