@@ -102,7 +102,7 @@ def rand_zoom(*args, **kwargs):
 def rand_crop(*args, **kwargs):
     "Random crop and pad"
     return crop_pad(*args, row_pct=(0,1), col_pct=(0,1), **kwargs)
-def zoom_crop(scale, do_rand=False, p=1.0):
+def zoom_crop(scale:float, do_rand:bool=False, p:float=1.0):
     "Randomly zoom and/or crop"
     zoom_fn = rand_zoom if do_rand else zoom
     crop_fn = rand_crop if do_rand else crop_pad

@@ -10,8 +10,9 @@ _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmA
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
 
-def uniform(low:Number, high:Number, size:List[int]=None)->FloatOrTensor:
+def uniform(low:Number, high:Number=None, size:List[int]=None)->FloatOrTensor:
     "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
+    if high is None: high=low
     return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
 def log_uniform(low, high, size=None)->FloatOrTensor:
@@ -270,15 +271,6 @@ class RandTransform():
 def resolve_tfms(tfms:TfmList):
     "Resolve every tfm in `tfms`"
     for f in listify(tfms): f.resolve()
-
-def apply_tfms(tfms:TfmList, x:Image, do_resolve:bool=True):
-    "Apply all the `tfms` to `x`, if `do_resolve` refresh all the random args"
-    if not tfms: return x
-    tfms = listify(tfms)
-    if do_resolve: resolve_tfms(tfms)
-    x = x.clone()
-    for tfm in tfms: x = tfm(x)
-    return x
 
 def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
     "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
