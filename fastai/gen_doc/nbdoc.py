@@ -7,6 +7,10 @@ from .core import *
 __all__ = ['get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor']
 
+MODULE_NAME = 'fastai'
+SOURCE_LINK = 'https://github.com/fastai/fastai_pytorch/blob/master/'
+PYTORCH_DOCS = 'https://pytorch.org/docs/stable/'
+
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
 def link_type(argtype, include_bt:bool=True):
@@ -14,12 +18,15 @@ def link_type(argtype, include_bt:bool=True):
     arg_name = fn_name(argtype)
     if include_bt: arg_name = code_esc(arg_name)
     if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
+    if belongs_to_module(argtype, 'torch') and ('Tensor' not in arg_name): return f'[{arg_name}]({get_pytorch_link(argtype)})'
     return arg_name
 
-def is_fastai_class(t):
-    "checks if belongs to fastai module"
+def is_fastai_class(t): return belongs_to_module(t, MODULE_NAME)
+
+def belongs_to_module(t, module_name):
+    "checks if belongs to module_name"
     if not inspect.getmodule(t): return False
-    return inspect.getmodule(t).__name__.startswith('fastai')
+    return inspect.getmodule(t).__name__.startswith(module_name)
 
 def code_esc(s): return f'<code>{s}</code>'
 
@@ -216,12 +223,22 @@ def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
     return f'{ft.__module__}.html#{fn_name(ft)}'
 
+def get_pytorch_link(ft) -> str:
+    "returns link to pytorch docs"
+    name = ft.__name__
+    paths = str(ft.__module__).split('.')
+    if len(paths) == 1: return f'{PYTORCH_DOCS}{paths[0]}.html#{paths[0]}.{name}'
+
+    offset = 1 if paths[1] == 'utils' else 0 # utils is a pytorch special case
+    doc_path = paths[1+offset]
+    plink = '.'.join(paths[:(2+offset)])
+    return f'{PYTORCH_DOCS}{doc_path}.html#{plink}.{name}'
+
 def get_source_link(ft) -> str:
     "returns link to  line in source code"
     lineno = inspect.getsourcelines(ft)[1]
-    fpath = os.path.realpath(inspect.getfile(inspect.getmodule(ft)))
-    relpath = os.path.relpath(fpath, os.getcwd())
-    link = f"{relpath}#L{lineno}"
+    github_path = inspect.getmodule(ft).__name__.replace('.', '/')
+    link = f"{SOURCE_LINK}{github_path}.py#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def title_md(s:str, title_level:int):
