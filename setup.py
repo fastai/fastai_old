@@ -27,7 +27,7 @@ requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupy
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest', ]
+test_requirements = ['pytest', 'numpy', 'torch>=0.5']
 
 setup(
     author="Jeremy Howard",
