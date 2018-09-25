@@ -21,6 +21,7 @@ from numpy import array, cos, exp, log, sin, tan, tanh
 from operator import attrgetter, itemgetter
 from pathlib import Path
 from spacy.symbols import ORTH
+from warnings import warn
 
 #for type annotations
 from fast_progress.fast_progress import MasterBar, ProgressBar

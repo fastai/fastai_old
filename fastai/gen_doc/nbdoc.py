@@ -16,22 +16,6 @@ def link_type(argtype, include_bt:bool=False):
     if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
     return arg_name
 
-def format_ft_def(elt, full_name:str, ignore_first:bool=False) -> str:
-    "Formats and links function definition to show in documentation"
-    args, defaults, formatted_types = get_arg_spec(elt)
-    if ignore_first: args = args[1:]
-
-    parsedargs = ''
-    diff = len(args) - len(defaults) if defaults is not None else len(args)
-    for i,arg in enumerate(args):
-        parsedargs += f'<em>{arg}</em>'
-        if arg in formatted_types: parsedargs += f': {formatted_types[arg]}'
-        if i-diff >= 0: parsedargs += f'={defaults[i-diff]}'
-        if i+1 < len(args): parsedargs += ', '
-    parsedreturn = f" -> {formatted_types['return']}" if 'return' in formatted_types else ''
-
-    return f'**{full_name}**({parsedargs}){parsedreturn}'
-
 def is_fastai_class(t):
     "checks if belongs to fastai module"
     if not inspect.getmodule(t): return False
@@ -49,9 +33,9 @@ def type_repr(t):
     elif hasattr(t, '__args__'):
         args = t.__args__
         if len(args)==2 and args[1] == type(None):
-            return f'Optional[{type_repr(args[0])}]'
+            return f'`Optional`[{type_repr(args[0])}]'
         reprs = ', '.join([type_repr(o) for o in t.__args__])
-        t_name = code_esc(t.__name__ if hasattr(t,'__name__') else t.__class__.__name__)
+        t_name = t.__name__ if hasattr(t,'__name__') else t.__class__.__name__
         return f'{code_esc(t_name)}[{reprs}]'
     elif hasattr(t, '__name__'): return code_esc(t.__name__)
     else: return code_esc(t.__class__.__name__)
@@ -61,7 +45,7 @@ def anno_repr(a): return type_repr(a)
 def format_param(p):
     res = code_esc(p.name)
     if hasattr(p, 'annotation') and p.annotation != p.empty: res += f':{anno_repr(p.annotation)}'
-    if p.default != p.empty: res += f'={p.default}'
+    if p.default != p.empty: res += f'=`{repr(p.default)}`'
     return res
 
 def format_ft_def(func, full_name:str=None)->str:
@@ -70,15 +54,18 @@ def format_ft_def(func, full_name:str=None)->str:
     res = f'`{ifnone(full_name, func.__name__)}`'
     fmt_params = [format_param(param) for name,param
                   in sig.parameters.items() if name not in ('self','cls')]
-    res += f"({', '.join(fmt_params)})"
+    arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty:
-        res += f" -> {anno_repr(sig.return_annotation)}"
-    return res
+        arg_str += f" -> {anno_repr(sig.return_annotation)}"
+    if type(func).__module__.startswith('fastai'):
+        arg_str += f" :: {code_esc(type(func).__name__)}"
+    if len(arg_str)>80: res += "\n"
+    return res + arg_str
 
 def get_enum_doc(elt, full_name:str) -> str:
     "Formatted enum documentation"
     vals = ', '.join(elt.__members__.keys())
-    doc = f'{code_esc(full_name)}:`Enum` = [{vals}]'
+    doc = f'{code_esc(full_name)}\n`Enum` = [{vals}]'
     return doc
 
 def get_cls_doc(elt, full_name:str) -> str:
@@ -88,8 +75,9 @@ def get_cls_doc(elt, full_name:str) -> str:
     if parent_class != object: doc += f' :: Inherits ({link_type(parent_class, include_bt=True)})'
     return doc
 
-def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict={}, title_level=None, alt_doc_string:str=''):
+def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str=''):
     "Show documentation for element `elt`. Supported types: class, Callable, and enum"
+    arg_comments = ifnone(arg_comments, {})
     if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
     if inspect.isclass(elt):
         if is_enum(elt.__class__):   doc = get_enum_doc(elt, full_name)
@@ -114,8 +102,9 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
     resolved_comments = {**doc.get('comments', {}), **arg_comments} # arg_comments takes priority
     args = inspect.getfullargspec(elt).args if not is_enum(elt.__class__) else elt.__members__.keys()
     if resolved_comments: parsed += '\n'
-    for a in args:
-        if a in resolved_comments: parsed += f'\n- *{a}*: {resolved_comments[a]}'
+    for a in resolved_comments:
+        parsed += f'\n- *{a}*: {resolved_comments[a]}'
+        if a not in args: warn(f'Doc arg mismatch: {a}')
 
     return_comment = arg_comments.get('return') or doc.get('return')
     if return_comment: parsed += f'\n\n*return*: {return_comment}'

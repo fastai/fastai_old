@@ -56,25 +56,27 @@ class DeviceDataLoader():
 class DataBunch():
     "Bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
     def __init__(self, train_dl:DataLoader, valid_dl:DataLoader, test_dl:Optional[DataLoader]=None,
-                 device:torch.device=None, tfms:Optional[Collection[Callable]]=None, path:PathOrStr='.'):
+                 device:torch.device=None, tfms:Optional[Collection[Callable]]=None, path:PathOrStr='.', 
+                 collate_fn:Callable=data_collate):
         "Bind `train_dl`,`valid_dl` and`test_dl` to `device`. tfms are DL tfms (normalize). `path` is for models."
         self.device = default_device if device is None else device
-        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms=tfms)
-        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms=tfms)
-        self.test_dl  = DeviceDataLoader(test_dl,  self.device, tfms=tfms) if test_dl else None
+        self.train_dl = DeviceDataLoader(train_dl, self.device, tfms, collate_fn)
+        self.valid_dl = DeviceDataLoader(valid_dl, self.device, tfms, collate_fn)
+        self.test_dl  = DeviceDataLoader(test_dl,  self.device, tfms, collate_fn) if test_dl else None
         self.path = Path(path)
 
     @classmethod
-    def create(cls, train_ds, valid_ds, test_ds=None, path='.', bs=64, num_workers=default_cpus,
-               tfms=None, device=None, size=None, **kwargs)->'DataBunch':
+    def create(cls, train_ds:Dataset, valid_ds:Dataset, test_ds:Dataset=None, path:PathOrStr='.', bs:int=64, 
+               num_workers:int=default_cpus, tfms:Optional[Collection[Callable]]=None, device:torch.device=None, 
+               collate_fn:Callable=data_collate)->'DataBunch':
         "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`"
         datasets = [train_ds,valid_ds]
         if test_ds is not None: datasets.append(test_ds)
         dls = [DataLoader(*o, num_workers=num_workers) for o in
                zip(datasets, (bs,bs*2,bs*2), (True,False,False))]
-        return cls(*dls, path=path, device=device, tfms=tfms)
+        return cls(*dls, path=path, device=device, tfms=tfms, **kwargs)
 
-    def __getattr__(self,k)->Any: return getattr(self.train_ds, k)
+    def __getattr__(self,k:int)->Any: return getattr(self.train_ds, k)
     def holdout(self, is_test:bool=False)->DeviceDataLoader:
         "Returns correct holdout `Dataset` for test vs validation (`is_test`)"
         return self.test_dl if is_test else self.valid_dl
