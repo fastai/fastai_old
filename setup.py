@@ -23,7 +23,7 @@ with open('README.md') as readme_file:
 with open('HISTORY.md') as history_file:
     history = history_file.read()
 
-requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch==0.5', 'torchvision==0.2.1', 'traitlets', 'typing']
+requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.5', 'torchvision>=0.2.1', 'traitlets', 'typing']
 
 setup_requirements = ['pytest-runner', ]
 

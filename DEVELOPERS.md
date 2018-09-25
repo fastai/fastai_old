@@ -32,7 +32,7 @@ Now make a list for `setup.py`'s `install_requires`:
 
     perl -nle '$q = chr(39); m/^(.*?)=/ && push @l, $1; END{ print join ", ", map {qq[$q$_$q]} @l}' reqsorted.txt
 
-and use the output to update setup.py. When merging make sure to not overwrite minimal version requirements, e.g. pytorch==0.5
+and use the output to update setup.py. When merging make sure to not overwrite minimal version requirements, e.g. pytorch>=0.5
 
 Cleanup
 
