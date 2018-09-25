@@ -4,6 +4,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 import nbformat.sign
 from pathlib import Path
 from .core import *
+from .nbdoc import *
 
 __all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
 
@@ -76,31 +77,12 @@ def get_global_vars(mod):
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
 
-def get_exports(mod):
-    public_names = mod.__all__ if hasattr(mod, '__all__') else dir(mod)
-    public_names.sort(key=str.lower)
-    return public_names
-
 def get_source_link(mod, lineno) -> str:
     "Returns link to line number in source code"
     fpath = os.path.realpath(inspect.getfile(mod))
     relpath = os.path.relpath(fpath, os.getcwd())
     link = f"{relpath}#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
-
-def get_ft_names(mod):
-    "Returns all the functions of module `mod`"
-    # If the module has an attribute __all__, it picks those.
-    # Otherwise, it returns all the functions defined inside a module.
-    fn_names = []
-    for elt_name in get_exports(mod):
-        elt = getattr(mod,elt_name)
-        #This removes the files imported from elsewhere
-        try:    fname = inspect.getfile(elt)
-        except: continue
-        if fname != mod.__file__: continue
-        if inspect.isclass(elt) or inspect.isfunction(elt): fn_names.append(elt_name)
-    return fn_names
 
 def execute_nb(fname):
     "Execute notebook `fname`"
