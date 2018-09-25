@@ -3,7 +3,19 @@
 
 """The setup script."""
 
+from pathlib import Path
+
 from setuptools import setup, find_packages
+
+def create_version_file(version):
+    print('-- Building version ' + version)
+    version_path = Path.cwd() / 'fastai' / 'version.py'
+    with open(version_path, 'w') as f:
+        f.write("__version__ = '{}'\n".format(version))
+
+# version
+version = '1.0.0.b1'
+create_version_file(version)
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -40,6 +52,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/fastai/fastai',
-    version='1.0.0.beta1',
+    version=version,
     zip_safe=False,
 )
