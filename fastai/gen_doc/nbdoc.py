@@ -4,8 +4,8 @@ from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, 
 from .docstrings import *
 from .core import *
 
-__all__ = ['get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name',
-           'show_video', 'show_video_from_youtube', 'create_anchor']
+__all__ = ['get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
+           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor']
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
@@ -141,10 +141,17 @@ def show_doc_from_name(mod_name, ft_name:str, doc_string:bool=True, arg_comments
         elt = getattr(elt, split)
     show_doc(elt, doc_string, ft_name, arg_comments, alt_doc_string)
 
-def get_ft_names(mod) -> List[str]:
-    "retrieves all the functions of `mod`"
+def get_exports(mod):
+    public_names = mod.__all__ if hasattr(mod, '__all__') else dir(mod)
+    #public_names.sort(key=str.lower)
+    return [o for o in public_names if not o.startswith('_')]
+
+def get_ft_names(mod)->List[str]:
+    "Returns all the functions of module `mod`"
+    # If the module has an attribute __all__, it picks those.
+    # Otherwise, it returns all the functions defined inside a module.
     fn_names = []
-    for elt_name in dir(mod):
+    for elt_name in get_exports(mod):
         elt = getattr(mod,elt_name)
         #This removes the files imported from elsewhere
         try:    fname = inspect.getfile(elt)
