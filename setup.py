@@ -27,16 +27,16 @@ with open('HISTORY.md') as history_file:
 # XXX: change to torch>=0.5.0 once it's available as a pip wheel
 requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.9', 'torchvision>=0.2.1', 'traitlets', 'typing']
 
-
 setup_requirements = ['pytest-runner', ]
 
 test_requirements = ['pytest', 'numpy', 'torch>=0.5']
 
+# list of classifiers: https://pypi.org/pypi?%3Aaction=list_classifiers
 setup(
     author="Jeremy Howard",
     author_email='info@fast.ai',
     classifiers=[
-        'Development Status :: Development Status :: 4 - Beta',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
@@ -54,6 +54,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
+    python_requires='>=3.6',
     url='https://github.com/fastai/fastai',
     version=version,
     zip_safe=False,
