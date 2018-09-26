@@ -5,6 +5,8 @@ _all__ = ['apply_perspective', 'brightness', 'contrast', 'crop', 'crop_pad', 'di
           'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_zoom', 'rotate', 'skew', 'squish', 'symmetric_warp', 'tilt', 
           'zoom', 'zoom_crop', 'zoom_squish']
 
+_pad_mode_convert = {'reflection':'reflect', 'zeros':'constant', 'border':'replicate'}
+
 @TfmLighting
 def brightness(x, change:uniform):
     "`change` brightness of image `x`"
@@ -65,8 +67,9 @@ def dihedral(x, k:partial(uniform_int,0,8)):
     return x.contiguous()
 
 @partial(TfmPixel, order=-10)
-def pad(x, padding, mode='reflect'):
-    "Pad `x` with `padding` pixels. `mode` fills in space ('constant','reflect','replicate')"
+def pad(x, padding, mode='reflection'):
+    "Pad `x` with `padding` pixels. `mode` fills in space ('zeros','reflection','border')"
+    mode = _pad_mode_convert[mode]
     return F.pad(x[None], (padding,)*4, mode=mode)[0]
 
 @TfmPixel
@@ -79,10 +82,10 @@ def crop(x, size, row_pct:uniform=0.5, col_pct:uniform=0.5):
     return x[:, row:row+rows, col:col+cols].contiguous()
 
 @TfmCrop
-def crop_pad(x, size, padding_mode='reflect',
+def crop_pad(x, size, padding_mode='reflection',
              row_pct:uniform = 0.5, col_pct:uniform = 0.5):
     "Crop and pad tfm - `row_pct`,`col_pct` sets focal point"
-    if padding_mode=='zeros': padding_mode='constant'
+    padding_mode = _pad_mode_convert[padding_mode]
     size = listify(size,2)
     if x.shape[1:] == size: return x
     rows,cols = size
