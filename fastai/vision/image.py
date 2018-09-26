@@ -77,13 +77,8 @@ class ImageBase(ItemBase):
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-<<<<<<< HEAD
     "Supports applying transforms to image data"
     def __init__(self, px:Tensor):
-=======
-    "Supports appying transforms to image data"
-    def __init__(self, px):
->>>>>>> b03035ede7afd968ce7a3c5dcee134e4203411d6
         "create from raw tensor image data `px`"
         self._px = px
         self._logit_px=None
