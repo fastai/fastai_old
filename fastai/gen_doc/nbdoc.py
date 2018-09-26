@@ -4,7 +4,7 @@ from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, 
 from .docstrings import *
 from .core import *
 
-__all__ = ['get_class_toc', 'get_fn_link', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
+__all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor']
 
 MODULE_NAME = 'fastai'
@@ -110,7 +110,8 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
     if return_comment: parsed += f'\n\n*return*: {return_comment}'
     return parsed
 
-BT_REGEX = re.compile("`([^`]*)`")
+# Finds all places with a backtick or <code> but only if it hasn't already been linked
+BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
 def link_docstring(elt, docstring:str) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mod = inspect.getmodule(elt)

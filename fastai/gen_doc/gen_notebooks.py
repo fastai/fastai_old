@@ -163,9 +163,14 @@ def read_nb_types(cells):
     doc_fns = {}
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            match = re.match(r"^`?(\w*)\s*=\s*", cell['source'])
+            match = re.match(r"^(?:<code>|`)?(\w*)\s*=\s*", cell['source'])
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
+
+def link_markdown_cells(cells, mod):
+    for i, cell in enumerate(cells):
+        if cell['cell_type'] == 'markdown':
+            cell['source'] = link_docstring(mod, cell['source'])
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -181,7 +186,7 @@ def update_pos(pos_dict, start_key, nbr=2):
     return pos_dict
 
 def insert_cells(cells, pos_dict, ft_name):
-    "Insert the function doc cells of a function in the list of cells at their correct postition and updates the position dictionary"
+    "Insert the function doc cells of a function in the list of cells at their correct position and updates the position dictionary"
     idx = get_insert_idx(pos_dict, ft_name)
     if idx == -1: cells += [get_doc_cell(ft_name), get_empty_cell()]
     else:
@@ -195,6 +200,8 @@ def update_module_page(mod, dest_path):
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
     cells = nb['cells']
+
+    link_markdown_cells(cells, mod)
 
     type_dict = read_nb_types(cells)
     gvar_map = get_global_vars(mod)
