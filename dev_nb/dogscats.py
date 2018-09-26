@@ -2,8 +2,8 @@ from nb_005 import *
 torch.cuda.set_device(3)
 
 PATH = Path('data/dogscats')
-train_ds = FilesDataset.from_folder(PATH/'train')
-valid_ds = FilesDataset.from_folder(PATH/'valid')
+train_ds = ImageDataset.from_folder(PATH/'train')
+valid_ds = ImageDataset.from_folder(PATH/'valid')
 data_norm,data_denorm = normalize_funcs(*imagenet_stats)
 
 arch,size,lr = tvm.resnet34, 224,3e-3

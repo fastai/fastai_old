@@ -116,9 +116,9 @@ def data_from_imagefolder(path:PathOrStr, train:PathOrStr='train', valid:PathOrS
                           test:Optional[PathOrStr]=None, **kwargs:Any):
     "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
     path=Path(path)
-    train_ds = FilesDataset.from_folder(path/train)
-    datasets = [train_ds, FilesDataset.from_folder(path/valid, classes=train_ds.classes)]
-    if test: datasets.append(FilesDataset.from_single_folder(
+    train_ds = ImageDataset.from_folder(path/train)
+    datasets = [train_ds, ImageDataset.from_folder(path/valid, classes=train_ds.classes)]
+    if test: datasets.append(ImageDataset.from_single_folder(
         path/test,classes=train_ds.classes))
     return DataBunch.create(*datasets, path=path, **kwargs)
 

@@ -100,7 +100,7 @@ ImgLabel = str
 ImgLabels = Collection[ImgLabel]
 Classes = Collection[Any]
 
-class FilesDataset(LabelDataset):
+class ImageDataset(LabelDataset):
     "Dataset for folders of images in style {folder}/{class}/{images}"
     def __init__(self, fns:FilePathList, labels:ImgLabels, classes:Optional[Classes]=None):
         self.classes = ifnone(classes, list(set(labels)))
@@ -124,7 +124,7 @@ class FilesDataset(LabelDataset):
 
     @classmethod
     def from_folder(cls, folder:Path, classes:Optional[Classes]=None,
-                    valid_pct:float=0., check_ext:bool=True) -> Union['FilesDataset', List['FilesDataset']]:
+                    valid_pct:float=0., check_ext:bool=True) -> Union['ImageDataset', List['ImageDataset']]:
         "Dataset of `classes` labeled images in `folder`. Optional `valid_pct` split validation set."
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
 
