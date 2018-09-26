@@ -3,9 +3,9 @@ from ..data import *
 import functools
 
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting', 
-           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'get_crop_target', 'get_default_args', 
-           'get_resize_target', 'grid_sample', 'log_uniform', 'logit', 'logit_', 'rand_bool', 'rand_crop', 
-           'rand_int', 'resolve_tfms', 'round_multiple', 'uniform', 'uniform_int']
+           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args', 
+           'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop', 
+           'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'show_images', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
@@ -30,7 +30,6 @@ def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOr
     "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
     return random.randint(low,high) if size is None else torch.randint(low,high,size)
 
-
 def pil2tensor(image:NPImage)->TensorImage:
     "Convert PIL style `image` array to torch style image tensor `get_image_files`"
     arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
@@ -46,15 +45,15 @@ def bb2hw(a:Collection[int]) -> np.ndarray:
     "Converts bounding box points from (width,height,center) to (height,width,top,left)"
     return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
 
-def draw_outline(o:Patch, lw:int):
+def _draw_outline(o:Patch, lw:int):
     "Outlines bounding box onto image `Patch`"
     o.set_path_effects([patheffects.Stroke(
         linewidth=lw, foreground='black'), patheffects.Normal()])
 
-def draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
+def _draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
     "Draws bounding box on `ax`"
     patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
-    draw_outline(patch, 4)
+    _draw_outline(patch, 4)
 
 def get_default_args(func:Callable):
     return {k: v.default
@@ -244,9 +243,9 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
         y=y.data
     if y is None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
     ax = _show_image(self.data, ax=ax)
-    if len(y.size()) == 1: draw_rect(ax, bb2hw(y))
+    if len(y.size()) == 1: _draw_rect(ax, bb2hw(y))
     else:
-        for i in range(y.size(0)): draw_rect(ax, bb2hw(y[i]))
+        for i in range(y.size(0)): _draw_rect(ax, bb2hw(y[i]))
 
 Image.show = _show
 

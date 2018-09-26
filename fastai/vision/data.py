@@ -3,10 +3,10 @@ from .image import *
 from .transform import *
 from ..data import *
 
-__all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'SegmentationDataset', 'bb2hw', 'denormalize', 'draw_outline', 'draw_rect', 
-           'get_image_files', 'image2np', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
-           'open_image', 'open_mask', 'pil2tensor', 'show_image', 'show_image_batch', 'show_images', 'show_xy_images',
-           'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 'imagenet_denorm']
+__all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'SegmentationDataset', 'denormalize', 
+           'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
+           'show_image_batch', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
+           'imagenet_denorm']
 
 TfmList = Collection[Transform]
 
@@ -62,6 +62,37 @@ class ImageDataset(LabelDataset):
 
         if valid_pct==0.: return cls(fns, labels, classes=classes)
         return [cls(*a, classes=classes) for a in random_split(valid_pct, fns, labels)]
+
+#Draft, to check
+class ImageMultiDataset(LabelDataset):
+    def __init__(self, fns:FilePathList, labels:ImgLabels, classes:Optional[Classes]=None):
+        self.classes = ifnone(classes, uniqueify(np.concatenate(labels)))
+        self.class2idx = {v:k for k,v in enumerate(self.classes)}
+        self.x = np.array(fns)
+        self.y = [np.array([self.class2idx[o] for o in l], dtype=np.int64)
+                  for l in labels]
+
+    def encode(self, x:Collection[int]):
+        "One-hot encodes the target"
+        res = np.zeros((self.c,), np.float32)
+        res[x] = 1.
+        return res
+    
+    def get_labels(self, idx:int) -> ImgLabels: return [self.classes[i] for i in self.y[idx]]
+    def __getitem__(self,i:int) -> Tuple[Image, ImgLabels]: return open_image(self.x[i]), self.encode(self.y[i])
+    
+    @classmethod
+    def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
+        "Typically used for test set. label all images in `folder` with `classes[0]`"
+        fnames = get_image_files(folder, check_ext=check_ext)
+        return cls(fnames, classes[0] * len(fnames), classes=classes)
+
+    @classmethod
+    def from_folder(cls, path:PathOrStr, folder:PathOrStr, fns:Collection[PathOrStr], labels:ImgLabels, valid_pct:float=0.2, 
+        classes:Optional[Classes]=None, test_name:Optional[PathOrStr]=None):
+        train,valid = random_split(valid_pct, f'{path}/{folder}/' + fns, labels)
+        train_ds = cls(*train, classes=classes)
+        return [train_ds,cls(*valid, classes=train_ds.classes)]
 
 class SegmentationDataset(DatasetBase):
     "A dataset for segmentation task"
@@ -153,7 +184,7 @@ def _create_with_tfm(train_ds, valid_ds, test_ds=None,
 DataBunch.create = _create_with_tfm
 
 def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
-                          test:Optional[PathOrStr]=None, **kwargs:Any):
+                          test:Optional[PathOrStr]=None, **kwargs:Any) -> DataBunch:
     "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
     path=Path(path)
     train_ds = ImageDataset.from_folder(path/train)
@@ -161,4 +192,10 @@ def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOr
     if test: datasets.append(ImageDataset.from_single_folder(
         path/test,classes=train_ds.classes))
     return DataBunch.create(*datasets, path=path, **kwargs)
+
+#TODO
+def image_data_from_csv(path:PathOrStr, folder:PathOrStr, csv_labels:PathOrStr, valid_pct:float=0.2, 
+                        test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
+    "Create `DataBunch` from a subfolder with the labels in a csv file."
+    
 
