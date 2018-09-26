@@ -6,7 +6,7 @@ __all__ = ['Callback', 'CallbackHandler', 'OptimWrapper', 'SmoothenValue', 'Step
 
 class OptimWrapper():
     "Basic wrapper around an optimizer to simplify HP changes"
-    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False, bn_wd:bool=True)->None:
+    def __init__(self, opt:optim.Optimizer, wd:Floats=0., true_wd:bool=False, bn_wd:bool=True):
         self.opt,self.true_wd,self.bn_wd = opt,true_wd,bn_wd
         self.opt_keys = list(self.opt.param_groups[0].keys())
         self.opt_keys.remove('params')
@@ -149,7 +149,7 @@ class Callback():
 
 class SmoothenValue():
     "Creates a smooth moving average for a value (loss, etc)"
-    def __init__(self, beta:float)->None:
+    def __init__(self, beta:float):
         "Create smoother for value, beta should be 0<beta<1"
         self.beta,self.n,self.mov_avg = beta,0,0
 

@@ -126,7 +126,7 @@ def create_module_page(mod, dest_path, force=False):
     json.dump(nb, open(doc_path, 'w' if force else 'x'))
     execute_nb(doc_path)
 
-_default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py']
+_default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py', 'imports']
 
 def get_module_names(path_dir, exclude=None):
     if exclude is None: exclude = _default_exclude

@@ -77,8 +77,8 @@ class ImageBase(ItemBase):
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    "Supports appying transforms to image data"
-    def __init__(self, px)->'Image':
+    "Supports applying transforms to image data"
+    def __init__(self, px:Tensor):
         "create from raw tensor image data `px`"
         self._px = px
         self._logit_px=None
@@ -100,7 +100,7 @@ class Image(ImageBase):
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
     def refresh(self)->None:
-        "Applies any logit or affine transfers that have been "
+        "Applies any logit, flow, or affine transfers that have been sent to the `Image`"
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
@@ -133,7 +133,7 @@ class Image(ImageBase):
     @flow.setter
     def flow(self,v:FlowField): self._flow=v
 
-    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image':
+    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any):
         "Equivalent to `image = sigmoid(func(logit(image)))`"
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
@@ -261,7 +261,7 @@ class Transform():
     "Utility class for adding probability and wrapping support to transform funcs"
     _wrap=None
     order=0
-    def __init__(self, func:Callable, order:Optional[int]=None)->None:
+    def __init__(self, func:Callable, order:Optional[int]=None):
         "Create a transform for `func` and assign it an priority `order`, attach to Image class"
         if order is not None: self.order=order
         self.func=func
