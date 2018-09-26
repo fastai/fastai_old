@@ -4,21 +4,21 @@ First, thanks a lot for wanting to help!
 
 ## Did you find a bug?
 
-* Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_v1/issues).
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/fastai/fastai_v1/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+* Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_pytorch/issues).
+* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/fastai/fastai_pytorch/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
 * Be sure to add the complete error messages.
 
 #### Did you write a patch that fixes a bug?
 
-* Sign the [Contributor License Agreement](https://www.clahub.com/agreements/fastai/fastai_v1).
+* Sign the [Contributor License Agreement](https://www.clahub.com/agreements/fastai/fastai_pytorch).
 * Open a new GitHub pull request with the patch.
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
-* Before submitting, please read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md) and clean-up your code accordingly.
+* Before submitting, please read the [doc on code style](https://github.com/fastai/fastai_pytorch/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md) and clean-up your code accordingly.
 
 ## Do you intend to add a new feature or change an existing one?
 
 * You can suggest your change on the [fastai forum](http://forums.fast.ai/) to see if others are interested or want to help.
-* PRs are welcome with a complete description of the new feature and an example of how it's use. Be sure to document your code and read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md).
+* PRs are welcome with a complete description of the new feature and an example of how it's use. Be sure to document your code and read the [doc on code style](https://github.com/fastai/fastai_pytorch/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md).
 
 ## Do you have questions about the source code?
 
@@ -63,11 +63,11 @@ This is done automatically during `diff`/`commit` git operations, but you need t
 
 Therefore, your developing process will always start with:
 
-    git clone https://github.com/fastai/fastai_v1
-    cd fastai_v1
+    git clone https://github.com/fastai/fastai_pytorch
+    cd fastai_pytorch
     tools/trust-origin-git-config
 
-The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
+The last command tells git to invoke configuration stored in `fastai_pytorch/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
 
 Note: windows users, not using bash emulation, will need to invoke the command as:
 
@@ -77,7 +77,7 @@ If you skip this configuration your commit/PR involving notebooks will not be ac
 
 Note: we can't make this happen automatically, since git will ignore a repository-stored `.gitconfig` for security reasons, unless a user will tell git to use it (and thus trust it).
 
-If you'd like to check whether you already trusted git with using `fastai_v1/.gitconfig` please look inside `fastai_v1/.git/config`, which should have this entry:
+If you'd like to check whether you already trusted git with using `fastai_pytorch/.gitconfig` please look inside `fastai_v1/.git/config`, which should have this entry:
 
     [include]
             path = ../.gitconfig

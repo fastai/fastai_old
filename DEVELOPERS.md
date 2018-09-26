@@ -59,13 +59,13 @@ or
 
 And then to the mashup:
 
-    cd fastai_v1/fastai/
+    cd fastai_pytorch/fastai/
     pipreqs --savepath req1.txt .
     pigar -p req2.txt
     perl -pi -e 's| ||g' req2.txt
     cat req1.txt req2.txt | grep "##" | sort | uniq > req.txt
 
-So this gives us `requirements.txt`-like file which can be used for pip. But we will get pip to sort things out from `setup.py`, by putting `.` inside `fastai_v1/requirements.txt`.
+So this gives us `requirements.txt`-like file which can be used for pip. But we will get pip to sort things out from `setup.py`, by putting `.` inside `fastai_pytorch/requirements.txt`.
 
 Now make a list for `setup.py`'s `install_requires`:
 
@@ -147,3 +147,12 @@ May be add: `--force-reinstall` or manually remove preinstalled `fastai` first f
 
 
 ### Conda
+
+
+[Tutorial](https://conda.io/docs/user-guide/tutorials/build-pkgs.html#building-and-installing)
+
+conda-build expects the build recipe under `fastai/meta.yaml`.
+
+Check that it's valid:
+
+   conda-build --check fastai meta.yaml
