@@ -77,8 +77,8 @@ class ImageBase(ItemBase):
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    "Supports appying transforms to image data"
-    def __init__(self, px)->'Image':
+    "Supports applying transforms to image data"
+    def __init__(self, px:Tensor):
         "create from raw tensor image data `px`"
         self._px = px
         self._logit_px=None
@@ -100,7 +100,7 @@ class Image(ImageBase):
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
 
     def refresh(self)->None:
-        "Applies any logit or affine transfers that have been "
+        "Applies any logit, flow, or affine transfers that have been sent to the `Image`"
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
