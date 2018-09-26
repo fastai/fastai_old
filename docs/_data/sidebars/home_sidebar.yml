@@ -43,7 +43,6 @@ entries:
     - output: web
       title: tta
       url: tta.html
-    - output: web
       subfolders:
       - output: web
         subfolderitems:
@@ -72,7 +71,6 @@ entries:
           title: callbacks.fp16
           url: callbacks.fp16.html
         title: callbacks
-      title: ''
     output: web
     title: Training
   - folderitems:
@@ -82,7 +80,6 @@ entries:
     - output: web
       title: colab
       url: colab.html
-    - output: web
       subfolders:
       - output: web
         subfolderitems:
@@ -102,7 +99,6 @@ entries:
           title: vision.data
           url: vision.data.html
         title: vision
-      title: ''
     output: web
     title: Applications
   - folderitems:
