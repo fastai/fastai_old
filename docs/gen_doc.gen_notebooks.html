@@ -83,15 +83,58 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The first (optional) step is to create a notebook "skeleton" - i.e. a notebook containing all the classes, methods, functions, and other symbols you wish to document. You can create this manually if you prefer, however using the automatic approach can save you some time and ensure you don't miss anything. For the initial skelton, use <a href="fastai.gen_doc.gen_notebooks.html#create_module_page"><code>create_module_page</code></a>, which creates a new module from scratch. To update it later with any newly-added symbols, use <a href="fastai.gen_doc.gen_notebooks.html#update_module_page"><code>update_module_page</code></a>.</p>
+<p>The first (optional) step is to create a notebook "skeleton" - i.e. a notebook containing all the classes, methods, functions, and other symbols you wish to document. You can create this manually if you prefer, however using the automatic approach can save you some time and ensure you don't miss anything. For the initial skelton, use <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#create_module_page"><code>create_module_page</code></a>, which creates a new module from scratch. To update it later with any newly-added symbols, use <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#update_module_page"><code>update_module_page</code></a>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=create_module_page></a><code>create_module_page</code>(<code>mod</code>, <code>dest_path</code>, <code>force</code>=<code>False</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/gen_notebooks.py#L99">[source]</a></div></h4>
+<p>Creates the documentation notebook for module <code>mod_name</code> in path <code>dest_path</code></p>
+<ul>
+<li><em>mod</em>: the module</li>
+<li><em>dest_path</em>: the folder in which to generate the notebook</li>
+<li><em>force</em>: if False, will raise an exception if the notebook is already present</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=update_module_page></a><code>update_module_page</code>(<code>mod</code>, <code>dest_path</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/gen_notebooks.py#L207">[source]</a></div></h4>
+<p>Updates the documentation notebook of a given module</p>
+<ul>
+<li><em>mod</em>: the module</li>
+<li><em>dest_path</em>: the folder in which to generate the notebook</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
@@ -106,7 +149,7 @@ summary:
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">update_module_page</span><span class="p">(</span><span class="n">nbdoc</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">update_module_page</span><span class="p">(</span><span class="n">gen_doc</span><span class="o">.</span><span class="n">gen_notebooks</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -116,15 +159,61 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>You can also generate and update <em>all</em> modules in a package using <a href="fastai.gen_doc.gen_notebooks.html#generate_all"><code>generate_all</code></a> and <a href="fastai.gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a>.</p>
+<p>You can also generate and update <em>all</em> modules in a package using <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#generate_all"><code>generate_all</code></a> and <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=generate_all></a><code>generate_all</code>(<code>pkg_name</code>, <code>dest_path</code>, <code>exclude</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/gen_notebooks.py#L144">[source]</a></div></h4>
+<p>Generate the documentation for all the modules in <code>pkg_name</code></p>
+<ul>
+<li><em>pkg_name</em>: name of the package to document</li>
+<li><em>dest_path</em>: the folder in which to generate the notebooks</li>
+<li><em>exclude</em>: names of subdirectories to ignore</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=update_all></a><code>update_all</code></h4>
+<p>(<code>pkg_name</code>, <code>dest_path</code>, <code>exclude</code>=<code>None</code>, <code>create_missing</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/gen_notebooks.py#L244">[source]</a></div></p>
+<p>Updates all the notebooks in <code>pkg_name</code></p>
+<ul>
+<li><em>pkg_name</em>: name of the package to document</li>
+<li><em>dest_path</em>: the folder in which to generate the notebooks</li>
+<li><em>exclude</em>: names of subdirectories to ignore</li>
+<li><em>create_missing</em>: create docs if they don't exist</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
@@ -135,7 +224,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As a convenience method, <a href="fastai.gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a> method</p>
+<p>As a convenience method, <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a> method</p>
 
 </div>
 </div>
@@ -164,26 +253,6 @@ summary:
 </pre></div>
 
 </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_text output_error">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-fg">&lt;ipython-input-2-c7e0098cab6d&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>fastai_pkg <span class="ansi-blue-fg">=</span> Path<span class="ansi-blue-fg">(</span>fastai<span class="ansi-blue-fg">.</span>__file__<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>parent
-<span class="ansi-green-intense-fg ansi-bold">      2</span> update_all<span class="ansi-blue-fg">(</span>fastai_pkg<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;.&#39;</span><span class="ansi-blue-fg">,</span> create_missing<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">NameError</span>: name &#39;Path&#39; is not defined</pre>
-</div>
-</div>
-
 </div>
 </div>
 
@@ -278,6 +347,21 @@ summary:
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<a href='../docs/gen_doc.gen_notebooks.html' target='_blank'>../docs/gen_doc.gen_notebooks.html</a><br>
+</div>
+
+</div>
+
 </div>
 </div>
 

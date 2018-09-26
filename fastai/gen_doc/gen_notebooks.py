@@ -148,7 +148,6 @@ def generate_all(pkg_name, dest_path, exclude=None):
     for mod_name in mod_files:
         mod = import_mod(mod_name)
         if mod is None: continue
-        print(f'Generating module page of {mod_name}')
         create_module_page(mod, dest_path)
 
 def read_nb(fname):
@@ -250,7 +249,6 @@ def update_all(pkg_name, dest_path, exclude=None, create_missing=True):
         mod = import_mod(f)
         if mod is None: continue
         if os.path.exists(get_doc_path(mod, dest_path)):
-            print(f'Updating module page of {f}')
             update_module_page(mod, dest_path)
         elif create_missing:
             print(f'Creating module page of {f}')
