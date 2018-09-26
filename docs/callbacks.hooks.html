@@ -1,0 +1,633 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="callbacks.hooks">callbacks.hooks<a class="anchor-link" href="#callbacks.hooks">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Type an introduction of the package here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=ActivationStats></a><em>class</em> <code>ActivationStats</code></h3>
+<p>(<code>learn</code>:<a href="fastai.basic_train.html#Learner"><code>Learner</code></a>, <code>modules</code>:<code>Sequence</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>do_remove</code>:<code>bool</code>=<code>True</code>) :: Inherits (<a href="fastai.callbacks.hooks.html#HookCallback"><code>HookCallback</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L62">[source]</a></div></p>
+<p>Callback that record the activations</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#ActivationStats"><code>ActivationStats</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=hook></a><code>hook</code></h4>
+<p>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>i</code>:<code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>o</code>:<code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]]) -&gt; <code>Tuple</code>[<code>OneEltTensor</code>, <code>OneEltTensor</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L68">[source]</a></div></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ActivationStats.hook</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_end></a><code>on_batch_end</code>(<code>kwargs</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L70">[source]</a></div></h4>
+<p>Called at the end of the batch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ActivationStats.on_batch_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_begin></a><code>on_train_begin</code>(<code>kwargs</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L64">[source]</a></div></h4>
+<p>To initialize constants in the callback.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ActivationStats.on_train_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_end></a><code>on_train_end</code>(<code>kwargs</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L71">[source]</a></div></h4>
+<p>Useful for cleaning up things and saving files/models</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ActivationStats.on_train_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=ClassificationInterpretation></a><em>class</em> <code>ClassificationInterpretation</code></h3>
+<p>(<code>data</code>:<a href="fastai.data.html#DataBunch"><code>DataBunch</code></a>, <code>y_pred</code>:<code>Tensor</code>, <code>y_true</code>:<code>Tensor</code>, <code>loss_class</code>:<code>type</code>=<code>&lt;class 'torch.nn.modules.loss.CrossEntropyLoss'&gt;</code>, <code>sigmoid</code>:<code>bool</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L83">[source]</a></div></p>
+<p>Interpretation methods for classification models</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#ClassificationInterpretation"><code>ClassificationInterpretation</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=confusion_matrix></a><code>confusion_matrix</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L107">[source]</a></div></h4>
+<p>Confusion matrix as an <code>np.ndarray</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ClassificationInterpretation.confusion_matrix</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot_confusion_matrix></a><code>plot_confusion_matrix</code></h4>
+<p>(<code>normalize</code>:<code>bool</code>=<code>False</code>, <code>title</code>:<code>str</code>=<code>'Confusion matrix'</code>, <code>cmap</code>:<code>Any</code>=<code>'Blues'</code>, <code>figsize</code>:<code>tuple</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L113">[source]</a></div></p>
+<p>Plot the confusion matrix</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ClassificationInterpretation.plot_confusion_matrix</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot_top_losses></a><code>plot_top_losses</code>(<code>k</code>, <code>largest</code>=<code>True</code>, <code>figsize</code>=<code>(12, 12)</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L96">[source]</a></div></h4>
+<p>Show images in <code>top_losses</code> along with their loss, label, and prediction</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ClassificationInterpretation.plot_top_losses</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=top_losses></a><code>top_losses</code>(<code>k</code>, <code>largest</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L92">[source]</a></div></h4>
+<p><code>k</code> largest(/smallest) losses</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ClassificationInterpretation.top_losses</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Hook></a><em>class</em> <code>Hook</code></h3>
+<p>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>hook_func</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>Any</code>], <code>is_forward</code>:<code>bool</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L9">[source]</a></div></p>
+<p>Creates a hook</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#Hook"><code>Hook</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=hook_fn></a><code>hook_fn</code></h4>
+<p>(<code>module</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>input</code>:<code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>output</code>:<code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]])<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L17">[source]</a></div></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Hook.hook_fn</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=remove></a><code>remove</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L22">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Hook.remove</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=HookCallback></a><em>class</em> <code>HookCallback</code></h3>
+<p>(<code>learn</code>:<a href="fastai.basic_train.html#Learner"><code>Learner</code></a>, <code>modules</code>:<code>Sequence</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>do_remove</code>:<code>bool</code>=<code>True</code>) :: Inherits (<a href="fastai.basic_train.html#LearnerCallback"><code>LearnerCallback</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L44">[source]</a></div></p>
+<p>Callback that registers given hooks</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#HookCallback"><code>HookCallback</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_begin></a><code>on_train_begin</code>(<code>kwargs</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L50">[source]</a></div></h4>
+<p>To initialize constants in the callback.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>HookCallback.on_train_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_end></a><code>on_train_end</code>(<code>kwargs</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L56">[source]</a></div></h4>
+<p>Useful for cleaning up things and saving files/models</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>HookCallback.on_train_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=remove></a><code>remove</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L59">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>HookCallback.remove</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Hooks></a><em>class</em> <code>Hooks</code></h3>
+<p>(<code>ms</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>], <code>hook_func</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>None</code>[<code>Tensor</code>, <code>Collection</code>[<code>str</code>]], <code>Any</code>], <code>is_forward</code>:<code>bool</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L27">[source]</a></div></p>
+<p>Creates several hooks</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#Hooks"><code>Hooks</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=remove></a><code>remove</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L38">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Hooks.remove</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=hook_output></a><code>hook_output</code></h4>
+<p>(<code>module</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>) -&gt; <a href="fastai.callbacks.hooks.html#Hook"><code>Hook</code></a><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L41">[source]</a></div></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#hook_output"><code>hook_output</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=hook_outputs></a><code>hook_outputs</code></h4>
+<p>(<code>modules</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]) -&gt; <a href="fastai.callbacks.hooks.html#Hooks"><code>Hooks</code></a><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L42">[source]</a></div></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#hook_outputs"><code>hook_outputs</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=model_sizes></a><code>model_sizes</code></h4>
+<p>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>size</code>:<code>tuple</code>=<code>(256, 256)</code>, <code>full</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Tuple</code>[<code>List</code>[<code>List</code>[<code>int</code>]], <code>Tensor</code>, <a href="fastai.callbacks.hooks.html#Hooks"><code>Hooks</code></a>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callbacks/hooks.py#L73">[source]</a></div></p>
+<p>Passes a dummy input through the model to get the various sizes</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callbacks.hooks.html#model_sizes"><code>model_sizes</code></a></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+

@@ -1,0 +1,619 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="text.transform">text.transform<a class="anchor-link" href="#text.transform">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Type an introduction of the package here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>default_rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces, sub_br]</code> <div style="text-align: right"><a href="../fastai/text/transform.py#L77">[source]</a></div></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>default_spec_tok = [BOS, FLD, UNK, PAD]</code> <div style="text-align: right"><a href="../fastai/text/transform.py#L78">[source]</a></div></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=BaseTokenizer></a><em>class</em> <code>BaseTokenizer</code>(<code>lang</code>:<code>str</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L11">[source]</a></div></h3>
+<p>Basic class for a tokenizer function.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=add_special_cases></a><code>add_special_cases</code>(<code>toks</code>:<code>Collection</code>[<code>str</code>])<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L17">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>BaseTokenizer.add_special_cases</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=tokenizer></a><code>tokenizer</code>(<code>t</code>:<code>Doc</code>) -&gt; <code>List</code>[<code>str</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L16">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>BaseTokenizer.tokenizer</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=SpacyTokenizer></a><em>class</em> <code>SpacyTokenizer</code>(<code>lang</code>:<code>str</code>) :: Inherits (<a href="fastai.text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L20">[source]</a></div></h3>
+<p>Little wrapper around a <code>spacy</code> tokenizer</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#SpacyTokenizer"><code>SpacyTokenizer</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=add_special_cases></a><code>add_special_cases</code>(<code>toks</code>:<code>Collection</code>[<code>str</code>])<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L29">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>SpacyTokenizer.add_special_cases</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=tokenizer></a><code>tokenizer</code>(<code>t</code>:<code>Doc</code>) -&gt; <code>List</code>[<code>str</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L26">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>SpacyTokenizer.tokenizer</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Tokenizer></a><em>class</em> <code>Tokenizer</code></h3>
+<p>(<code>tok_fn</code>:<code>Callable</code>[]=<code>&lt;class 'fastai.text.transform.SpacyTokenizer'&gt;</code>, <code>lang</code>:<code>str</code>=<code>'en'</code>, <code>rules</code>:<code>Collection</code>[<code>Callable</code>[<code>str</code>, <code>str</code>]]=<code>None</code>, <code>special_cases</code>:<code>Collection</code>[<code>str</code>]=<code>None</code>, <code>n_cpus</code>:<code>int</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L81">[source]</a></div></p>
+<p>Puts together rules, a tokenizer function and a language to process text with multiprocessing</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#Tokenizer"><code>Tokenizer</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=proc_text></a><code>proc_text</code></h4>
+<p>(<code>t</code>:<code>str</code>, <code>tok</code>:<a href="fastai.text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a>) -&gt; <code>List</code>[<code>str</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L95">[source]</a></div></p>
+<p>Processes one text</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Tokenizer.proc_text</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=process_all></a><code>process_all</code></h4>
+<p>(<code>texts</code>:<code>Collection</code>[<code>str</code>]) -&gt; <code>List</code>[<code>List</code>[<code>str</code>]]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L106">[source]</a></div></p>
+<p>Processes a list of texts in several processes</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Tokenizer.process_all</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=process_all_1></a><code>process_all_1</code></h4>
+<p>(<code>texts</code>:<code>Collection</code>[<code>str</code>]) -&gt; <code>List</code>[<code>List</code>[<code>str</code>]]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L100">[source]</a></div></p>
+<p>Processes a list of texts in one process</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Tokenizer.process_all_1</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Vocab></a><em>class</em> <code>Vocab</code>(<code>path</code>:<code>None</code>[<code>Path</code>, <code>str</code>])<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L112">[source]</a></div></h3>
+<p>Contains the correspondance between numbers and tokens and numericalizes</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#Vocab"><code>Vocab</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=create></a><code>create</code></h4>
+<p>(<code>path</code>:<code>None</code>[<code>Path</code>, <code>str</code>], <code>tokens</code>:<code>Collection</code>[<code>Collection</code>[<code>str</code>]], <code>max_vocab</code>:<code>int</code>, <code>min_freq</code>:<code>int</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L127">[source]</a></div></p>
+<p>Create a vocabulary from a set of tokens.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Vocab.create</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=numericalize></a><code>numericalize</code></h4>
+<p>(<code>t</code>:<code>Collection</code>[<code>str</code>]) -&gt; <code>List</code>[<code>int</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L119">[source]</a></div></p>
+<p>Converts a list of tokens to their ids</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Vocab.numericalize</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=textify></a><code>textify</code></h4>
+<p>(<code>nums</code>:<code>Collection</code>[<code>int</code>]) -&gt; <code>List</code>[<code>str</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L123">[source]</a></div></p>
+<p>Converts a list of ids to their tokens</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Vocab.textify</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=deal_caps></a><code>deal_caps</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L62">[source]</a></div></h4>
+<p>Replace words in all caps</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#deal_caps"><code>deal_caps</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=fixup></a><code>fixup</code>(<code>x</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L69">[source]</a></div></h4>
+<p>List of replacements from html strings</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#fixup"><code>fixup</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=replace_rep></a><code>replace_rep</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L46">[source]</a></div></h4>
+<p>Replace repetitions at the character level</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#replace_rep"><code>replace_rep</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=replace_wrep></a><code>replace_wrep</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L54">[source]</a></div></h4>
+<p>Replace word repetitions</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#replace_wrep"><code>replace_wrep</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=rm_useless_spaces></a><code>rm_useless_spaces</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L42">[source]</a></div></h4>
+<p>Remove multiple spaces</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#rm_useless_spaces"><code>rm_useless_spaces</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=spec_add_spaces></a><code>spec_add_spaces</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L38">[source]</a></div></h4>
+<p>Add spaces between special characters</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#spec_add_spaces"><code>spec_add_spaces</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=sub_br></a><code>sub_br</code>(<code>t</code>:<code>str</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L33">[source]</a></div></h4>
+<p>Replaces the <br /> by</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.text.transform.html#sub_br"><code>sub_br</code></a></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+

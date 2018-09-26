@@ -1,0 +1,1103 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="callback">callback<a class="anchor-link" href="#callback">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Type an introduction of the package here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Callback></a><em>class</em> <code>Callback</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L116">[source]</a></div></h3>
+<p>Base class for callbacks that want to record values, dynamically change learner params, etc</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#Callback"><code>Callback</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_begin></a><code>on_backward_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L130">[source]</a></div></h4>
+<p>Returns the loss (which can allow us to modify it, for instance for reg functions)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_backward_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_end></a><code>on_backward_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L134">[source]</a></div></h4>
+<p>Called after backprop but before optimizer step. Useful for true weight decay in AdamW</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_backward_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_begin></a><code>on_batch_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L124">[source]</a></div></h4>
+<p>Set HP before the step is done. Returns xb, yb (which can allow us to modify the input at that step if needed)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_batch_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_end></a><code>on_batch_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L140">[source]</a></div></h4>
+<p>Called at the end of the batch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_batch_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L121">[source]</a></div></h4>
+<p>At the beginning of each epoch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_epoch_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_end></a><code>on_epoch_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>bool</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L143">[source]</a></div></h4>
+<p>Called at the end of an epoch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_epoch_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_loss_begin></a><code>on_loss_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L127">[source]</a></div></h4>
+<p>Called after forward pass but before loss has been computed. Returns the output (which can allow us to modify it)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_loss_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_step_end></a><code>on_step_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L137">[source]</a></div></h4>
+<p>Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_step_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_begin></a><code>on_train_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L118">[source]</a></div></h4>
+<p>To initialize constants in the callback.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_train_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_end></a><code>on_train_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L146">[source]</a></div></h4>
+<p>Useful for cleaning up things and saving files/models</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Callback.on_train_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=CallbackHandler></a><em>class</em> <code>CallbackHandler</code></h3>
+<p>(<code>callbacks</code>:<code>Collection</code>[<a href="fastai.callback.html#Callback"><code>Callback</code></a>], <code>beta</code>:<code>float</code>=<code>0.98</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L168">[source]</a></div></p>
+<p>Manages all of the registered callback objects, beta is for smoothing loss</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#CallbackHandler"><code>CallbackHandler</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_begin></a><code>on_backward_begin</code>(<code>loss</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L209">[source]</a></div></h4>
+<p>Handle gradient calculation on <code>loss</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_backward_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_end></a><code>on_backward_end</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L218">[source]</a></div></h4>
+<p>Handle end of gradient calc</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_backward_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_begin></a><code>on_batch_begin</code></h4>
+<p>(<code>xb</code>:<code>Tensor</code>, <code>yb</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L193">[source]</a></div></p>
+<p>Handle new batch <code>xb</code>,<code>yb</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_batch_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_end></a><code>on_batch_end</code>(<code>loss</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L225">[source]</a></div></h4>
+<p>Handle end of processing one batch with <code>loss</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_batch_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L188">[source]</a></div></h4>
+<p>Handle new epoch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_epoch_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_end></a><code>on_epoch_end</code></h4>
+<p>(<code>val_metrics</code>:<code>Collection</code>[<code>None</code>[<code>Tensor</code>, <code>Number</code>]]) -&gt; <code>bool</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L233">[source]</a></div></p>
+<p>Epoch is done, process <code>val_metrics</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_epoch_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_loss_begin></a><code>on_loss_begin</code>(<code>out</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L201">[source]</a></div></h4>
+<p>Handle start of loss calculation with model output <code>out</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_loss_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_step_end></a><code>on_step_end</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L221">[source]</a></div></h4>
+<p>Handle end of optimization step</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_step_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_begin></a><code>on_train_begin</code></h4>
+<p>(<code>epochs</code>:<code>int</code>, <code>pbar</code>:<code>None</code>[<code>MasterBar</code>, <code>ProgressBar</code>], <code>metrics</code>:<code>Collection</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>None</code>[<code>Tensor</code>, <code>Number</code>]]]) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L182">[source]</a></div></p>
+<p>About to start learning</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_train_begin</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_end></a><code>on_train_end</code></h4>
+<p>(<code>exception</code>:<code>None</code>[<code>bool</code>, <code>Exception</code>]) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L240">[source]</a></div></p>
+<p>Handle end of training, <code>exception</code> is an <code>Exception</code> or False if no exceptions during training</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CallbackHandler.on_train_end</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=OptimWrapper></a><em>class</em> <code>OptimWrapper</code></h3>
+<p>(<code>opt</code>:<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>, <code>wd</code>:<code>None</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.0</code>, <code>true_wd</code>:<code>bool</code>=<code>False</code>, <code>bn_wd</code>:<code>bool</code>=<code>True</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L7">[source]</a></div></p>
+<p>Basic wrapper around an optimizer to simplify HP changes</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#OptimWrapper"><code>OptimWrapper</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=create></a><code>create</code></h4>
+<p>(<code>opt_fn</code>:<code>None</code>[<code>type</code>, <code>Callable</code>[]], <code>lr</code>:<code>None</code>[<code>float</code>, <code>Tuple</code>[], <code>List</code>[<code>T</code>]], <code>layer_groups</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>], <code>kwargs</code>:<code>Any</code>) -&gt; <a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L16">[source]</a></div></p>
+<p>Create an optim.Optimizer from <code>opt_fn</code> with <code>lr</code>. Set lr on `layer_groups``</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.create</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=read_defaults></a><code>read_defaults</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L93">[source]</a></div></h4>
+<p>Read the values inside the optimizer for the hyper-parameters</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.read_defaults</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=read_val></a><code>read_val</code></h4>
+<p>(<code>key</code>:<code>str</code>) -&gt; <code>None</code>[<code>List</code>[<code>float</code>], <code>Tuple</code>[<code>List</code>[<code>float</code>], <code>List</code>[<code>float</code>]]]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L110">[source]</a></div></p>
+<p>Read a hyper-parameter key in the optimizer dictionary.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.read_val</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=set_val></a><code>set_val</code></h4>
+<p>(<code>key</code>:<code>str</code>, <code>val</code>:<code>Any</code>, <code>bn_groups</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Any</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L102">[source]</a></div></p>
+<p>Set the values inside the optimizer dictionary at the key</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.set_val</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=step></a><code>step</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L30">[source]</a></div></h4>
+<p>Set weight decay and step optimizer</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.step</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=zero_grad></a><code>zero_grad</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L41">[source]</a></div></h4>
+<p>Clear optimizer gradients</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>OptimWrapper.zero_grad</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=SmoothenValue></a><em>class</em> <code>SmoothenValue</code>(<code>beta</code>:<code>float</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L150">[source]</a></div></h3>
+<p>Creates a smooth moving average for a value (loss, etc)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#SmoothenValue"><code>SmoothenValue</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=add_value></a><code>add_value</code>(<code>val</code>:<code>float</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L156">[source]</a></div></h4>
+<p>Add current value to calculate updated smoothed value</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>SmoothenValue.add_value</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Stepper></a><em>class</em> <code>Stepper</code></h3>
+<p>(<code>vals</code>:<code>None</code>[<code>float</code>, <code>Tuple</code>[<code>float</code>, <code>float</code>]], <code>n_iter</code>:<code>int</code>, <code>func</code>:<code>Optional</code>[<code>Callable</code>[<code>Number</code>, <code>Number</code>, <code>float</code>, <code>Number</code>]]=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L265">[source]</a></div></p>
+<p>Used to "step" from start,end (<code>vals</code>) over <code>n_iter</code> iterations on a schedule defined by <code>func</code> (defaults to linear)</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#Stepper"><code>Stepper</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=step></a><code>step</code>() -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L274">[source]</a></div></h4>
+<p>Return next value along annealed schedule</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Stepper.step</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=annealing_cos></a><code>annealing_cos</code></h4>
+<p>(<code>start</code>:<code>Number</code>, <code>end</code>:<code>Number</code>, <code>pct</code>:<code>float</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L253">[source]</a></div></p>
+<p>Cosine anneal from <code>start</code> to <code>end</code> as pct goes from 0.0 to 1.0</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#annealing_cos"><code>annealing_cos</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=annealing_exp></a><code>annealing_exp</code></h4>
+<p>(<code>start</code>:<code>Number</code>, <code>end</code>:<code>Number</code>, <code>pct</code>:<code>float</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L250">[source]</a></div></p>
+<p>Exponentially anneal from <code>start</code> to <code>end</code> as pct goes from 0.0 to 1.0</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#annealing_exp"><code>annealing_exp</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=annealing_linear></a><code>annealing_linear</code></h4>
+<p>(<code>start</code>:<code>Number</code>, <code>end</code>:<code>Number</code>, <code>pct</code>:<code>float</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L247">[source]</a></div></p>
+<p>Linearly anneal from <code>start</code> to <code>end</code> as pct goes from 0.0 to 1.0</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#annealing_linear"><code>annealing_linear</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=annealing_no></a><code>annealing_no</code></h4>
+<p>(<code>start</code>:<code>Number</code>, <code>end</code>:<code>Number</code>, <code>pct</code>:<code>float</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L244">[source]</a></div></p>
+<p>No annealing, always return <code>start</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#annealing_no"><code>annealing_no</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=annealing_poly></a><code>annealing_poly</code>(<code>degree</code>:<code>Number</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L261">[source]</a></div></h4>
+<p>Anneal polynomically from <code>start</code> to <code>end</code> as pct goes from 0.0 to 1.0</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#annealing_poly"><code>annealing_poly</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=do_annealing_poly></a><code>do_annealing_poly</code></h4>
+<p>(<code>start</code>:<code>Number</code>, <code>end</code>:<code>Number</code>, <code>pct</code>:<code>float</code>, <code>degree</code>:<code>Number</code>) -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L258">[source]</a></div></p>
+<p>Helper function for <code>anneal_poly</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.callback.html#do_annealing_poly"><code>do_annealing_poly</code></a></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+

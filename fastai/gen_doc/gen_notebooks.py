@@ -121,11 +121,12 @@ def create_module_page(mod, dest_path, force=False):
             for name in in_ft_names:
                 cells += _symbol_skeleton(name)
     nb['cells'] = init_cell + cells
-    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),
-                       'w' if force else 'x'))
-    execute_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
 
-_default_exclude = ['.ipynb_checkpoints', '__pycache__']
+    doc_path = get_doc_path(mod, dest_path)
+    json.dump(nb, open(doc_path, 'w' if force else 'x'))
+    execute_nb(doc_path)
+
+_default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py']
 
 def get_module_names(path_dir, exclude=None):
     if exclude is None: exclude = _default_exclude
@@ -133,9 +134,11 @@ def get_module_names(path_dir, exclude=None):
     files = path_dir.glob('*')
     res = []
     for f in files:
+        if f.is_dir() and f.name in exclude: continue # exclude directories
+        if any([f.name.endswith(ex) for ex in exclude]): continue # exclude extensions
+
         if f.name[-3:] == '.py': res.append(f'{path_dir.name}.{f.name[:-3]}')
-        elif f.is_dir() and not f.name in exclude:
-            res += [f'{path_dir.name}.{name}' for name in get_module_names(f)]
+        elif f.is_dir(): res += [f'{path_dir.name}.{name}' for name in get_module_names(f)]
     return res
 
 def generate_all(pkg_name, dest_path, exclude=None):
@@ -143,8 +146,10 @@ def generate_all(pkg_name, dest_path, exclude=None):
     if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)
     for mod_name in mod_files:
+        mod = import_mod(mod_name)
+        if mod is None: continue
         print(f'Generating module page of {mod_name}')
-        create_module_page(mod_name, dest_path)
+        create_module_page(mod, dest_path)
 
 def read_nb(fname):
     "Read a notebook and returns its corresponding json"
@@ -195,10 +200,16 @@ def insert_cells(cells, pos_dict, ft_name):
         pos_dict = update_pos(pos_dict, ft_name, 2)
     return cells, pos_dict
 
+def get_doc_path(mod, dest_path):
+    strip_name = strip_fastai(mod.__name__)
+    return os.path.join(dest_path,f'{strip_name}.ipynb')
+
+
 def update_module_page(mod, dest_path):
     "Updates the documentation notebook of a given module"
+    doc_path = get_doc_path(mod, dest_path)
     strip_name = strip_fastai(mod.__name__)
-    nb = read_nb(os.path.join(dest_path,f'{strip_name}.ipynb'))
+    nb = read_nb(doc_path)
     cells = nb['cells']
 
     link_markdown_cells(cells, mod)
@@ -227,12 +238,20 @@ def update_module_page(mod, dest_path):
                 if name not in pos_dict.keys():
                     cells, pos_dict = insert_cells(cells, pos_dict, name)
     nb['cells'] = cells
-    json.dump(nb, open(os.path.join(dest_path,f'{strip_name}.ipynb'),'w'))
-    #execute_nb(os.path.join(dest_path,f'{mod_name}.ipynb'))
+    json.dump(nb, open(doc_path,'w'))
+    #execute_nb(doc_path)
 
-def update_all(pkg_name, dest_path, exclude=('.ipynb_checkpoints', '__pycache__')):
+
+def update_all(pkg_name, dest_path, exclude=None, create_missing=True):
     "Updates all the notebooks in `pkg_name`"
+    if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)
     for f in mod_files:
-        print(f'Updating module page of {f}')
-        update_module_page(f, dest_path)
+        mod = import_mod(f)
+        if mod is None: continue
+        if os.path.exists(get_doc_path(mod, dest_path)):
+            print(f'Updating module page of {f}')
+            update_module_page(mod, dest_path)
+        elif create_missing:
+            print(f'Creating module page of {f}')
+            create_module_page(mod, dest_path)

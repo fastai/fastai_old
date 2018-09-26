@@ -1,0 +1,120 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="gen_doc.convert2html">gen_doc.convert2html<a class="anchor-link" href="#gen_doc.convert2html">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is the module to convert a jupyter notebook to an html page. It will normally render everything the way it was in the notebooks, by suppressing the input of the code cells with input cells masked, and converting the links between notebooks in links between the html pages.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span> 
+<span class="kn">from</span> <span class="nn">fastai.gen_doc.convert2html</span> <span class="k">import</span> <span class="o">*</span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=convert_nb></a><code>convert_nb</code>(<code>fname</code>, <code>dest_path</code>=<code>'.'</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/convert2html.py#L31">[source]</a></div></h4>
+<p>Converts a given notebook in an html page.</p>
+<ul>
+<li><em>fname</em>: name of the notebook</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Convert-all-to-html">Convert all to html<a class="anchor-link" href="#Convert-all-to-html">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=convert_all></a><code>convert_all</code>(<code>folder</code>, <code>dest_path</code>=<code>'.'</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/convert2html.py#L40">[source]</a></div></h4>
+<p>Converts all the notebooks in a given folder in a html pages.</p>
+<ul>
+<li><em>folder</em>: name of the folder</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Usage:</span>
+<span class="n">convert_all</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;../docs&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;generator object Path.glob at 0x1a1cddced0&gt;
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+ 
+
