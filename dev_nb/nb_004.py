@@ -6,8 +6,8 @@
 
 from nb_003 import *
 from torch import Tensor,tensor
-from fast_progress import master_bar,progress_bar
-from fast_progress.fast_progress import MasterBar, ProgressBar
+from fastprogress import master_bar,progress_bar
+from fastprogress.fastprogress import MasterBar, ProgressBar
 import re
 from typing import Iterator
 

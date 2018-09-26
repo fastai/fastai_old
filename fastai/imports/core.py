@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from copy import copy, deepcopy
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
-from fast_progress import master_bar, progress_bar
+from fastprogress import master_bar, progress_bar
 from functools import partial, reduce
 from IPython.core.debugger import set_trace
 from matplotlib import patches, patheffects
@@ -24,7 +24,7 @@ from spacy.symbols import ORTH
 from warnings import warn
 
 #for type annotations
-from fast_progress.fast_progress import MasterBar, ProgressBar
+from fastprogress.fastprogress import MasterBar, ProgressBar
 from matplotlib.patches import Patch
 from numbers import Number
 from pandas import Series, DataFrame
