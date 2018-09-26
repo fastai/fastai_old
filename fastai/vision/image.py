@@ -133,7 +133,7 @@ class Image(ImageBase):
     @flow.setter
     def flow(self,v:FlowField): self._flow=v
 
-    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image':
+    def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any):
         "Equivalent to `image = sigmoid(func(logit(image)))`"
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
