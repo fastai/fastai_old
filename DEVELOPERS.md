@@ -146,7 +146,11 @@ May be add: `--force-reinstall` or manually remove preinstalled `fastai` first f
 
 
 
-### Conda
+### Conda ###
+
+Install build tools:
+
+    conda install conda-verify conda-build
 
 
 [Tutorial](https://conda.io/docs/user-guide/tutorials/build-pkgs.html#building-and-installing)
@@ -155,4 +159,40 @@ conda-build expects the build recipe under `fastai/meta.yaml`.
 
 Check that it's valid:
 
-   conda-build --check fastai meta.yaml
+    conda-build --check fastai meta.yaml
+
+    conda-verify ./conda/
+
+To validate a package:
+
+    conda-verify path/to/package.tar.bz2
+
+To render the final meta.yaml (after jinja2 processing):
+
+    conda-render --conda/
+
+If there is a missing package from conda, but available on pypi, build it:
+
+    conda skeleton pypi fast_progress
+    conda-build fast_progress
+
+# XXX: what do we do with it then? I have it built:
+/conda-bld/linux-64/fast_progress-0.1.4-py36_0.tar.bz2
+# How to make it available to users and satisfy build requirements?
+
+Can install it locally:
+
+    conda install --use-local fast_progress
+
+
+To upload the package to the channel use:
+https://conda.io/docs/user-guide/tutorials/build-pkgs.html#optional-uploading-new-packages-to-anaconda-org
+anaconda upload -u XXX ~/anaconda3/conda-bld/linux-64/xxx.tar
+
+Docs:
+
+meta.yaml written using jinja2 python templating language. API docs: http://jinja.pocoo.org/docs/2.10/api/#high-level-api
+
+Support:
+
+ chat channel https://gitter.im/conda/conda-build
