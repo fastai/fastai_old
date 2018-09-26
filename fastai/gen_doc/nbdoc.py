@@ -5,7 +5,7 @@ from .docstrings import *
 from .core import *
 
 __all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
-           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor']
+           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
 
 MODULE_NAME = 'fastai'
 SOURCE_LINK = 'https://github.com/fastai/fastai_pytorch/blob/master/'
