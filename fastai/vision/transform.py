@@ -2,8 +2,8 @@ from ..torch_core import *
 from .image import *
 
 _all__ = ['apply_perspective', 'brightness', 'contrast', 'crop', 'crop_pad', 'dihedral', 'flip_lr', 'get_transforms', 
-          'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_zoom', 'rotate', 'skew', 'squish', 'symmetric_warp', 'tilt', 
-          'zoom', 'zoom_crop', 'zoom_squish']
+          'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_resize_crop', 'rand_zoom', 'rotate', 'skew', 'squish', 'symmetric_warp', 
+          'tilt', 'zoom', 'zoom_crop']
 
 _pad_mode_convert = {'reflection':'reflect', 'zeros':'constant', 'border':'replicate'}
 
@@ -197,29 +197,32 @@ def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10.
     #       train                   , valid
     return (res + listify(xtra_tfms), [crop_pad()])
 
-#To keep?
 def _compute_zs_mat(sz:TensorImageSize, scale:float, squish:float,
                    invert:bool, row_pct:float, col_pct:float)->AffineMatrix:
     "Utility routine to compute zoom/squish matrix"
     orig_ratio = math.sqrt(sz[2]/sz[1])
     for s,r,i in zip(scale,squish, invert):
-        s,r = math.sqrt(s),math.sqrt(r)
+        s,r = 1/math.sqrt(s),math.sqrt(r)
         if s * r <= 1 and s / r <= 1: #Test if we are completely inside the picture
             w,h = (s/r, s*r) if i else (s*r,s/r)
-            w /= orig_ratio
-            h *= orig_ratio
             col_c = (1-w) * (2*col_pct - 1)
             row_c = (1-h) * (2*row_pct - 1)
-            return get_zoom_mat(w, h, col_c, row_c)
+            return _get_zoom_mat(w, h, col_c, row_c)
 
     #Fallback, hack to emulate a center crop without cropping anything yet.
-    if orig_ratio > 1: return get_zoom_mat(1/orig_ratio**2, 1, 0, 0.)
-    else:              return get_zoom_mat(1, orig_ratio**2, 0, 0.)
+    if orig_ratio > 1: return _get_zoom_mat(1/orig_ratio**2, 1, 0, 0.)
+    else:              return _get_zoom_mat(1, orig_ratio**2, 0, 0.)
 
 @TfmCoord
-def zoom_squish(c, size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_bool=False,
+def zoom_squish(c, img_size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_bool=False,
                 row_pct:uniform=0.5, col_pct:uniform=0.5):
     #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
     #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
-    m = _compute_zs_mat(size, scale, squish, invert, row_pct, col_pct)
+    m = _compute_zs_mat(img_size, scale, squish, invert, row_pct, col_pct)
     return affine_mult(c, FloatTensor(m))
+
+def rand_resize_crop(size:int, max_scale:float=2., ratios:Tuple[float,float]=(3./4.,4./3.)) -> Tfms:
+    "Randomly resizes and crop the image to a ratio in `ratios` after a zoom of `max_scale`"
+    return [zoom_squish(scale=(1.,max_scale,8), squish=(*ratios,8), invert=(0.5,8), row_pct=(0.,1.), col_pct=(0.,1.)), 
+            crop(size=sz)]
+
