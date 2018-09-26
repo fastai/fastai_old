@@ -1,0 +1,119 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="tabular.data">tabular.data<a class="anchor-link" href="#tabular.data">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Type an introduction of the package here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=TabularDataset></a><em>class</em> <code>TabularDataset</code></h3>
+<p>(<code>df</code>:<code>DataFrame</code>, <code>dep_var</code>:<code>str</code>, <code>cat_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>cont_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>stats</code>:<code>Optional</code>[<code>Tuple</code>[<code>ndarray</code>, <code>ndarray</code>]]=<code>None</code>, <code>log_output</code>:<code>bool</code>=<code>False</code>) :: Inherits (<a href="fastai.data.html#DatasetBase"><code>DatasetBase</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/tabular/data.py#L10">[source]</a></div></p>
+<p>Class for tabular data</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.tabular.data.html#TabularDataset"><code>TabularDataset</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_dataframe></a><code>from_dataframe</code></h4>
+<p>(<code>df</code>:<code>DataFrame</code>, <code>dep_var</code>:<code>str</code>, <code>tfms</code>:<code>Optional</code>[<code>Collection</code>[<a href="fastai.tabular.transform.html#TabularTransform"><code>TabularTransform</code></a>]]=<code>None</code>, <code>cat_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>cont_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>stats</code>:<code>Optional</code>[<code>Tuple</code>[<code>ndarray</code>, <code>ndarray</code>]]=<code>None</code>, <code>log_output</code>:<code>bool</code>=<code>False</code>) -&gt; <code>str</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/tabular/data.py#L39">[source]</a></div></p>
+<p>Creates a tabular dataframe from df after applying optional transforms</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>TabularDataset.from_dataframe</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=tabular_data_from_df></a><code>tabular_data_from_df</code></h4>
+<p>(<code>path</code>, <code>train_df</code>:<code>DataFrame</code>, <code>valid_df</code>:<code>DataFrame</code>, <code>dep_var</code>:<code>str</code>, <code>test_df</code>:<code>Optional</code>[<code>DataFrame</code>]=<code>None</code>, <code>tfms</code>:<code>Optional</code>[<code>Collection</code>[<a href="fastai.tabular.transform.html#TabularTransform"><code>TabularTransform</code></a>]]=<code>None</code>, <code>cat_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>cont_names</code>:<code>Optional</code>[<code>Collection</code>[<code>str</code>]]=<code>None</code>, <code>stats</code>:<code>Optional</code>[<code>Tuple</code>[<code>ndarray</code>, <code>ndarray</code>]]=<code>None</code>, <code>log_output</code>:<code>bool</code>=<code>False</code>, <code>kwargs</code>) -&gt; <a href="fastai.data.html#DataBunch"><code>DataBunch</code></a><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/tabular/data.py#L57">[source]</a></div></p>
+<p>Creates a <a href="fastai.data.html#DataBunch"><code>DataBunch</code></a> from train/valid/test dataframes.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="fastai.tabular.data.html#tabular_data_from_df"><code>tabular_data_from_df</code></a></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+
