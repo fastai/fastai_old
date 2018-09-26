@@ -63,7 +63,7 @@ def get_inner_fts(elt):
     return fts
 
 def get_global_vars(mod):
-    """Returns globally assigned variables"""
+    "Returns globally assigned variables"
     # https://stackoverflow.com/questions/8820276/docstring-for-variable/31764368#31764368
     import ast,re
     with open(mod.__file__, 'r') as f: fstr = f.read()
