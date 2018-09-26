@@ -3,7 +3,7 @@ from .image import *
 from .transform import *
 from ..data import *
 
-__all__ = ['CoordTargetDataset', 'DatasetTfm', 'FilesDataset', 'SegmentationDataset', 'bb2hw', 'denormalize', 'draw_outline', 'draw_rect', 
+__all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'SegmentationDataset', 'bb2hw', 'denormalize', 'draw_outline', 'draw_rect', 
            'get_image_files', 'image2np', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
            'open_image', 'open_mask', 'pil2tensor', 'show_image', 'show_image_batch', 'show_images', 'show_xy_images',
            'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 'imagenet_denorm']
@@ -27,7 +27,7 @@ def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figs
     if denorm: x = denorm(x)
     show_images(x,y[:rows*rows].cpu(),rows, classes)
 
-class FilesDataset(LabelDataset):
+class ImageDataset(LabelDataset):
     "Dataset for folders of images in style {folder}/{class}/{images}"
     def __init__(self, fns:FilePathList, labels:ImgLabels, classes:Optional[Classes]=None):
         self.classes = ifnone(classes, list(set(labels)))
@@ -51,7 +51,7 @@ class FilesDataset(LabelDataset):
 
     @classmethod
     def from_folder(cls, folder:Path, classes:Optional[Classes]=None,
-                    valid_pct:float=0., check_ext:bool=True) -> Union['FilesDataset', List['FilesDataset']]:
+                    valid_pct:float=0., check_ext:bool=True) -> Union['ImageDataset', List['ImageDataset']]:
         "Dataset of `classes` labeled images in `folder`. Optional `valid_pct` split validation set."
         if classes is None: classes = [cls.name for cls in find_classes(folder)]
 
@@ -156,9 +156,9 @@ def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOr
                           test:Optional[PathOrStr]=None, **kwargs:Any):
     "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
     path=Path(path)
-    train_ds = FilesDataset.from_folder(path/train)
-    datasets = [train_ds, FilesDataset.from_folder(path/valid, classes=train_ds.classes)]
-    if test: datasets.append(FilesDataset.from_single_folder(
+    train_ds = ImageDataset.from_folder(path/train)
+    datasets = [train_ds, ImageDataset.from_folder(path/valid, classes=train_ds.classes)]
+    if test: datasets.append(ImageDataset.from_single_folder(
         path/test,classes=train_ds.classes))
     return DataBunch.create(*datasets, path=path, **kwargs)
 
