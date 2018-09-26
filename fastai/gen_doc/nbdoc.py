@@ -75,7 +75,8 @@ def get_cls_doc(elt, full_name:str) -> str:
     if parent_class != object: doc += f' :: Inherits ({link_type(parent_class, include_bt=True)})'
     return doc
 
-def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str=''):
+def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str='',
+             ignore_warn:bool=False):
     "Show documentation for element `elt`. Supported types: class, Callable, and enum"
     arg_comments = ifnone(arg_comments, {})
     if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
@@ -88,11 +89,11 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     link = f'<a id={full_name}></a>'
     if is_fastai_class(elt): doc += get_source_link(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
-        doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string)
+        doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
     display(title_md(link+doc, title_level))
 
-def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
+def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_warn:bool=False) -> str:
     "merges and formats the docstring definition with arg_comments and alt_doc_string"
     parsed = ""
     doc = parse_docstring(inspect.getdoc(elt))
@@ -104,7 +105,7 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
     if resolved_comments: parsed += '\n'
     for a in resolved_comments:
         parsed += f'\n- *{a}*: {resolved_comments[a]}'
-        if a not in args: warn(f'Doc arg mismatch: {a}')
+        if a not in args and not ignore_warn: warn(f'Doc arg mismatch: {a}')
 
     return_comment = arg_comments.get('return') or doc.get('return')
     if return_comment: parsed += f'\n\n*return*: {return_comment}'
