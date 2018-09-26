@@ -8,8 +8,9 @@ __all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', '
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
 
 MODULE_NAME = 'fastai'
-SOURCE_LINK = 'https://github.com/fastai/fastai_pytorch/blob/master/'
+SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
 PYTORCH_DOCS = 'https://pytorch.org/docs/stable/'
+DOCS_URL = 'http://docs.fast.ai/'
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
@@ -57,7 +58,7 @@ def format_ft_def(func, full_name:str=None)->str:
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty:
         arg_str += f" -> {anno_repr(sig.return_annotation)}"
-    if type(func).__module__.startswith('fastai'):
+    if is_fastai_class(type(func)):
         arg_str += f" :: {link_type(type(func))}"
     if len(arg_str)>80: res += "\n"
     return res + arg_str
@@ -224,7 +225,8 @@ def fn_name(ft)->str:
 
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
-    return f'{ft.__module__}.html#{fn_name(ft)}'
+    strip_name = strip_fastai(ft.__module__)
+    return f'{DOCS_URL}{strip_name}.html#{fn_name(ft)}'
 
 def get_pytorch_link(ft) -> str:
     "returns link to pytorch docs"
@@ -241,7 +243,7 @@ def get_source_link(ft) -> str:
     "returns link to  line in source code"
     lineno = inspect.getsourcelines(ft)[1]
     github_path = inspect.getmodule(ft).__name__.replace('.', '/')
-    link = f"{SOURCE_LINK}{github_path}.py#L{lineno}"
+    link = f"{SOURCE_URL}{github_path}.py#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def title_md(s:str, title_level:int):
