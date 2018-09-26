@@ -30,10 +30,16 @@ def open_image(fn:PathOrStr):
 
 def open_mask(fn:PathOrStr) -> ImageMask: return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
 
-def image2np(image:Tensor)->np.ndarray:
+def image2np(image:TensorImage)->np.ndarray:
     "Convert from torch style `image` to numpy/matplotlib style"
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
+
+def _image2bytestr(image:Image):
+    imgByteArr = io.BytesIO()
+    bt = image.px.mul(255).clamp(0, 255).byte()
+    PIL.Image.fromarray(image2np(bt)).save(imgByteArr, format='JPEG')
+    return imgByteArr.getvalue()
 
 def bb2hw(a:Collection[int]) -> np.ndarray:
     "Converts bounding box points from (width,height,center) to (height,width,top,left)"
@@ -49,14 +55,14 @@ def draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
     patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
     draw_outline(patch, 4)
 
-def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
+def _show_image(img:TensorImage, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
                 alpha:float=None) -> plt.Axes:
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
     return ax
 
-def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
+def show_image(x:TensorImage, y:Tensor=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
                title:Optional[str]=None, hide_axis:bool=True, cmap:str='viridis'):
     "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
     ax1 = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap)
@@ -75,6 +81,7 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
         for i in range(y.size(0)): draw_rect(ax, bb2hw(y[i]))
 
 Image.show = _show
+Image._image2bytestr = _image2bytestr
 
 def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
     "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"

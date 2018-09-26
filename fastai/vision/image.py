@@ -73,6 +73,7 @@ class Image(ImageBase):
     def device(self)->torch.device: return self._px.device
 
     def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
+    def _repr_jpeg_(self): return self._image2bytestr()
 
     def refresh(self)->None:
         "Applies any logit or affine transfers that have been "
