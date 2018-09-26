@@ -1,4 +1,5 @@
 from ..torch_core import *
+from .image import *
 from .transform import *
 from ..data import *
 
@@ -16,73 +17,6 @@ def get_image_files(c:Path, check_ext:bool=True)->FilePathList:
     return [o for o in list(c.iterdir())
             if not o.name.startswith('.') and not o.is_dir()
             and (not check_ext or (o.suffix in image_extensions))]
-
-def pil2tensor(image:NPImage)->TensorImage:
-    "Convert PIL style `image` array to torch style image tensor `get_image_files`"
-    arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
-    arr = arr.view(image.size[1], image.size[0], -1)
-    return arr.permute(2,0,1)
-
-def open_image(fn:PathOrStr):
-    "Return `Image` object created from image in file `fn`"
-    x = PIL.Image.open(fn).convert('RGB')
-    return Image(pil2tensor(x).float().div_(255))
-
-def open_mask(fn:PathOrStr) -> ImageMask: return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
-
-def image2np(image:Tensor)->np.ndarray:
-    "Convert from torch style `image` to numpy/matplotlib style"
-    res = image.cpu().permute(1,2,0).numpy()
-    return res[...,0] if res.shape[2]==1 else res
-
-def bb2hw(a:Collection[int]) -> np.ndarray:
-    "Converts bounding box points from (width,height,center) to (height,width,top,left)"
-    return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
-
-def draw_outline(o:Patch, lw:int):
-    "Outlines bounding box onto image `Patch`"
-    o.set_path_effects([patheffects.Stroke(
-        linewidth=lw, foreground='black'), patheffects.Normal()])
-
-def draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
-    "Draws bounding box on `ax`"
-    patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
-    draw_outline(patch, 4)
-
-def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
-                alpha:float=None) -> plt.Axes:
-    if ax is None: fig,ax = plt.subplots(figsize=figsize)
-    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
-    if hide_axis: ax.axis('off')
-    return ax
-
-def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
-               title:Optional[str]=None, hide_axis:bool=True, cmap:str='viridis'):
-    "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
-    ax1 = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap)
-    if y is not None: _show_image(y, ax=ax1, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
-    if hide_axis: ax1.axis('off')
-    if title: ax1.set_title(title)
-
-def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
-    if y is not None:
-        is_bb = isinstance(y, ImageBBox)
-        y=y.data
-    if y is None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
-    ax = _show_image(self.data, ax=ax)
-    if len(y.size()) == 1: draw_rect(ax, bb2hw(y))
-    else:
-        for i in range(y.size(0)): draw_rect(ax, bb2hw(y[i]))
-
-Image.show = _show
-
-def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
-    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()):
-        show_image(x[i], ax)
-        ax.set_title(classes[y[i]])
-    plt.tight_layout()
 
 def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figsize:Tuple[int,int]=(12,15),
                      denorm:Callable=None) -> None:

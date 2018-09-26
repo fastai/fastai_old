@@ -30,6 +30,32 @@ def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOr
     "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
     return random.randint(low,high) if size is None else torch.randint(low,high,size)
 
+
+def pil2tensor(image:NPImage)->TensorImage:
+    "Convert PIL style `image` array to torch style image tensor `get_image_files`"
+    arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
+    arr = arr.view(image.size[1], image.size[0], -1)
+    return arr.permute(2,0,1)
+
+def image2np(image:Tensor)->np.ndarray:
+    "Convert from torch style `image` to numpy/matplotlib style"
+    res = image.cpu().permute(1,2,0).numpy()
+    return res[...,0] if res.shape[2]==1 else res
+
+def bb2hw(a:Collection[int]) -> np.ndarray:
+    "Converts bounding box points from (width,height,center) to (height,width,top,left)"
+    return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
+
+def draw_outline(o:Patch, lw:int):
+    "Outlines bounding box onto image `Patch`"
+    o.set_path_effects([patheffects.Stroke(
+        linewidth=lw, foreground='black'), patheffects.Normal()])
+
+def draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
+    "Draws bounding box on `ax`"
+    patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
+    draw_outline(patch, 4)
+
 def get_default_args(func:Callable):
     return {k: v.default
             for k, v in inspect.signature(func).parameters.items()
@@ -153,10 +179,6 @@ class Image(ImageBase):
     @logit_px.setter
     def logit_px(self,v:LogitTensorImage)->None: self._logit_px=v
 
-    def show(self, ax:plt.Axes=None, **kwargs:Any)->None:
-        "Plots the image into `ax`"
-        show_image(self.px, ax=ax, **kwargs)
-
     @property
     def data(self)->TensorImage:
         "Returns this images pixels as a tensor"
@@ -191,6 +213,50 @@ class ImageBBox(ImageMask):
             if len(idxs) != 0:
                 bboxes.append(torch.tensor([idxs[:,0].min(), idxs[:,1].min(), idxs[:,0].max(), idxs[:,1].max()])[None])
         return torch.cat(bboxes, 0).squeeze()
+
+def open_image(fn:PathOrStr) -> Image:
+    "Return `Image` object created from image in file `fn`"
+    x = PIL.Image.open(fn).convert('RGB')
+    return Image(pil2tensor(x).float().div_(255))
+
+def open_mask(fn:PathOrStr) -> ImageMask: 
+    "Return `ImageMask` object create from mask in file `fn`"
+    return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
+
+def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
+                alpha:float=None) -> plt.Axes:
+    if ax is None: fig,ax = plt.subplots(figsize=figsize)
+    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
+    if hide_axis: ax.axis('off')
+    return ax
+
+def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
+               title:Optional[str]=None, hide_axis:bool=True, cmap:str='viridis'):
+    "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
+    ax1 = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap)
+    if y is not None: _show_image(y, ax=ax1, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
+    if hide_axis: ax1.axis('off')
+    if title: ax1.set_title(title)
+
+def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
+    if y is not None:
+        is_bb = isinstance(y, ImageBBox)
+        y=y.data
+    if y is None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
+    ax = _show_image(self.data, ax=ax)
+    if len(y.size()) == 1: draw_rect(ax, bb2hw(y))
+    else:
+        for i in range(y.size(0)): draw_rect(ax, bb2hw(y[i]))
+
+Image.show = _show
+
+def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
+    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
+    fig, axs = plt.subplots(rows,rows,figsize=figsize)
+    for i, ax in enumerate(axs.flatten()):
+        show_image(x[i], ax)
+        ax.set_title(classes[y[i]])
+    plt.tight_layout()
 
 class Transform():
     "Utility class for adding probability and wrapping support to transform funcs"
@@ -272,9 +338,8 @@ def resolve_tfms(tfms:TfmList):
     "Resolve every tfm in `tfms`"
     for f in listify(tfms): f.resolve()
 
-def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
-    "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
-    if padding_mode=='reflect': padding_mode='reflection'
+def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflection')->TensorImage:
+    "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflection, border or zeros."
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
 
 def affine_grid(size:TensorImageSize)->FlowField:
@@ -333,7 +398,7 @@ def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
 
 def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
                xtra:Optional[Dict[Transform,dict]]=None, size:Optional[Union[int,TensorImageSize]]=None,
-               mult:int=32, do_crop:bool=True, padding_mode:str='reflect', **kwargs:Any)->TensorImage:
+               mult:int=32, do_crop:bool=True, padding_mode:str='reflection', **kwargs:Any)->TensorImage:
     "Apply all `tfms` to `x` - `do_resolve`: bind random args - size,mult used to crop/pad"
     if tfms or xtra or size:
         if not xtra: xtra={}
