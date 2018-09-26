@@ -122,20 +122,17 @@ class Callback():
         "At the beginning of each epoch"
         pass
     def on_batch_begin(self, **kwargs:Any)->None:
-        """To set HP before the step is done.
-           Returns xb, yb (which can allow us to modify the input at that step if needed)"""
+        "Set HP before the step is done. Returns xb, yb (which can allow us to modify the input at that step if needed)"
         pass
     def on_loss_begin(self, **kwargs:Any)->None:
-        """Called after the forward pass but before the loss has been computed.
-           Returns the output (which can allow us to modify it)"""
+        "Called after forward pass but before loss has been computed. Returns the output (which can allow us to modify it)"
         pass
     def on_backward_begin(self, **kwargs:Any)->None:
-        """Called after the forward pass and the loss has been computed, but before the back propagation.
+        """Called after the forward pass and the loss has been computed, but before backprop.
            Returns the loss (which can allow us to modify it, for instance for reg functions)"""
         pass
     def on_backward_end(self, **kwargs:Any)->None:
-        """Called after the back propagation had been done (and the gradients computed) but before the step of the optimizer.
-           Useful for true weight decay in AdamW"""
+        "Called after backprop but before optimizer step. Useful for true weight decay in AdamW"
         pass
     def on_step_end(self, **kwargs:Any)->None:
         "Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful)"

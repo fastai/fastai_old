@@ -154,7 +154,7 @@ class QRNN(torch.nn.Module):
         self.bidirectional = bidirectional
 
     def reset(self):
-        r'''If your convolutional window is greater than 1, you must reset at the beginning of each new sequence'''
+        r'If your convolutional window is greater than 1, you must reset at the beginning of each new sequence'
         [layer.reset() for layer in self.layers]
 
     def forward(self, input, hidden=None):

@@ -17,7 +17,7 @@ def num_features(m:Model)->int:
 
 def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5):
     """Model head that takes `nf` features, runs through `lin_ftrs`, and about `nc` classes.
-       `ps` is for dropout and can be a single float or a list for each layer"""
+    :param ps: dropout, can be a single float or a list for each layer"""
     lin_ftrs = [nf, 512, nc] if lin_ftrs is None else [nf] + lin_ftrs + [nc]
     ps = listify(ps)
     if len(ps)==1: ps = [ps[0]/2] * (len(lin_ftrs)-2) + ps

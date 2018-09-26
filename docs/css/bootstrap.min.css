@@ -1893,11 +1893,13 @@ address {
 code,
 kbd,
 pre,
-samp {
+samp,
+ouput_html{
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace
 }
 
-code {
+code,
+ouput_html{
     padding: 2px 4px;
     font-size: 90%;
     color: #c7254e;
@@ -1919,7 +1921,8 @@ kbd kbd {
     font-weight: 700;
 }
 
-pre {
+pre, 
+output_html{
     display: block;
     padding: 9.5px;
     margin: 0 0 10px;
@@ -1933,7 +1936,10 @@ pre {
     border-radius: 4px
 }
 
-pre code {
+
+pre,
+code,
+output_html{
     padding: 0;
     font-size: inherit;
     color: inherit;

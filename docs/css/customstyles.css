@@ -88,31 +88,51 @@ margin-top: -40px
 }
 
 .output_html a{
-        background-color: DodgerBlue;
-            border: none;
-                color: white;
-                    padding: 12px 30px;
-                        cursor: pointer;
-                            font-size: 20px;
-                            box-sizing: 15px;
-                            position: absolute;
-                }
-
-.output_html a::before{                                 
-                     background:url('https://image.flaticon.com/icons/svg/25/25407.svg');
-                     content: '';
-                    background-size:cover;
-                    position:absolute;
-                }
-
-
-
-/* Darker background on mouse-over */
-.output_html a:hover {
-        background-color: RoyalBlue;
-
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    margin: 25px 0px;
+    display: block;
+    padding: 9.5px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #F5F5F5;
+    border: 1px solid #FFA500;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    overflow: auto;
 }
 
+.col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9 {
+        float: left;
+}
+
+.col-md-9 {
+    width: 75%;
+}
+
+/* From: https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_download_button' */
+.cstm_btn a{
+   background-color: DodgerBlue;
+   border: none;
+   color: white;
+   padding: 12px 30px;
+   cursor: pointer;
+   font-size: 20px;
+   box-sizing: 15px;
+   position: absolute;
+}
+
+/* Darker background on mouse-over */
+.cstm_btn a:hover {
+    background-color: RoyalBlue;
+}
+
+.container #notebook-container{
+    width: 100%;
+}
 .post-content img {
     margin: 12px 0px 3px 0px;
     width: auto;
@@ -621,7 +641,7 @@ a.fa.fa-envelope-o.mailto {
 }
 
 h3 {color: #ED1951; font-weight:normal; font-size:130%;}
-h4 {color: #808080; font-weight:normal; font-size:120%; font-style:italic;}
+h4 {color: #000000; font-weight:normal; font-size:120%; font-weight:bold;}
 
 .alert, .callout {
     overflow: hidden;
