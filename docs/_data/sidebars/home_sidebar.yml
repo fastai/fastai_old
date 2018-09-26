@@ -1,29 +1,19 @@
-# This is your sidebar TOC. The sidebar code loops through sections here and provides the appropriate formatting.
-
 entries:
-- title: Sidebar
-  folders:
+- folders:
+  - folderitems:
+    - output: web
+      title: overview
+      url: overview.html
+    title: Core
+  - folderitems:
+    - subfolders:
+      - output: web
+        title: overview
+        url: callbacks.html
+      - output: web
+        title: callbacks.rnn
+        url: callbacks.rnn.html
+      title: callbacks
+    title: Training
+  title: Sidebar
 
-  - title: gen_doc
-    output: web
-    folderitems:
-    - title: gen_notebooks
-      url: /index.html
-      output: web
-      subfolders:
-      - title: Some subfolder
-        output: web
-        subfolderitems:
-        - title: some item
-          output: web
-          url: /foo.html
-    - title: convert2html
-      url: /gen_doc.gen_notebooks.html
-      output: web
-
-  - title: vision
-    output: web
-    folderitems:
-    - title: transforms
-      url: /index.html
-      output: web
