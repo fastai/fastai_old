@@ -2,9 +2,9 @@ from ..torch_core import *
 from ..data import *
 import functools
 
-_all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting', 
-           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args', 
-           'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop', 
+_all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
+           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
+           'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop',
            'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'show_images', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
@@ -41,7 +41,7 @@ def image2np(image:Tensor)->np.ndarray:
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
-def bb2hw(a:Collection[int]) -> np.ndarray:
+def bb2hw(a:Collection[int])->np.ndarray:
     "Converts bounding box points from (width,height,center) to (height,width,top,left)"
     return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
 
@@ -197,7 +197,7 @@ class ImageBBox(ImageMask):
         return self.__class__(self.px.clone())
 
     @classmethod
-    def create(cls, bboxes:Collection[Collection[int]], h:int, w:int) -> 'ImageBBox':
+    def create(cls, bboxes:Collection[Collection[int]], h:int, w:int)->'ImageBBox':
         "Creates an ImageBBox object from bboxes"
         pxls = torch.zeros(len(bboxes),h, w).long()
         for i,bbox in enumerate(bboxes):
@@ -205,7 +205,7 @@ class ImageBBox(ImageMask):
         return cls(pxls)
 
     @property
-    def data(self) -> LongTensor:
+    def data(self)->LongTensor:
         bboxes = []
         for i in range(self.px.size(0)):
             idxs = torch.nonzero(self.px[i])
@@ -213,17 +213,17 @@ class ImageBBox(ImageMask):
                 bboxes.append(torch.tensor([idxs[:,0].min(), idxs[:,1].min(), idxs[:,0].max(), idxs[:,1].max()])[None])
         return torch.cat(bboxes, 0).squeeze()
 
-def open_image(fn:PathOrStr) -> Image:
+def open_image(fn:PathOrStr)->Image:
     "Return `Image` object created from image in file `fn`"
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
-def open_mask(fn:PathOrStr) -> ImageMask: 
+def open_mask(fn:PathOrStr)->ImageMask:
     "Return `ImageMask` object create from mask in file `fn`"
     return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
 
 def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
-                alpha:float=None) -> plt.Axes:
+                alpha:float=None)->plt.Axes:
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
     ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
@@ -368,13 +368,13 @@ class TfmAffine(Transform):
 class TfmPixel(Transform):
     "Decorator for pixel tfm funcs"
     order,_wrap = 10,'pixel'
-class TfmCoord(Transform): 
+class TfmCoord(Transform):
     "Decorator for coord tfm funcs"
     order,_wrap = 4,'coord'
 class TfmCrop(TfmPixel):
     "Decorator for crop tfm funcs"
     order=99
-class TfmLighting(Transform): 
+class TfmLighting(Transform):
     "Decorator for lighting tfm funcs"
     order,_wrap = 8,'lighting'
 

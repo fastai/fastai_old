@@ -193,9 +193,27 @@ def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOr
         path/test,classes=train_ds.classes))
     return DataBunch.create(*datasets, path=path, **kwargs)
 
+def _get_fns(ds, path):
+    "List of all file names relative to `path`"
+    return [str(fn.relative_to(path)) for fn in ds.x]
+
+def _labels_to_csv(self, dest:str):
+    "Save file names and labels in `data` as CSV to file name `dest`"
+    fns = _get_fns(self.train_ds)
+    y = list(self.train_ds.y)
+    fns += _get_fns(self.valid_ds)
+    y += list(self.valid_ds.y)
+    if hasattr(self,'test_dl') and data.test_dl:
+        fns += _get_fns(self.test_ds)
+        y += list(self.test_ds.y)
+    df = pd.DataFrame({'name': fns, 'label': y})
+    df.to_csv(dest, index=False)
+
+DataBunch.labels_to_csv = _labels_to_csv
+
 #TODO
 def image_data_from_csv(path:PathOrStr, folder:PathOrStr, csv_labels:PathOrStr, valid_pct:float=0.2, 
                         test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
     "Create `DataBunch` from a subfolder with the labels in a csv file."
-    
+
 
