@@ -77,8 +77,13 @@ class ImageBase(ItemBase):
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
+<<<<<<< HEAD
     "Supports applying transforms to image data"
     def __init__(self, px:Tensor):
+=======
+    "Supports appying transforms to image data"
+    def __init__(self, px):
+>>>>>>> b03035ede7afd968ce7a3c5dcee134e4203411d6
         "create from raw tensor image data `px`"
         self._px = px
         self._logit_px=None
@@ -261,7 +266,7 @@ class Transform():
     "Utility class for adding probability and wrapping support to transform funcs"
     _wrap=None
     order=0
-    def __init__(self, func:Callable, order:Optional[int]=None)->None:
+    def __init__(self, func:Callable, order:Optional[int]=None):
         "Create a transform for `func` and assign it an priority `order`, attach to Image class"
         if order is not None: self.order=order
         self.func=func
