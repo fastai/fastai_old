@@ -113,12 +113,13 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='') -> str:
 BT_REGEX = re.compile("`([^`]*)`")
 def link_docstring(elt, docstring:str) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
+    mod = inspect.getmodule(elt)
+    modvars = mod.__dict__
     for m in BT_REGEX.finditer(docstring):
-        if m.group(1) in globals():
-            link_elt = globals()[m.group(1)]
-            if is_fastai_class(link_elt):
-                link = f'[{m.group(0)}]({get_fn_link(link_elt)})'
-                docstring = docstring.replace(m.group(0), link)
+        if m.group(1) in modvars:
+            link_elt = modvars[m.group(1)]
+            link = link_type(link_elt)
+            docstring = docstring.replace(m.group(0), link)
     return docstring
 
 
