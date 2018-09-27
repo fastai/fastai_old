@@ -222,8 +222,9 @@ def show_video_from_youtube(code, start=0):
 
 def fn_name(ft)->str:
     if hasattr(ft, '__name__'):   return ft.__name__
-    elif hasattr(ft,'_name'): return ft._name
+    elif hasattr(ft,'_name') and ft._name: return ft._name
     #elif hasattr(ft,'__class__'): return ft.__class__.__name__
+    elif hasattr(ft,'__origin__'): return str(ft.__origin__).split('.')[-1]
     else:                         return str(ft).split('.')[-1]
 
 def get_fn_link(ft) -> str:
