@@ -253,7 +253,7 @@ def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], fig
     "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
-        show_image(x[i], ax)
+        show_image(x[i], ax=ax)
         ax.set_title(classes[y[i]])
     plt.tight_layout()
 
