@@ -1,5 +1,6 @@
 ---
 title: "Jeremy's notes on fastai coding style"
+keywords: fastai
 sidebar: home_sidebar
 ---
 

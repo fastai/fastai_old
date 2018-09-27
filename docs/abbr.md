@@ -1,5 +1,6 @@
 ---
 title: "fastai Abbreviation Guide"
+keywords: fastai
 sidebar: home_sidebar
 ---
 
