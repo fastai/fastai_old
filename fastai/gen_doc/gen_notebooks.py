@@ -74,7 +74,8 @@ def get_global_vars(mod):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
             key,lineno = node.targets[0].id,node.targets[0].lineno-1
             codestr = flines[lineno]
-            if re.match(f"^{key}\s*=\s*.*", codestr): # only top level assignment
+            match = re.match(f"^({key})\s*=\s*.*", codestr)
+            if match and match.group(1) != '__all__': # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
 
@@ -126,6 +127,7 @@ def create_module_page(mod, dest_path, force=False):
     doc_path = get_doc_path(mod, dest_path)
     json.dump(nb, open(doc_path, 'w' if force else 'x'))
     execute_nb(doc_path)
+    return doc_path
 
 _default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py', 'imports']
 
