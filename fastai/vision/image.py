@@ -234,17 +234,16 @@ def open_mask(fn:PathOrStr)->ImageMask:
 def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
                 alpha:float=None)->plt.Axes:
     if ax is None: fig,ax = plt.subplots(figsize=figsize)
-    ax.imshow(image2np(img), cmap=cmap, alpha=alpha)
+    ax.imshow(image2np(img.data), cmap=cmap, alpha=alpha)
     if hide_axis: ax.axis('off')
     return ax
 
 def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
                title:Optional[str]=None, hide_axis:bool=True, cmap:str='viridis'):
     "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
-    ax1 = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap)
-    if y is not None: _show_image(y, ax=ax1, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
-    if hide_axis: ax1.axis('off')
-    if title: ax1.set_title(title)
+    ax = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap, figsize=figsize)
+    if y is not None: _show_image(y, ax=ax, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
+    if title: ax.set_title(title)
 
 def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
     if y is not None:
