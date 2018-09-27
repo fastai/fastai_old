@@ -1,7 +1,7 @@
 "`Image` provides support to convert, transform and show images"
 from ..torch_core import *
 from ..data import *
-import functools
+from io import BytesIO
 
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
            'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
@@ -98,7 +98,14 @@ class Image(ImageBase):
     @property
     def device(self)->torch.device: return self._px.device
 
-    def __repr__(self): return f'{self.__class__.__name__} ({self.shape})'
+    def __repr__(self): return f'{self.__class__.__name__} {tuple(self.shape)}'
+    def _repr_png_(self): return self._repr_image_format('png')
+    def _repr_jpeg_(self): return self._repr_image_format('jpeg')
+
+    def _repr_image_format(self, format_str):
+        with BytesIO() as str_buffer:
+            plt.imsave(str_buffer, image2np(self.px), format=format_str)
+            return str_buffer.getvalue()
 
     def refresh(self)->None:
         "Applies any logit, flow, or affine transfers that have been sent to the `Image`"
