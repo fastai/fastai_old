@@ -6,6 +6,7 @@ AffineMatrix = Tensor
 BoolOrTensor = Union[bool,Tensor]
 FloatOrTensor = Union[float,Tensor]
 FlowField = Tensor
+IntOrTensor = Union[int,Tensor]
 ItemsList = Collection[Union[Tensor,ItemBase,'ItemsList',float,int]]
 LambdaFunc = Callable[[Tensor],Tensor]
 LayerFunc = Callable[[nn.Module],None]

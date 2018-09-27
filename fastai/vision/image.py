@@ -5,79 +5,76 @@ from io import BytesIO
 import PIL
 
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
-           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
-           'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop',
-           'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'uniform', 'uniform_int']
+          'TfmPixel', 'Transform', 'apply_tfms', 'bb2hw', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 
+          'rand_crop', 'show_image', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
 
-def uniform(low:Number, high:Number=None, size:List[int]=None)->FloatOrTensor:
-    "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
+def uniform(low:Number, high:Number=None, size:Optional[List[int]]=None)->FloatOrTensor:
+    "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`."
     if high is None: high=low
     return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
-def log_uniform(low, high, size=None)->FloatOrTensor:
-    "Draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
+def log_uniform(low, high, size:Optional[List[int]]=None)->FloatOrTensor:
+    "Draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)."
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
-def rand_bool(p:float, size=None)->BoolOrTensor:
-    "Draw 1 or shape=`size` random booleans (True occuring probability p)"
+def rand_bool(p:float, size:Optional[List[int]]=None)->BoolOrTensor:
+    "Draw 1 or shape=`size` random booleans (True occuring probability `p`)."
     return uniform(0,1,size)<p
 
-def rand_int(low:int,high:int)->int: return random.randint(low, high)
-
-def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOrTensor:
-    "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
-    return random.randint(low,high) if size is None else torch.randint(low,high,size)
+def uniform_int(low:int, high:int, size:Optional[List[int]]=None)->IntOrTensor:
+    "Generate int or tensor `size` of ints between `low` and `high` (included)."
+    return random.randint(low,high) if size is None else torch.randint(low,high+1,size)
 
 def pil2tensor(image:NPImage)->TensorImage:
-    "Convert PIL style `image` array to torch style image tensor `get_image_files`"
+    "Convert PIL style `image` array to torch style image tensor."
     arr = ByteTensor(torch.ByteStorage.from_buffer(image.tobytes()))
     arr = arr.view(image.size[1], image.size[0], -1)
     return arr.permute(2,0,1)
 
 def image2np(image:Tensor)->np.ndarray:
-    "Convert from torch style `image` to numpy/matplotlib style"
+    "Convert from torch style `image` to numpy/matplotlib style."
     res = image.cpu().permute(1,2,0).numpy()
     return res[...,0] if res.shape[2]==1 else res
 
 def bb2hw(a:Collection[int])->np.ndarray:
-    "Converts bounding box points from (width,height,center) to (height,width,top,left)"
+    "Convert bounding box points from (width,height,center) to (height,width,top,left)."
     return np.array([a[1],a[0],a[3]-a[1],a[2]-a[0]])
 
 def _draw_outline(o:Patch, lw:int):
-    "Outlines bounding box onto image `Patch`"
+    "Outline bounding box onto image `Patch`."
     o.set_path_effects([patheffects.Stroke(
         linewidth=lw, foreground='black'), patheffects.Normal()])
 
 def _draw_rect(ax:plt.Axes, b:Collection[int], color:str='white'):
-    "Draws bounding box on `ax`"
+    "Draw bounding box on `ax`."
     patch = ax.add_patch(patches.Rectangle(b[:2], *b[-2:], fill=False, edgecolor=color, lw=2))
     _draw_outline(patch, 4)
 
-def get_default_args(func:Callable):
+def _get_default_args(func:Callable):
     return {k: v.default
             for k, v in inspect.signature(func).parameters.items()
             if v.default is not inspect.Parameter.empty}
 
 class ImageBase(ItemBase):
-    "Img based `Dataset` items derive from this. Subclass to handle lighting, pixel, etc"
+    "Image based `Dataset` items derive from this. Subclass to handle lighting, pixel, etc..."
     def lighting(self, func:LightingFunc, *args, **kwargs)->'ImageBase': return self
     def pixel(self, func:PixelFunc, *args, **kwargs)->'ImageBase': return self
     def coord(self, func:CoordFunc, *args, **kwargs)->'ImageBase': return self
     def affine(self, func:AffineFunc, *args, **kwargs)->'ImageBase': return self
 
     def set_sample(self, **kwargs)->'ImageBase':
-        "Set parameters that control how we `grid_sample` the image after transforms are applied"
+        "Set parameters that control how we `grid_sample` the image after transforms are applied."
         self.sample_kwargs = kwargs
         return self
 
 class Image(ImageBase):
-    "Supports applying transforms to image data"
+    "Support applying transforms to image data."
     def __init__(self, px:Tensor):
-        "create from raw tensor image data `px`"
+        "Create from raw tensor image data `px`."
         self._px = px
         self._logit_px=None
         self._flow=None
@@ -85,16 +82,13 @@ class Image(ImageBase):
         self.sample_kwargs = {}
 
     def clone(self):
+        "Mimic the behavior of torch.clone for `Image` objects."
         return self.__class__(self.px.clone())
     
     @property
-    def shape(self)->Tuple[int,int,int]:
-        "Returns (ch, h, w) for this image"
-        return self._px.shape
+    def shape(self)->Tuple[int,int,int]: return self._px.shape
     @property
-    def size(self)->Tuple[int,int]:
-        "Returns (h, w) for this image"
-        return self.shape[-2:]
+    def size(self)->Tuple[int,int]: return self.shape[-2:]
     @property
     def device(self)->torch.device: return self._px.device
 
@@ -108,33 +102,33 @@ class Image(ImageBase):
             return str_buffer.getvalue()
 
     def refresh(self)->None:
-        "Applies any logit, flow, or affine transfers that have been sent to the `Image`"
+        "Apply any logit, flow, or affine transfers that have been sent to the `Image`."
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
         if self._affine_mat is not None or self._flow is not None:
-            self._px = grid_sample(self._px, self.flow, **self.sample_kwargs)
+            self._px = _grid_sample(self._px, self.flow, **self.sample_kwargs)
             self.sample_kwargs = {}
             self._flow = None
         return self
 
     @property
     def px(self)->TensorImage:
-        "Get the tensor pixel buffer"
+        "Get the tensor pixel buffer."
         self.refresh()
         return self._px
     @px.setter
     def px(self,v:TensorImage)->None:
-        "Set the pixel buffer to `v`"
+        "Set the pixel buffer to `v`."
         self._px=v
 
     @property
     def flow(self)->FlowField:
-        "Access the flow-field grid after applying queued affine transforms"
+        "Access the flow-field grid after applying queued affine transforms."
         if self._flow is None:
-            self._flow = affine_grid(self.shape)
+            self._flow = _affine_grid(self.shape)
         if self._affine_mat is not None:
-            self._flow = affine_mult(self._flow,self._affine_mat)
+            self._flow = _affine_mult(self._flow,self._affine_mat)
             self._affine_mat = None
         return self._flow
 
@@ -142,36 +136,36 @@ class Image(ImageBase):
     def flow(self,v:FlowField): self._flow=v
 
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any):
-        "Equivalent to `image = sigmoid(func(logit(image)))`"
+        "Equivalent to `image = sigmoid(func(logit(image)))`."
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
 
     def pixel(self, func:PixelFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.px = func(image.px)`"
+        "Equivalent to `image.px = func(image.px)`."
         self.px = func(self.px, *args, **kwargs)
         return self
 
     def coord(self, func:CoordFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.flow = func(image.flow, image.size)`"
+        "Equivalent to `image.flow = func(image.flow, image.size).`"
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
     def affine(self, func:AffineFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.affine_mat = image.affine_mat @ func()`"
+        "Equivalent to `image.affine_mat = image.affine_mat @ func()`."
         m = tensor(func(*args, **kwargs)).to(self.device)
         self.affine_mat = self.affine_mat @ m
         return self
 
     def resize(self, size:Union[int,TensorImageSize])->'Image':
-        "Resize the image to `size`, size can be a single int"
+        "Resize the image to `size`, size can be a single int."
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
-        self.flow = affine_grid(size)
+        self.flow = _affine_grid(size)
         return self
 
     @property
     def affine_mat(self)->AffineMatrix:
-        "Get the affine matrix that will be applied by `refresh`"
+        "Get the affine matrix that will be applied by `refresh`."
         if self._affine_mat is None:
             self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
@@ -180,7 +174,7 @@ class Image(ImageBase):
 
     @property
     def logit_px(self)->LogitTensorImage:
-        "Get logit(image.px)"
+        "Get logit(image.px)."
         if self._logit_px is None: self._logit_px = logit_(self.px)
         return self._logit_px
     @logit_px.setter
@@ -188,11 +182,11 @@ class Image(ImageBase):
 
     @property
     def data(self)->TensorImage:
-        "Returns this images pixels as a tensor"
+        "Return this images pixels as a tensor."
         return self.px
     
 class ImageMask(Image):
-    "Class for image segmentation target"
+    "Class for image segmentation target."
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image': return self
     
     def refresh(self):
@@ -201,15 +195,15 @@ class ImageMask(Image):
     
     @property
     def data(self)->TensorImage:
-        "Returns this images pixels as a tensor"
+        "Return this images pixels as a `LongTensor`."
         return self.px.long()
 
 class ImageBBox(ImageMask):
-    "Image class for bbox-style annotations"
+    "Image class for bbox-style annotations."
     
     @classmethod
     def create(cls, bboxes:Collection[Collection[int]], h:int, w:int)->'ImageBBox':
-        "Creates an ImageBBox object from bboxes"
+        "Create an ImageBBox object from `bboxes`."
         pxls = torch.zeros(len(bboxes),h, w).long()
         for i,bbox in enumerate(bboxes):
             pxls[i,bbox[0]:bbox[2]+1,bbox[1]:bbox[3]+1] = 1
@@ -225,12 +219,12 @@ class ImageBBox(ImageMask):
         return torch.cat(bboxes, 0).squeeze()
 
 def open_image(fn:PathOrStr)->Image:
-    "Return `Image` object created from image in file `fn`"
+    "Return `Image` object created from image in file `fn`."
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
 def open_mask(fn:PathOrStr)->ImageMask: 
-    "Return `ImageMask` object create from mask in file `fn`"
+    "Return `ImageMask` object create from mask in file `fn`."
     return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 
 def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
@@ -242,7 +236,7 @@ def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool
 
 def show_image(x:Image, y:Image=None, ax:plt.Axes=None, figsize:tuple=(3,3), alpha:float=0.5,
                title:Optional[str]=None, hide_axis:bool=True, cmap:str='viridis'):
-    "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`"
+    "Plot tensor `x` using matplotlib axis `ax`.  `figsize`,`axis`,`title`,`cmap` and `alpha` pass to `ax.imshow`."
     ax = _show_image(x, ax=ax, hide_axis=hide_axis, cmap=cmap, figsize=figsize)
     if y is not None: _show_image(y, ax=ax, alpha=alpha, hide_axis=hide_axis, cmap=cmap)
     if title: ax.set_title(title)
@@ -262,27 +256,27 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
 Image.show = _show
 
 class Transform():
-    "Utility class for adding probability and wrapping support to transform funcs"
+    "Utility class for adding probability and wrapping support to transform `func`."
     _wrap=None
     order=0
     def __init__(self, func:Callable, order:Optional[int]=None):
-        "Create a transform for `func` and assign it an priority `order`, attach to Image class"
+        "Create a transform for `func` and assign it an priority `order`, attach to `Image` class."
         if order is not None: self.order=order
         self.func=func
         functools.update_wrapper(self, self.func)
         self.func.__annotations__['return'] = Image
         self.params = copy(func.__annotations__)
-        self.def_args = get_default_args(func)
+        self.def_args = _get_default_args(func)
         setattr(Image, func.__name__,
                 lambda x, *args, **kwargs: self.calc(x, *args, **kwargs))
 
     def __call__(self, *args:Any, p:float=1., is_random:bool=True, **kwargs:Any)->Image:
-        "Calc now if `args` passed; else create a transform called prob `p` if `random`"
+        "Calc now if `args` passed; else create a transform called prob `p` if `random`."
         if args: return self.calc(*args, **kwargs)
         else: return RandTransform(self, kwargs=kwargs, is_random=is_random, p=p)
 
     def calc(self, x:Image, *args:Any, **kwargs:Any)->Image:
-        "Apply to image `x`, wrapping it if necessary"
+        "Apply to image `x`, wrapping it if necessary."
         if self._wrap: return getattr(x, self._wrap)(self.func, *args, **kwargs)
         else:          return self.func(x, *args, **kwargs)
 
@@ -296,7 +290,7 @@ Tfms = Optional[TfmList]
 
 @dataclass
 class RandTransform():
-    "Wraps `Transform` to add randomized execution"
+    "Wrap `Transform` to add randomized execution."
     tfm:Transform
     kwargs:dict
     p:int=1.0
@@ -306,7 +300,7 @@ class RandTransform():
     def __post_init__(self): functools.update_wrapper(self, self.tfm)
 
     def resolve(self)->None:
-        "Bind any random variables needed tfm calc"
+        "Bind any random variables needed."
         if not self.is_random:
             self.resolved = {**self.tfm.def_args, **self.kwargs}
             return
@@ -333,19 +327,19 @@ class RandTransform():
     def order(self)->int: return self.tfm.order
 
     def __call__(self, x:Image, *args, **kwargs)->Image:
-        "Randomly execute our tfm on `x`"
+        "Randomly execute our tfm on `x`."
         return self.tfm(x, *args, **{**self.resolved, **kwargs}) if self.do_run else x
 
 
-def resolve_tfms(tfms:TfmList):
-    "Resolve every tfm in `tfms`"
+def _resolve_tfms(tfms:TfmList):
+    "Resolve every tfm in `tfms`."
     for f in listify(tfms): f.resolve()
 
-def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflection')->TensorImage:
-    "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflection, border or zeros."
+def _grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflection')->TensorImage:
+    "Grab pixels in `coords` from `input` sampling by `mode`. `paddding_mode` is reflection, border or zeros."
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
 
-def affine_grid(size:TensorImageSize)->FlowField:
+def _affine_grid(size:TensorImageSize)->FlowField:
     size = ((1,)+size)
     N, C, H, W = size
     grid = FloatTensor(N, H, W, 2)
@@ -355,8 +349,8 @@ def affine_grid(size:TensorImageSize)->FlowField:
     grid[:, :, :, 1] = torch.ger(linear_points, torch.ones(W)).expand_as(grid[:, :, :, 1])
     return grid
 
-def affine_mult(c:FlowField,m:AffineMatrix)->FlowField:
-    "Multiply `c` by `m` - can adjust for rectangular shaped `c`"
+def _affine_mult(c:FlowField,m:AffineMatrix)->FlowField:
+    "Multiply `c` by `m` - can adjust for rectangular shaped `c`."
     if m is None: return c
     size = c.size()
     _,h,w,_ = size
@@ -367,31 +361,31 @@ def affine_mult(c:FlowField,m:AffineMatrix)->FlowField:
     return c.view(size)
 
 class TfmAffine(Transform):
-    "Decorator for affine tfm funcs"
+    "Decorator for affine tfm funcs."
     order,_wrap = 5,'affine'
 class TfmPixel(Transform):
-    "Decorator for pixel tfm funcs"
+    "Decorator for pixel tfm funcs."
     order,_wrap = 10,'pixel'
 class TfmCoord(Transform):
-    "Decorator for coord tfm funcs"
+    "Decorator for coord tfm funcs."
     order,_wrap = 4,'coord'
 class TfmCrop(TfmPixel):
-    "Decorator for crop tfm funcs"
+    "Decorator for crop tfm funcs."
     order=99
 class TfmLighting(Transform):
-    "Decorator for lighting tfm funcs"
+    "Decorator for lighting tfm funcs."
     order,_wrap = 8,'lighting'
 
-def round_multiple(x:int, mult:int)->int:
-    "Calc `x` to nearest multiple of `mult`"
+def _round_multiple(x:int, mult:int)->int:
+    "Calc `x` to nearest multiple of `mult`."
     return (int(x/mult+0.5)*mult)
 
-def get_crop_target(target_px:Union[int,Tuple[int,int]], mult:int=32)->Tuple[int,int]:
-    "Calc crop shape of `target_px` to nearest multiple of `mult`"
+def _get_crop_target(target_px:Union[int,Tuple[int,int]], mult:int=32)->Tuple[int,int]:
+    "Calc crop shape of `target_px` to nearest multiple of `mult`."
     target_r,target_c = listify(target_px, 2)
-    return round_multiple(target_r,mult),round_multiple(target_c,mult)
+    return _round_multiple(target_r,mult),_round_multiple(target_c,mult)
 
-def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
+def _get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
     "Calc size of `img` to fit in `crop_target` - adjust based on `do_crop`"
     if crop_target is None: return None
     ch,r,c = img.shape
@@ -402,16 +396,16 @@ def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
 def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
                xtra:Optional[Dict[Transform,dict]]=None, size:Optional[Union[int,TensorImageSize]]=None,
                mult:int=32, do_crop:bool=True, padding_mode:str='reflection', **kwargs:Any)->TensorImage:
-    "Apply all `tfms` to `x` - `do_resolve`: bind random args - `size`, `mult` used to crop/pad"
+    "Apply all `tfms` to `x` - `do_resolve`: bind random args - `size`, `mult` used to crop/pad."
     if tfms or xtra or size:
         if not xtra: xtra={}
         tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)
-        if do_resolve: resolve_tfms(tfms)
+        if do_resolve: _resolve_tfms(tfms)
         x = x.clone()
         x.set_sample(padding_mode=padding_mode, **kwargs)
         if size:
-            crop_target = get_crop_target(size, mult=mult)
-            target = get_resize_target(x, crop_target, do_crop=do_crop)
+            crop_target = _get_crop_target(size, mult=mult)
+            target = _get_resize_target(x, crop_target, do_crop=do_crop)
             x.resize(target)
 
         size_tfms = [o for o in tfms if isinstance(o.tfm,TfmCrop)]
