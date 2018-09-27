@@ -5,6 +5,8 @@ from traitlets.config import Config
 from pathlib import Path
 import fire
 
+__all__ = ['HandleLinksPreprocessor', 'read_nb', 'convert_nb', 'convert_all']
+
 class HandleLinksPreprocessor(Preprocessor):
     "A preprocesser that replaces all the .ipynb by .html in links. "
     def preprocess_cell(self, cell, resources, index):
