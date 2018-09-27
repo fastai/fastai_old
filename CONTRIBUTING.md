@@ -1,25 +1,25 @@
 # How to contribute to fastai
 
-First, thanks a lot for wanting to help! Make sure you have read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) first. In particular, please don't make your first contribution be about the fact we don't respect your norms of coding style. It has been heavily discussed on the [forum](http://forums.fast.ai/) and we still stand by our choices. That doesn't mean we'll never change our ways, but the best mean to convince us is to play a bit by our rules first, then explain to us why yours are better ;).
+First, thanks a lot for wanting to help! Make sure you have read the [doc on code style](https://github.com/fastai/fastai_pytorch/blob/master/docs/style.md) first. In particular, please don't make your first contribution be about the fact we don't respect your norms of coding style. It has been heavily discussed on the [forum](http://forums.fast.ai/) and we still stand by our choices. That doesn't mean we'll never change our ways, but the best mean to convince us is to play a bit by our rules first, then explain to us why yours are better ;).
 
 ## Did you find a bug?
 
 * Nobody is perfect, especially not us. But first, please double-check the bug doesn't come from something on your side. The [forum](http://forums.fast.ai/) is a tremendous source for help, and we'd advise to use it as a first step. Be sure to include as much code as you can so that other people can easily help you.
-* Then, ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_v1/issues).
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/fastai/fastai_v1/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+* Then, ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_pytorch/issues).
+* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/fastai/fastai_pytorch/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
 * Be sure to add the complete error messages.
 
 #### Did you write a patch that fixes a bug?
 
-* Sign the [Contributor License Agreement](https://www.clahub.com/agreements/fastai/fastai_v1).
+* Sign the [Contributor License Agreement](https://www.clahub.com/agreements/fastai/fastai_pytorch).
 * Open a new GitHub pull request with the patch.
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
-* Before submitting, please be sure you abide by our [coding style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the guide on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md) and clean-up your code accordingly.
+* Before submitting, please be sure you abide by our [coding style](https://github.com/fastai/fastai_pytorch/blob/master/docs/style.md) and [the guide on abbreviations](https://github.com/fastai/fastai_pytorch/blob/master/docs/abbr.md) and clean-up your code accordingly.
 
 ## Do you intend to add a new feature or change an existing one?
 
 * You can suggest your change on the [fastai forum](http://forums.fast.ai/) to see if others are interested or want to help. [This topic](http://forums.fast.ai/t/fastai-v1-adding-features/23041/8) lists the features that will be added to fastai in the foreseeable future. Be sure to read it too!
-* PRs are welcome with a complete description of the new feature and an example of how it's use. Be sure to document your code and read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md).
+* PRs are welcome with a complete description of the new feature and an example of how it's use. Be sure to document your code and read the [doc on code style](https://github.com/fastai/fastai_pytorch/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_pytorch/blob/master/docs/abbr.md).
 
 ## Do you have questions about the source code?
 
@@ -51,11 +51,11 @@ This is done automatically during `diff`/`commit` git operations, but you need t
 
 Therefore, your developing process will always start with:
 
-    git clone https://github.com/fastai/fastai_v1
-    cd fastai_v1
+    git clone https://github.com/fastai/fastai_pytorch
+    cd fastai_pytorch
     tools/trust-origin-git-config
 
-The last command tells git to invoke configuration stored in `fastai_v1/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
+The last command tells git to invoke configuration stored in `fastai_pytorch/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
 
 Note: windows users, not using bash emulation, will need to invoke the command as:
 
@@ -65,7 +65,7 @@ If you skip this configuration your commit/PR involving notebooks will not be ac
 
 Note: we can't make this happen automatically, since git will ignore a repository-stored `.gitconfig` for security reasons, unless a user will tell git to use it (and thus trust it).
 
-If you'd like to check whether you already trusted git with using `fastai_v1/.gitconfig` please look inside `fastai_v1/.git/config`, which should have this entry:
+If you'd like to check whether you already trusted git with using `fastai_pytorch/.gitconfig` please look inside `fastai_pytorch/.git/config`, which should have this entry:
 
     [include]
             path = ../.gitconfig
