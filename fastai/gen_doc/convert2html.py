@@ -35,7 +35,7 @@ def convert_nb(fname, dest_path='.'):
     nb = read_nb(fname)
     new_name = re.sub(r"(.*)\.ipynb",r"\1.html",str(fname))
     meta = nb['metadata']
-    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {'title': fname.strip('.ipynb'), 'summary':""}
+    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {'title': str(fname).replace('.ipynb', ''), 'summary':""}
     with open(f'{dest_path}/{new_name}','w') as f:
         f.write(exporter.from_notebook_node(nb, resources=meta_jekyll)[0])
 

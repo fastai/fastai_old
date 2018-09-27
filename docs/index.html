@@ -1,0 +1,133 @@
+---
+title: fastai
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: ""
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Welcome-to-fastai">Welcome to fastai<a class="anchor-link" href="#Welcome-to-fastai">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The fastai library simplifies training fast and accurate neural nets using modern best practices. It's based on research in to deep learning best practices undertaken at <a href="http://www.fast.ai">fast.ai</a>. If you're looking for the source code, head over to the <a href="https://github.com/fastai/fastai_pytorch">fastai_pytorch repo</a> on GitHub.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Installation">Installation<a class="anchor-link" href="#Installation">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To install fastai, we recommend <code>conda</code>:</p>
+
+<pre><code>conda install -c fastai
+
+</code></pre>
+<p>Alternatively, you can install using pip - if you do so, you'll first need to install the latest pytorch <code>conda-nightly</code> package or source from master.</p>
+
+<pre><code>pip install fastai
+
+</code></pre>
+<p>fastai is a pure python package, so you can also simply symlink the fastai directory to wherever you're running your code, as long as you've installed the dependencies (listed in the conda and pip files).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Reading-the-docs">Reading the docs<a class="anchor-link" href="#Reading-the-docs">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We've provided below a quick overview of the key modules in this library. For details on each one, use the sidebar to find the module you're interested in. Each module includes an overview and example of how to use it, along with documentation for every class, function, and method. API documentation looks, for example, like this:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=find_classes></a><code>find_classes</code>(<code>folder</code>:<code>Path</code>) -&gt; <code>Collection</code>[<code>Path</code>]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/core.py#L59">[source]</a></div></h4>
+<p>List of label subdirectories in imagenet-style <code>folder</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Types for each parameter, and the return type, are displayed following standard Python <a href="https://www.python.org/dev/peps/pep-0484/">type hint syntax</a>. Types that are defined by fastai or Pytorch link directly to more information about that type. The docstring for the symbol is show immediately after the signature, along with a link to the source code for the symbol in GitHub. After the basic signature and docstring you'll find examples and additional details (not shown in this example).</p>
+<p>For inherited classes and some types of decorated function, the base class or decorator type will also be shown at the end of the signature, delimited by <code>::</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Module-overview">Module overview<a class="anchor-link" href="#Module-overview">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>At the base of everything are the two modules <code>core</code> and <code>torch_core</code> (we're not including the <code>fastai.</code> prefix when naming modules in these docs). They define the basic functions we use in the library; <code>core</code> only relies on general modules, whereas <code>torch_core</code> requires pytorch. Most type-hinting shortcuts are defined there too (at least the one that don't depend on fastai classes defined later). Nearly all modules below import <code>torch_core</code>.</p>
+<p>Then, there are three modules directly on top of <code>torch_core</code>:</p>
+<ul>
+<li><code>data</code>, which contains the class that will take a <code>Dataset</code> or pytorch <code>DataLoader</code> to wrap it in a <code>DeviceDataLoader</code> (a class that sits on top of a <code>DataLoader</code> and is in charge of putting the data on the right device as well as applying transforms such as normalization) and regroup then in a <code>DataBunch</code>.</li>
+<li><code>layers</code>, which contains basic functions to define custom layers or groups of layers</li>
+<li><code>metrics</code>, which contains all the metrics</li>
+</ul>
+<p>From <code>layers</code>, we have all the modules in the models folder that are defined. Then from <code>data</code> we can split on one of the four main <em>applications</em>, which each has their own module: <code>vision</code>, <code>text</code> <code>colab</code>, or <code>tabular</code>. Each of those submodules is built in the same way with:</p>
+<ul>
+<li>a submodule named <code>transform</code> that handles the transformations of our data (data augmentation for computer vision, numericalizing and tokenizing for text and preprocessing for tabular)</li>
+<li>a submodule named <code>data</code> that contains the class that will create datasets and the helper functions to create <code>DataBunch</code> objects.</li>
+</ul>
+<p>This takes care of building your model and handling the data. We regroup those in a <code>Learner</code> object to take care of training. More specifically:</p>
+<ul>
+<li><code>callback</code> defines the basis of callbacks and the <code>CallbackHandler</code>. Those are functions that will be called every step of the way of the training loop and can allow us to customize what is happening there;</li>
+<li><code>basic_train</code> defines <code>Learner</code> and <code>Recorder</code> (which is a callback that records stats and takes care of updating the progress bars) and have the training loop;</li>
+<li><code>callbacks</code> is a submodule defining various callbacks;</li>
+<li><code>learn</code> defines helper functions to invoke the callbacks more easily.</li>
+</ul>
+<p>The module <code>tta</code> (for Test Time Augmentation) depends on <code>basic_train</code>, the module <code>colab</code> (for collaborative filtering) depends on <code>basic_train</code> and <code>layers</code>, so does the module <code>conv_learner</code> (for our models with a skeleton trained on imagenet and a custom head for classification) and the module <code>rnn_learn</code> (to automatically get learner objects for NLP) depends on <code>callbacks</code> (specifically the <code>rnn</code> callback) and <code>models</code> (specifically the rnn models).</p>
+<p>Here is a graph of the key module dependencies:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="imgs/module_overview.png" alt="Modules overview"></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+
