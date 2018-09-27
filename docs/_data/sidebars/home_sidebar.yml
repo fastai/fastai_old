@@ -99,6 +99,33 @@ entries:
           title: vision.data
           url: vision.data.html
         title: vision
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: text.html
+        - output: web
+          title: text_learner
+          url: text_learner.html
+        - output: web
+          title: text.transform
+          url: text.transform.html
+        - output: web
+          title: text.data
+          url: text.data.html
+        title: text
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: tabular.html
+        - output: web
+          title: tabular.transform
+          url: tabular.transform.html
+        - output: web
+          title: tabular.data
+          url: tabular.data.html
+        title: tabular
     output: web
     title: Applications
   - folderitems:
