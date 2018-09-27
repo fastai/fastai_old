@@ -211,7 +211,15 @@ Once the extra packages have been built you can install them from the build dire
 
 Or upload them first and then install normally via `conda install`.
 
+#### The Problem Of Supporting Different Architectures
 
+Every package we release on conda needs to be either `noarch` or we need to build a whole slew of packages for each platform we choose to support, `linux-64`, `win-64`, etc.
+
+So far `fastai` is `noarch` (pure python), so we only need to make `python3.6` and `python3.7` releases.
+
+But as shown in the previous section we also have to deal with several dependencies which are not on conda. If they are `noarch`, it should be easy to release conda packages for dependencies every so often. If they are platform-specific we will have to remove them from conda dependencies and ask users to install those via pip. An easy way to check whether a package for a specific platform is available is to:
+
+    conda search -i --platform win-64
 
 
 #### Uploading and Testing
