@@ -7,7 +7,7 @@ from ..data import *
 __all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'SegmentationDataset', 'denormalize', 
            'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
            'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
-           'imagenet_denorm']
+           'imagenet_denorm', 'image_data_from_csv', ]
 
 TfmList = Collection[Transform]
 
@@ -100,11 +100,12 @@ class ImageMultiDataset(LabelDataset):
     def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
         "Typically used for test set. label all images in `folder` with `classes[0]`"
         fnames = get_image_files(folder, check_ext=check_ext)
-        return cls(fnames, classes[0] * len(fnames), classes=classes)
+        labels = [[classes[0]]] * len(fnames)
+        return cls(fnames, labels, classes=classes)
 
     @classmethod
-    def from_folder(cls, path:PathOrStr, folder:PathOrStr, fns:Collection[PathOrStr], labels:ImgLabels, valid_pct:float=0.2, 
-        classes:Optional[Classes]=None, test_name:Optional[PathOrStr]=None):
+    def from_folder(cls, path:PathOrStr, folder:PathOrStr, fns:pd.Series, labels:ImgLabels, valid_pct:float=0.2, 
+        classes:Optional[Classes]=None):
         train,valid = random_split(valid_pct, f'{path}/{folder}/' + fns, labels)
         train_ds = cls(*train, classes=classes)
         return [train_ds,cls(*valid, classes=train_ds.classes)]
@@ -220,7 +221,24 @@ def _labels_to_csv(self, dest:str):
 
 DataBunch.labels_to_csv = _labels_to_csv
 
-#TODO
+def uniqueify(x:Series) -> List[Any]: return list(OrderedDict.fromkeys(x).keys())
+
+def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1, 
+                      label_delim:str=' ', header:Optional[Union[int,str]]='infer', suffix:Optional[str]=None):
+    import pandas as pd
+    import csv
+    df = pd.read_csv(csv_path, header=header)
+    df.iloc[:,label_col] = list(csv.reader(df.iloc[:,label_col], delimiter=label_delim))
+    labels = df.iloc[:,label_col]
+    fnames = df.iloc[:,fn_col]
+    if suffix: fnames = fnames + suffix
+    return fnames, labels
+    
 def image_data_from_csv(path:PathOrStr, folder:PathOrStr, csv_labels:PathOrStr, valid_pct:float=0.2, 
                         test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
-    "Create `DataBunch` from a subfolder with the labels in a csv file."
+    fnames, labels = csv_to_fns_labels(csv_labels, suffix=suffix)
+    path=Path(path)
+    datasets = ImageMultiDataset.from_folder(path, folder, fnames, labels, valid_pct=valid_pct)
+    if test: datasets.append(ImageMultiDataset.from_single_folder(path/test, classes=datasets[0].classes))
+    return DataBunch.create(*datasets, path=path, **kwargs)
+    
