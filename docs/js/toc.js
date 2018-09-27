@@ -65,7 +65,7 @@
       }
       else if (this_level > level) { // lower level than before; expand the previous to contain a ol
         for(i = this_level; i > level; i--) {
-          html += "<"+settings.listType+"><li>"
+          html += "<"+settings.listType+">"+((i-level == 2) ? "<li class=\"hide_content\">" : "<li>")
         }
         html += "<a href='#" + header.id + "'>" + txt + "</a>";
       }

@@ -1,4 +1,4 @@
-"1-Cycle style training as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
+"Supports 1-Cycle style training"
 from ..core import *
 from ..callback import *
 from ..basic_train import Learner

@@ -505,7 +505,7 @@ def grid_sample_nearest(input:TensorImage, coords:FlowField, padding_mode:str='z
 def grid_sample(x:TensorImage, coords:FlowField, mode:str='bilinear', padding_mode:str='reflect')->TensorImage:
     "Grab pixels in `coords` from `input` sampling by `mode`. pad is reflect or zeros."
     if padding_mode=='reflect': padding_mode='reflection'
-    if mode=='nearest': return grid_sample_nearest(x[None], coords, padding_mode)[0]
+    #if mode=='nearest': return grid_sample_nearest(x[None], coords, padding_mode)[0]
     return F.grid_sample(x[None], coords, mode=mode, padding_mode=padding_mode)[0]
 
 def affine_grid(size:TensorImageSize)->FlowField:
