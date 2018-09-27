@@ -55,4 +55,4 @@ For other setups/platforms use `pip install` at the moment (see above).
     pip install -e .
     tools/run-after-git-clone
 
-Please refer to [CONTRIBUTING.md](https://github.com/fastai/fastai_pytorch/blob/master/CONTRIBUTING.md)  and [DEVELOPERS.md][(https://github.com/fastai/fastai_pytorch/blob/master/DEVELOPERS.md) for more details.
+Please refer to [CONTRIBUTING.md](https://github.com/fastai/fastai_pytorch/blob/master/CONTRIBUTING.md) and [the developers guide](http://docs.fast.ai/developers.html) for more details.
