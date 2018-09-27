@@ -1,0 +1,81 @@
+# full guide of options:
+# https://conda.io/docs/user-guide/tasks/build-packages/define-metadata.html
+
+# also perhaps we don't need the recipe at all?
+# https://conda.io/docs/user-guide/tasks/build-packages/build-without-recipe.html
+
+# To see what comes out after this template is processed, run:
+#    conda-render ./conda/
+
+{% set data = load_setup_py_data(setup_file='../setup.py', from_recipe_dir=True) %}
+
+package:
+#  name: fastai
+#  version: 1.0
+  name: {{ data.name }}
+  version: "{{ data.version }}"
+
+source:
+  # Source from a local path
+  path: ..
+
+  # Source from tarball
+  # url: https://pypi.python.org/packages/source/fastai/fastai/fastai-1.0.0b.tar.gz
+  # sha1: f0a2c9a30073449cfb7d171c57552f3109d93894
+
+  # Source from git
+  # git_rev: v0.13.1
+  # git_url: https://github.com/fastai/fastai_pytorch.git
+
+build:
+  number: 1
+  noarch: python
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  #entry_points:
+  #  - fastai = fastai:main
+
+# tweaks converting from pypi to conda
+# - must use - torch >=0.4.9 (note, there is only one space), for details: https://conda.io/docs/user-guide/tasks/build-packages/package-spec.html#package-match-specifications
+# so we inject the whitespace, since pypi doesn't have it in 'torch>=0.4.9'
+# - torch on pypi, pytorch on conda for the same pacakge
+requirements:
+  build:
+    - python
+    {%- for dep in data['setup_requires'] %}
+    - {{ dep.lower()|replace(">=", " >=")|replace("==", " ==")|replace("torch", "pytorch")|replace("pytorchvision", "torchvision") }}
+    {%- endfor %}
+
+  run:
+    - python
+    {%- for dep in data['install_requires'] %}
+    - {{ dep.lower()|replace(">=", " >=")|replace("==", " ==")|replace("torch", "pytorch")|replace("pytorchvision", "torchvision") }}
+    {%- endfor %}
+
+test:
+  imports:
+    - fastai
+
+  requires:
+    - python
+    {%- for dep in data['tests_require'] %}
+    - {{ dep.lower()|replace(">=", " >=")|replace("==", " ==")|replace("torch", "pytorch")|replace("pytorchvision", "torchvision") }}
+    {%- endfor %}
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data['license'] }}
+  license_family: APACHE
+  license_file: LICENSE
+  summary: {{ data['description'] }}
+  # use jinja2 filter to replace new lines with \n - has to be one line
+  #description: {{ data['long_description'] }}
+  description: Bla Blah XXX too long
+  doc_url: {{ data.get('url') }}
+  dev_url: {{ data.get('url') }}
+
+extra:
+  deploy:
+    - anaconda-client
+    - setuptools >=0.39
+    - twine >=1.11
+  recipe-maintainers: ''

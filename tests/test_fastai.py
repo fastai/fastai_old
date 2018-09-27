@@ -5,9 +5,10 @@
 
 import pytest
 
+import fastai
 
-from fastai import fastai
-
+def test_basic():
+    assert fastai.__version__
 
 @pytest.fixture
 def response():

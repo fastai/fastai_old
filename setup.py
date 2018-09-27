@@ -3,7 +3,19 @@
 
 """The setup script."""
 
+from pathlib import Path
+
 from setuptools import setup, find_packages
+
+def create_version_file(version):
+    print('-- Building version ' + version)
+    version_path = Path.cwd() / 'fastai' / 'version.py'
+    with open(version_path, 'w') as f:
+        f.write("__version__ = '{}'\n".format(version))
+
+# version
+version = '1.0.0b1'
+create_version_file(version)
 
 with open('README.md') as readme_file:
     readme = readme_file.read()
@@ -11,17 +23,24 @@ with open('README.md') as readme_file:
 with open('HISTORY.md') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+# pip doesn't think that 0.5.0a0+1637729 >=0.5.0, must use >=0.4.9 instead
+# XXX: change to torch>=0.5.0 once it's available as a pip wheel
+# XXX: change to torchvision>=0.2.1 once it's available as a pip wheel
+requirements = ['cupy', 'dataclasses', 'fastprogress', 'fire', 'ipython', 'matplotlib', 'nbconvert', 'nbformat', 'numpy>=1.12', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.1', 'torchvision>=0.2.1', 'traitlets', 'typing']
 
-setup_requirements = ['pytest-runner', ]
+# requirements to skip:
+# jupyter_contrib_nbextensions - only needed for internal tools - it's not on conda and requires too many of its own dependencies which aren't on conda either
 
-test_requirements = ['pytest', ]
+setup_requirements = ['pytest-runner', 'conda-build', ]
 
+test_requirements = ['pytest', 'numpy', 'torch>=0.4.1']
+
+# list of classifiers: https://pypi.org/pypi?%3Aaction=list_classifiers
 setup(
     author="Jeremy Howard",
     author_email='info@fast.ai',
     classifiers=[
-        'Development Status :: Development Status :: 4 - Beta',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
@@ -35,12 +54,12 @@ setup(
     include_package_data=True,
     keywords='fastai',
     name='fastai',
-    packages=find_packages(include=['fastai']),
+    packages=find_packages(),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/fastai/fastai',
-    version='1.0.0.beta1',
+    python_requires='>=3.6',
+    url='https://github.com/fastai/fastai_pytorch',
+    version=version,
     zip_safe=False,
 )
-
