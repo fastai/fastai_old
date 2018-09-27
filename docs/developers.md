@@ -127,7 +127,7 @@ You don't really need it, as the anaconda client cashes your credentials so you 
 4. Install build tools:
 
     conda install conda-verify conda-build anaconda-client
-
+    pip install twine>=1.12
 
 
 ## Publish
@@ -148,6 +148,10 @@ XXX: travis-ci.org as well.
 
     python setup.py bdist_wheel
 
+3. Test the packages:
+
+    twine check dist/*
+
 3. Publish:
 
     twine upload --repository testpypi dist/*
@@ -155,6 +159,9 @@ XXX: travis-ci.org as well.
 If you haven't created `~/.pypirc` as explained earlier, use this instead:
 
     twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+Note: PyPI won't allow re-uploading the same package filename, even if it's a minor fix. If you delete the file from pypi or test.pypi it still won't let you do it. So either a micro-level version needs to be bumped (A.B.C++) or some [post release string added](https://www.python.org/dev/peps/pep-0440/#post-releases) in `setup.py`.
+
 
 4. Test:
 
@@ -164,12 +171,38 @@ Test the webpage:
 
 Test installation (use pypi.org for packages that aren't on test.pypi.org)
 
-    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b2
+
+Hmm, it looks like it wants an explicit `fastai==1.0.0b2` argument, otherwise it tries to install `fastai-0.7`.
 
 May be add: `--force-reinstall` or manually remove preinstalled `fastai` first from your python installation: e.g. `python3.6/site-packages/fastai*`, run `python -m site` to find out the location.
 
+#### Various Helper Tools
 
+Sometimes with too many local installs/uninstalls into the same environment, especially if you nuke folders and files with `rm(1)`, things can get pretty messed up. So this can help diagnose what pip sees:
 
+    pip show fastai
+    [...]
+    Name: fastai
+    Version: 1.0.0b1
+    Location: /some/path/to/git/clone/of/fastai_pytorch
+
+yet `pip` can't uninstall it:
+
+    pip uninstall fastai
+    Can't uninstall 'fastai'. No files were found to uninstall.
+
+`easy-install` (`pip install -e`) can make things very confusing as it may point to git checkouts that are no longer up-to-date. and you can't uninstall it. It's db is a plain text file here:
+
+    path/to/lib/python3.6/site-packages/easy-install.pth
+
+so just removing the relevant path from this file will fix the problem. (or removing the whole file if you need to).
+
+Now running:
+
+    pip show fastai
+
+shows nothing.
 
 ### Conda
 
@@ -279,7 +312,7 @@ Now you need to rebuild the package, and if you changed the `number` to `2`, the
 
 ### Documentation
 
-* To figure out the nuances of the `meta.yaml` recipe writing see this [tutorial](https://conda.io/docs/user-guide/tutorials/build-pkgs.html#building-and-installing).
+* To figure out the nuances of the `meta.yaml` recipe writing see this [tutorial](https://conda.io/docs/user-guide/tasks/build-packages/define-metadata.html)
 
 * `meta.yaml` is written using `jinja2` `python` templating language. [API docs](http://jinja.pocoo.org/docs/2.10/api/#high-level-api)
 
