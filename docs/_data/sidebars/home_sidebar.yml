@@ -19,9 +19,19 @@ entries:
     - output: web
       title: layers
       url: layers.html
-    - output: web
-      title: models
-      url: models.html
+      subfolders:
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: models.html
+        - output: web
+          title: models.rnn
+          url: models.rnn.html
+        - output: web
+          title: models.unet
+          url: models.unet.html
+        title: models
     output: web
     title: Core
   - folderitems:
@@ -84,8 +94,8 @@ entries:
           title: overview
           url: text.html
         - output: web
-          title: text_learner
-          url: text_learner.html
+          title: text.learner
+          url: text.learner.html
         - output: web
           title: text.transform
           url: text.transform.html
@@ -111,8 +121,8 @@ entries:
           title: overview
           url: vision.html
         - output: web
-          title: vision_learner
-          url: vision_learner.html
+          title: vision.learner
+          url: vision.learner.html
         - output: web
           title: vision.transform
           url: vision.transform.html
