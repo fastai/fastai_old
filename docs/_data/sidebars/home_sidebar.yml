@@ -65,9 +65,6 @@ entries:
           title: callbacks.hooks
           url: callbacks.hooks.html
         - output: web
-          title: callbacks.general_sched
-          url: callbacks.general_sched.html
-        - output: web
           title: callbacks.fp16
           url: callbacks.fp16.html
         title: callbacks
@@ -81,24 +78,6 @@ entries:
       title: colab
       url: colab.html
       subfolders:
-      - output: web
-        subfolderitems:
-        - output: web
-          title: overview
-          url: vision.html
-        - output: web
-          title: vision_learner
-          url: vision_learner.html
-        - output: web
-          title: vision.transform
-          url: vision.transform.html
-        - output: web
-          title: vision.image
-          url: vision.image.html
-        - output: web
-          title: vision.data
-          url: vision.data.html
-        title: vision
       - output: web
         subfolderitems:
         - output: web
@@ -126,6 +105,24 @@ entries:
           title: tabular.data
           url: tabular.data.html
         title: tabular
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: vision.html
+        - output: web
+          title: vision_learner
+          url: vision_learner.html
+        - output: web
+          title: vision.transform
+          url: vision.transform.html
+        - output: web
+          title: vision.image
+          url: vision.image.html
+        - output: web
+          title: vision.data
+          url: vision.data.html
+        title: vision
     output: web
     title: Applications
   - folderitems:
