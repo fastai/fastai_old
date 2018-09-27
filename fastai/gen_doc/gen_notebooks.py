@@ -1,3 +1,4 @@
+"`gen_doc.nbdoc` generates notebook documentation from module functions and links to correct places"
 import pkgutil, inspect, sys,os, importlib,json,enum,warnings,nbformat,re
 from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
