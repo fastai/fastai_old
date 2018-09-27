@@ -1,3 +1,4 @@
+"Implements [mixup](https://arxiv.org/abs/1710.09412) training method"
 from ..torch_core import *
 from ..callback import *
 from ..basic_train import Learner

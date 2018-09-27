@@ -1,3 +1,4 @@
+"`Image` provides support to convert, transform and show images"
 from ..torch_core import *
 from ..data import *
 import functools

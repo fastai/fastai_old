@@ -1,3 +1,4 @@
+"Module support for Collaborative Filtering"
 from .torch_core import *
 from .basic_train import *
 from .data import *

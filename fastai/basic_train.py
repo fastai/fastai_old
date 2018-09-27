@@ -1,3 +1,4 @@
+"Provides basic training and validation with `Learner`"
 from .torch_core import *
 from .data import *
 from .callback import *

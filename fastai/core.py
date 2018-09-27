@@ -1,3 +1,4 @@
+"`fastai.core` contains essential util functions to format and split data"
 from .imports.core import *
 
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")

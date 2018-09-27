@@ -1,3 +1,4 @@
+"NLP data loading pipeline. Supports csv, folders, and preprocessed data."
 from ..torch_core import *
 from .transform import *
 from ..data import *
