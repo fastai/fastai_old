@@ -1,10 +1,11 @@
 # How to contribute to fastai
 
-First, thanks a lot for wanting to help!
+First, thanks a lot for wanting to help! Make sure you have read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) first. In particular, please don't make your first contribution be about the fact we don't respect your norms of coding style. It has been heavily discussed on the [forum](http://forums.fast.ai/) and we still stand by our choices. That doesn't mean we'll never change our ways, but the best mean to convince us is to play a bit by our rules first, then explain to us why yours are better ;).
 
 ## Did you find a bug?
 
-* Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_v1/issues).
+* Nobody is perfect, especially not us. But first, please double-check the bug doesn't come from something on your side. The [forum](http://forums.fast.ai/) is a tremendous source for help, and we'd advise to use it as a first step. Be sure to include as much code as you can so that other people can easily help you.
+* Then, ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/fastai/fastai_v1/issues).
 * If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/fastai/fastai_v1/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
 * Be sure to add the complete error messages.
 
@@ -13,16 +14,16 @@ First, thanks a lot for wanting to help!
 * Sign the [Contributor License Agreement](https://www.clahub.com/agreements/fastai/fastai_v1).
 * Open a new GitHub pull request with the patch.
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
-* Before submitting, please read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md) and clean-up your code accordingly.
+* Before submitting, please be sure you abide by our [coding style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the guide on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md) and clean-up your code accordingly.
 
 ## Do you intend to add a new feature or change an existing one?
 
-* You can suggest your change on the [fastai forum](http://forums.fast.ai/) to see if others are interested or want to help.
+* You can suggest your change on the [fastai forum](http://forums.fast.ai/) to see if others are interested or want to help. [This topic](http://forums.fast.ai/t/fastai-v1-adding-features/23041/8) lists the features that will be added to fastai in the foreseeable future. Be sure to read it too!
 * PRs are welcome with a complete description of the new feature and an example of how it's use. Be sure to document your code and read the [doc on code style](https://github.com/fastai/fastai_v1/blob/master/docs/style.md) and [the one on abbreviations](https://github.com/fastai/fastai_v1/blob/master/docs/abbr.md).
 
 ## Do you have questions about the source code?
 
-* Please ask it on the [fastai forum](http://forums.fast.ai/) (after searching someone didn't ask the same one before with a quick search).
+* Please ask it on the [fastai forum](http://forums.fast.ai/) (after searching someone didn't ask the same one before with a quick search). We'd rather have the maximum of discussions there so that the largest number can benefit from it.
 
 ## Do you want to contribute to the documentation?
 
@@ -30,7 +31,7 @@ First, thanks a lot for wanting to help!
 
 ## How to contribute to jupyter notebooks
 
-* Please read the following sections if you're contributing to `*.ipynb` notebooks.
+* Please read the following sections if you're contributing to `*.ipynb` notebooks. Note that the development notebooks are frozen now, and you should only contribute to the prose in them.
 
 ### Validate any notebooks you're contributing to
 
@@ -41,19 +42,6 @@ Alternatively, you could use a CLI JSON validation tool, e.g. [jsonlint](https:/
     jsonlint-php example.ipynb
 
 but it's second best, since you may have a valid JSON, but invalid notebook format, as the latter has extra requirements on which fields are valid and which are not.
-
-### Autogenerate nb_*.py files
-
-* When you finish working on a notebook, make sure to run:
-
-    tools/build
-
-If you're on windows and don't have bash¸ please run this instead:
-
-    python tools\build
-
-This will convert any modified `dev_nb/*.ipynb` to `nb_*.py`. Do not modify any of the `nb_*.py` manually, since your changes will be overwritten by the autogenerator.
-
 
 ### Git: a mandatory notebook strip out
 
