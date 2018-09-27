@@ -26,7 +26,7 @@ def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figs
     if rows is None: rows = int(math.sqrt(len(x)))
     x = x[:rows*rows].cpu()
     if denorm: x = denorm(x)
-    show_images(x,y[:rows*rows].cpu(),rows, classes)
+    show_images(x,y[:rows*rows].cpu(),rows, classes, figsize)
 
 def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
     "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
