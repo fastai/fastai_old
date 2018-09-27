@@ -7,11 +7,15 @@ import nbformat.sign, sys
 from pathlib import Path
 
 print("Attention! Changing all notebooks under docs_src to be *trusted*")
-path = Path(sys.argv[1] if len(sys.argv) > 1 else 'docs_src')
+
+# make sure we are under the root of the project
+cur_dir = Path(".").resolve().name
+if (cur_dir == "tools"): os.chdir("..")
+
+path = Path('docs_src')
 fnames = [file for file in path.glob("*.ipynb")]
 for fname in fnames:
     with open(fname) as f:
         nb = nbformat.read(f, as_version=4)
         nbformat.sign.NotebookNotary().sign(nb)
 print("Done")
-
