@@ -65,9 +65,6 @@ entries:
           title: callbacks.hooks
           url: callbacks.hooks.html
         - output: web
-          title: callbacks.general_sched
-          url: callbacks.general_sched.html
-        - output: web
           title: callbacks.fp16
           url: callbacks.fp16.html
         title: callbacks
@@ -81,6 +78,33 @@ entries:
       title: colab
       url: colab.html
       subfolders:
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: text.html
+        - output: web
+          title: text_learner
+          url: text_learner.html
+        - output: web
+          title: text.transform
+          url: text.transform.html
+        - output: web
+          title: text.data
+          url: text.data.html
+        title: text
+      - output: web
+        subfolderitems:
+        - output: web
+          title: overview
+          url: tabular.html
+        - output: web
+          title: tabular.transform
+          url: tabular.transform.html
+        - output: web
+          title: tabular.data
+          url: tabular.data.html
+        title: tabular
       - output: web
         subfolderitems:
         - output: web

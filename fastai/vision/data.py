@@ -1,3 +1,4 @@
+"`vision.data` manages data input pipeline - folders -> transform -> batch input. Includes support for classification, segmentation and bounding boxes"
 from ..torch_core import *
 from .image import *
 from .transform import *

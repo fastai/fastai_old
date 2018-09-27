@@ -1,9 +1,10 @@
+"`gen_doc.nbdoc` generates notebook documentation from module functions and links to correct places"
+
 import inspect,importlib,enum,os,re
 from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
 from .core import *
-
 __all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
 
@@ -56,11 +57,9 @@ def format_ft_def(func, full_name:str=None)->str:
     fmt_params = [format_param(param) for name,param
                   in sig.parameters.items() if name not in ('self','cls')]
     arg_str = f"({', '.join(fmt_params)})"
-    if sig.return_annotation != sig.empty:
-        arg_str += f" -> {anno_repr(sig.return_annotation)}"
-    if is_fastai_class(type(func)):
-        arg_str += f" :: {link_type(type(func))}"
-    if len(arg_str)>80: res += "\n"
+    if sig.return_annotation != sig.empty: arg_str += f" -> {anno_repr(sig.return_annotation)}"
+    if is_fastai_class(type(func)):        arg_str += f" :: {link_type(type(func))}"
+    if len(arg_str)>30: res += "\n"
     return res + arg_str
 
 def get_enum_doc(elt, full_name:str) -> str:
@@ -73,7 +72,7 @@ def get_cls_doc(elt, full_name:str) -> str:
     "Class definition"
     parent_class = inspect.getclasstree([elt])[-1][0][1][0]
     doc = f'<em>class</em> ' + format_ft_def(elt, full_name)
-    if parent_class != object: doc += f' :: Inherits ({link_type(parent_class, include_bt=True)})'
+    if parent_class != object: doc += f' :: {link_type(parent_class, include_bt=True)}'
     return doc
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str='',
@@ -159,10 +158,14 @@ def get_ft_names(mod)->List[str]:
     for elt_name in get_exports(mod):
         elt = getattr(mod,elt_name)
         #This removes the files imported from elsewhere
+        #set_trace()
         try:    fname = inspect.getfile(elt)
         except: continue
-        if fname != mod.__file__: continue
-        if inspect.isclass(elt) or inspect.isfunction(elt): fn_names.append(elt_name)
+        if mod.__file__.endswith('__init__.py'):
+            if inspect.ismodule(elt): fn_names.append(elt_name)
+        else:
+            if (not mod.__file__.endswith('__init__.py')) and (fname != mod.__file__): continue
+            if inspect.isclass(elt) or inspect.isfunction(elt): fn_names.append(elt_name)
     return fn_names
 
 def get_inner_fts(elt) -> List[str]:

@@ -1,9 +1,9 @@
 ---
-title: 
+title: torch_core
 keywords: 
 sidebar: home_sidebar
 tags: 
-summary: 
+summary: Utility functions to help deal with tensors
 ---
 
 <div class="container" id="notebook-container">
@@ -32,259 +32,259 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>AdamW = partial(optim.Adam, betas=(0.9,0.99))</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L41">[source]</a></div></p>
+<p><code>AdamW = partial(optim.Adam, betas=(0.9,0.99))</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L42">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>AffineFunc = Callable[[KWArgs], AffineMatrix]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L24">[source]</a></div></p>
+<p><code>AffineFunc = Callable[[KWArgs], AffineMatrix]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L25">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>AffineMatrix = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L3">[source]</a></div></p>
+<p><code>AffineMatrix = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L4">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>BoolOrTensor = Union[bool,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L4">[source]</a></div></p>
+<p><code>BoolOrTensor = Union[bool,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L5">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>CoordFunc = Callable[[FlowField, TensorImageSize, ArgStar, KWArgs], LogitTensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L36">[source]</a></div></p>
+<p><code>CoordFunc = Callable[[FlowField, TensorImageSize, ArgStar, KWArgs], LogitTensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L37">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>FloatOrTensor = Union[float,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L5">[source]</a></div></p>
+<p><code>FloatOrTensor = Union[float,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L6">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>FlowField = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L6">[source]</a></div></p>
+<p><code>FlowField = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L7">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>HookFunc = Callable[[Model, Tensors, Tensors], Any]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L25">[source]</a></div></p>
+<p><code>HookFunc = Callable[[Model, Tensors, Tensors], Any]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L26">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>ItemsList = Collection[Union[Tensor,ItemBase,'ItemsList',float,int]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L7">[source]</a></div></p>
+<p><code>ItemsList = Collection[Union[Tensor,ItemBase,'ItemsList',float,int]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L8">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LambdaFunc = Callable[[Tensor],Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L8">[source]</a></div></p>
+<p><code>LambdaFunc = Callable[[Tensor],Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L9">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LayerFunc = Callable[[nn.Module],None]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L9">[source]</a></div></p>
+<p><code>LayerFunc = Callable[[nn.Module],None]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L10">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LightingFunc = Callable[[LogitTensorImage, ArgStar, KWArgs], LogitTensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L37">[source]</a></div></p>
+<p><code>LightingFunc = Callable[[LogitTensorImage, ArgStar, KWArgs], LogitTensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L38">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LogitTensorImage = TensorImage</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L26">[source]</a></div></p>
+<p><code>LogitTensorImage = TensorImage</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L27">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LossFunction = Callable[[Tensor, Tensor], Rank0Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L27">[source]</a></div></p>
+<p><code>LossFunction = Callable[[Tensor, Tensor], Rank0Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L28">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>MetricFunc = Callable[[Tensor,Tensor],TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L28">[source]</a></div></p>
+<p><code>MetricFunc = Callable[[Tensor,Tensor],TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L29">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>MetricFuncList = Collection[MetricFunc]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L29">[source]</a></div></p>
+<p><code>MetricFuncList = Collection[MetricFunc]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L30">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>MetricsList = Collection[TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L30">[source]</a></div></p>
+<p><code>MetricsList = Collection[TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L31">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Model = nn.Module</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L10">[source]</a></div></p>
+<p><code>Model = nn.Module</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L11">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>ModuleList = Collection[nn.Module]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L11">[source]</a></div></p>
+<p><code>ModuleList = Collection[nn.Module]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L12">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>OptLossFunc = Optional[LossFunction]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L31">[source]</a></div></p>
+<p><code>OptLossFunc = Optional[LossFunction]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L32">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>OptMetrics = Optional[MetricsList]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L32">[source]</a></div></p>
+<p><code>OptMetrics = Optional[MetricsList]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L33">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>OptOptimizer = Optional[optim.Optimizer]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L12">[source]</a></div></p>
+<p><code>OptOptimizer = Optional[optim.Optimizer]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L13">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>OptSplitFunc = Optional[SplitFunc]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L33">[source]</a></div></p>
+<p><code>OptSplitFunc = Optional[SplitFunc]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L34">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>ParamList = Collection[nn.Parameter]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L13">[source]</a></div></p>
+<p><code>ParamList = Collection[nn.Parameter]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L14">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>PixelFunc = Callable[[TensorImage, ArgStar, KWArgs], TensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L34">[source]</a></div></p>
+<p><code>PixelFunc = Callable[[TensorImage, ArgStar, KWArgs], TensorImage]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L35">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Rank0Tensor = NewType('OneEltTensor', Tensor)</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L14">[source]</a></div></p>
+<p><code>Rank0Tensor = NewType('OneEltTensor', Tensor)</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L15">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>SplitFunc = Callable[[Model], List[Model]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L15">[source]</a></div></p>
+<p><code>SplitFunc = Callable[[Model], List[Model]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L16">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>SplitFuncOrIdxList = Union[Callable, Collection[ModuleList]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L16">[source]</a></div></p>
+<p><code>SplitFuncOrIdxList = Union[Callable, Collection[ModuleList]]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L17">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TensorImage = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L19">[source]</a></div></p>
+<p><code>TensorImage = Tensor</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L20">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TensorImageSize = Tuple[int,int,int]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L20">[source]</a></div></p>
+<p><code>TensorImageSize = Tuple[int,int,int]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L21">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TensorOrNumList = Collection[TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L18">[source]</a></div></p>
+<p><code>TensorOrNumList = Collection[TensorOrNumber]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L19">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TensorOrNumber = Union[Tensor,Number]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L17">[source]</a></div></p>
+<p><code>TensorOrNumber = Union[Tensor,Number]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L18">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Tensors = Union[Tensor, Collection['Tensors']]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L21">[source]</a></div></p>
+<p><code>Tensors = Union[Tensor, Collection['Tensors']]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L22">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Weights = Dict[str,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L22">[source]</a></div></p>
+<p><code>Weights = Dict[str,Tensor]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L23">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L39">[source]</a></div></p>
+<p><code>bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L40">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>default_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L40">[source]</a></div></p>
+<p><code>default_device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L41">[source]</a></div></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if num_children(l) else [l]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L82">[source]</a></div></p>
+<p><code>flatten_model=lambda l: sum(map(flatten_model,l.children()),[]) if num_children(l) else [l]</code> <div style="text-align: right"><a href="../fastai/torch_core.py#L83">[source]</a></div></p>
 
 </div>
 </div>
@@ -312,7 +312,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#apply_init"><code>apply_init</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#apply_init"><code>apply_init</code></a></p>
 
 </div>
 </div>
@@ -340,7 +340,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#apply_leaf"><code>apply_leaf</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#apply_leaf"><code>apply_leaf</code></a></p>
 
 </div>
 </div>
@@ -368,7 +368,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#bn2float"><code>bn2float</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#bn2float"><code>bn2float</code></a></p>
 
 </div>
 </div>
@@ -396,7 +396,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#calc_loss"><code>calc_loss</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#calc_loss"><code>calc_loss</code></a></p>
 
 </div>
 </div>
@@ -424,7 +424,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#children"><code>children</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#children"><code>children</code></a></p>
 
 </div>
 </div>
@@ -452,7 +452,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#cond_init"><code>cond_init</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#cond_init"><code>cond_init</code></a></p>
 
 </div>
 </div>
@@ -480,7 +480,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#data_collate"><code>data_collate</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#data_collate"><code>data_collate</code></a></p>
 
 </div>
 </div>
@@ -508,7 +508,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#first_layer"><code>first_layer</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#first_layer"><code>first_layer</code></a></p>
 
 </div>
 </div>
@@ -562,7 +562,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#in_channels"><code>in_channels</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#in_channels"><code>in_channels</code></a></p>
 
 </div>
 </div>
@@ -590,7 +590,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#model2half"><code>model2half</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#model2half"><code>model2half</code></a></p>
 
 </div>
 </div>
@@ -618,7 +618,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#num_children"><code>num_children</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#num_children"><code>num_children</code></a></p>
 
 </div>
 </div>
@@ -646,7 +646,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#range_children"><code>range_children</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#range_children"><code>range_children</code></a></p>
 
 </div>
 </div>
@@ -674,7 +674,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#requires_grad"><code>requires_grad</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#requires_grad"><code>requires_grad</code></a></p>
 
 </div>
 </div>
@@ -702,7 +702,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#set_bn_eval"><code>set_bn_eval</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#set_bn_eval"><code>set_bn_eval</code></a></p>
 
 </div>
 </div>
@@ -730,7 +730,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#split_bn_bias"><code>split_bn_bias</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#split_bn_bias"><code>split_bn_bias</code></a></p>
 
 </div>
 </div>
@@ -758,7 +758,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#split_model"><code>split_model</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#split_model"><code>split_model</code></a></p>
 
 </div>
 </div>
@@ -786,7 +786,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#split_model_idx"><code>split_model_idx</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#split_model_idx"><code>split_model_idx</code></a></p>
 
 </div>
 </div>
@@ -814,7 +814,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#to_data"><code>to_data</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#to_data"><code>to_data</code></a></p>
 
 </div>
 </div>
@@ -842,7 +842,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#to_device"><code>to_device</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#to_device"><code>to_device</code></a></p>
 
 </div>
 </div>
@@ -870,7 +870,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#to_half"><code>to_half</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#to_half"><code>to_half</code></a></p>
 
 </div>
 </div>
@@ -898,7 +898,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="fastai.torch_core.html#trainable_params"><code>trainable_params</code></a></p>
+<p><a href="http://docs.fast.ai/torch_core.html#trainable_params"><code>trainable_params</code></a></p>
 
 </div>
 </div>

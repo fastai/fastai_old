@@ -1,3 +1,4 @@
+"`fastai.data` loads and manages datasets with `DataBunch`"
 from .torch_core import *
 
 __all__ = ['DataBunch', 'DatasetBase', 'DeviceDataLoader', 'LabelDataset']

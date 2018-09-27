@@ -1,3 +1,4 @@
+"Cleaning and feature engineering functions for structured data"
 from ..torch_core import *
 
 __all__ = ['Categorify', 'FillMissing', 'FillStrategy', 'TabularTransform']

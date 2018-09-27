@@ -1,3 +1,4 @@
+"Regroups lr adjustment to seq_len, AR and TAR"
 from ..torch_core import *
 from ..callback import *
 from ..basic_train import Learner

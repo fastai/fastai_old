@@ -1,3 +1,4 @@
+"Implements various metrics to measure training accuracy"
 from .torch_core import *
 
 __all__ = ['accuracy', 'accuracy_thresh', 'dice', 'exp_rmspe', 'fbeta']

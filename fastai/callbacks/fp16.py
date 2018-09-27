@@ -1,3 +1,4 @@
+"Callback support for half precision (fp16) training. Increases training speed."
 from ..torch_core import *
 from ..callback import *
 from ..basic_train import *

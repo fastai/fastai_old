@@ -1,3 +1,4 @@
+"Image transformations for data augmentation. All transforms are done on the tensor level"
 from ..torch_core import *
 from .image import *
 

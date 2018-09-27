@@ -1,3 +1,4 @@
+"Hooks provide extensibility at the model level."
 from ..torch_core import *
 from ..callback import *
 from ..basic_train import *

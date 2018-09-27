@@ -5,6 +5,8 @@ from traitlets.config import Config
 from pathlib import Path
 import fire
 
+__all__ = ['HandleLinksPreprocessor', 'read_nb', 'convert_nb', 'convert_all']
+
 class HandleLinksPreprocessor(Preprocessor):
     "A preprocesser that replaces all the .ipynb by .html in links. "
     def preprocess_cell(self, cell, resources, index):
@@ -29,7 +31,7 @@ def read_nb(fname):
     with open(fname,'r') as f: return nbformat.reads(f.read(), as_version=4)
 
 def convert_nb(fname, dest_path='.'):
-    "Converts a given notebook in an html page. "
+    "Converts a notebook `fname` to html file in `dest_path` "
     nb = read_nb(fname)
     new_name = re.sub(r"(.*)\.ipynb",r"\1.html",str(fname))
     meta = nb['metadata']
@@ -38,10 +40,9 @@ def convert_nb(fname, dest_path='.'):
         f.write(exporter.from_notebook_node(nb, resources=meta_jekyll)[0])
 
 def convert_all(folder, dest_path='.'):
-    "Converts all the notebooks in a given folder in a html pages. "
+    "Converts all notebooks `folder` to html pages in `dest_path`. "
     path = Path(folder)
     nb_files = path.glob('*.ipynb')
-    print(nb_files)
     for file in nb_files: convert_nb(file, dest_path=dest_path)
 
 if __name__ == 'main': fire.Fire(convert_all)
