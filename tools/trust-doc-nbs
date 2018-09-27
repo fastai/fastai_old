@@ -8,7 +8,7 @@
 #
 # The installed hook will be executed by git automatically at the end
 # of 'git pull' only if it triggered an actual merge event and that
-# the latter was sucessful
+# the latter was successful
 #
 # trust:
 #   tools/trust-doc-nbs
