@@ -1,6 +1,7 @@
 "Image transformations for data augmentation. All transforms are done on the tensor level"
 from ..torch_core import *
 from .image import *
+from .image import _affine_mult
 
 _all__ = ['brightness', 'contrast', 'crop', 'crop_pad', 'dihedral', 'flip_lr', 'get_transforms', 
           'jitter', 'pad', 'perspective_warp', 'rand_crop', 'rand_resize_crop', 'rand_zoom', 'rotate', 'skew', 'squish', 'symmetric_warp', 
@@ -158,7 +159,7 @@ def symmetric_warp(c, img_size, magnitude:partial(uniform,size=4)=0):
     return _perspective_warp(c, targ_pts)
 
 @TfmCoord
-def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
+def tilt(c, img_size, direction:uniform_int, magnitude:uniform=0):
     "Tilt `c` field and resize to`img_size` with random `direction` and `magnitude`"
     orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
     if direction == 0:   targ_pts = [[-1,-1], [-1,1], [1,-1-magnitude], [1,1+magnitude]]
@@ -166,10 +167,10 @@ def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
     elif direction == 2: targ_pts = [[-1,-1], [-1-magnitude,1], [1,-1], [1+magnitude,1]]
     elif direction == 3: targ_pts = [[-1-magnitude,-1], [-1,1], [1+magnitude,-1], [1,1]]
     coeffs = find_coeffs(orig_pts, targ_pts)
-    return apply_perspective(c, coeffs)
+    return _apply_perspective(c, coeffs)
 
 @TfmCoord
-def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
+def skew(c, img_size, direction:uniform_int, magnitude:uniform=0):
     "Skew `c` field and resize to`img_size` with random `direction` and `magnitude`"
     orig_pts = [[-1,-1], [-1,1], [1,-1], [1,1]]
     if direction == 0:   targ_pts = [[-1-magnitude,-1], [-1,1], [1,-1], [1,1]]
@@ -181,7 +182,7 @@ def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
     elif direction == 6: targ_pts = [[-1,-1], [-1,1], [1,-1], [1+magnitude,1]]
     elif direction == 7: targ_pts = [[-1,-1], [-1,1], [1,-1], [1,1+magnitude]]
     coeffs = find_coeffs(orig_pts, targ_pts)
-    return apply_perspective(c, coeffs)
+    return _apply_perspective(c, coeffs)
 
 def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
                    max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,
@@ -220,7 +221,7 @@ def zoom_squish(c, img_size, scale:uniform=1.0, squish:uniform=1.0, invert:rand_
     #This is intended for scale, squish and invert to be of size 10 (or whatever) so that the transform
     #can try a few zoom/squishes before falling back to center crop (like torchvision.RandomResizedCrop)
     m = _compute_zs_mat(img_size, scale, squish, invert, row_pct, col_pct)
-    return affine_mult(c, FloatTensor(m))
+    return _affine_mult(c, FloatTensor(m))
 
 def rand_resize_crop(size:int, max_scale:float=2., ratios:Tuple[float,float]=(0.75,1.33)):
     "Randomly resizes and crop the image to a ratio in `ratios` after a zoom of `max_scale`"
