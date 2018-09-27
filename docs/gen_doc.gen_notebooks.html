@@ -224,38 +224,16 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As a convenience method, <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a> method</p>
+<p>As a convenience method, there's <a href="http://docs.fast.ai/gen_doc.gen_notebooks.html#update_all"><code>update_all</code></a> to update all notebooks. This snippet does the whole lot for you:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">fastai</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">fastai</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="n">fastai_pkg</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fastai</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">update_all</span><span class="p">(</span><span class="n">fastai_pkg</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">create_missing</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 
 </div>
 </div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fastai_pkg</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fastai</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
-<span class="n">update_all</span><span class="p">(</span><span class="n">fastai_pkg</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">create_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -300,71 +278,13 @@ summary:
 <li><strong>dir</strong> is the directory where all your notebooks are stored.</li>
 </ul>
 <p>If you prefer to do this in a notebook, you can simply type:</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.gen_doc.convert2html</span> <span class="k">import</span> <span class="n">convert_nb</span>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.gen_doc.convert2html</span> <span class="kn">import</span> <span class="n">convert_nb</span>
+<span class="n">convert_nb</span><span class="p">(</span><span class="s1">&#39;gen_doc.gen_notebooks.html&#39;</span><span class="p">,</span> <span class="s1">&#39;../docs&#39;</span><span class="p">)</span>
 </pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">convert_nb</span><span class="p">(</span><span class="s1">&#39;gen_doc.gen_notebooks.ipynb&#39;</span><span class="p">,</span> <span class="s1">&#39;../docs&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <p>For more information see the <a href="gen_doc.convert2html.html">documentation of convert2html</a>.</p>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">FileLink</span>
-<span class="n">FileLink</span><span class="p">(</span><span class="s1">&#39;../docs/gen_doc.gen_notebooks.html&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<a href='../docs/gen_doc.gen_notebooks.html' target='_blank'>../docs/gen_doc.gen_notebooks.html</a><br>
-</div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 </div>
  

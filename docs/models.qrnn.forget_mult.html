@@ -1,0 +1,333 @@
+---
+title: 
+keywords: 
+sidebar: home_sidebar
+tags: 
+summary: 
+---
+
+<div class="container" id="notebook-container">
+    
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="models.qrnn.forget_mult">models.qrnn.forget_mult<a class="anchor-link" href="#models.qrnn.forget_mult">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Type an introduction of the package here.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>kernel = '''</code> <div style="text-align: right"><a href="../fastai/models/qrnn/forget_mult.py#L11">[source]</a></div></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=CPUForgetMult></a><em>class</em> <code>CPUForgetMult</code>() :: Inherits (<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L76">[source]</a></div></h3>
+<p>Your models should also subclass this class.</p>
+<p>Modules can also contain other Modules, allowing to nest them in
+a tree structure. You can assign the submodules as regular attributes::</p>
+
+<pre><code>import torch.nn as nn
+import torch.nn.functional as F
+
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.conv1 = nn.Conv2d(1, 20, 5)
+        self.conv2 = nn.Conv2d(20, 20, 5)
+
+    def forward(self, x):
+       x = F.relu(self.conv1(x))
+       return F.relu(self.conv2(x))
+
+</code></pre>
+<p>Submodules assigned in this way will be registered, and will have their
+parameters converted too when you call :meth:<code>to</code>, etc.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="http://docs.fast.ai/models.qrnn.forget_mult.html#CPUForgetMult"><code>CPUForgetMult</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=forward></a><code>forward</code>(<code>f</code>, <code>x</code>, <code>hidden_init</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L80">[source]</a></div></h4>
+<p>Should be overridden by all subclasses.</p>
+<p>.. note::
+    Although the recipe for forward pass needs to be defined within
+    this function, one should call the :class:<code>Module</code> instance afterwards
+    instead of this since the former takes care of running the
+    registered hooks while the latter silently ignores them.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>CPUForgetMult.forward</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=ForgetMult></a><em>class</em> <code>ForgetMult</code>() :: Inherits (<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L158">[source]</a></div></h3>
+<p>h_t = f_t <em> x_t + (1 - f_t) </em> h_{t-1}</p>
+<p>This equation is equivalent to dynamic weighted averaging.</p>
+<p>Inputs: X, hidden</p>
+
+<pre><code>- X (seq_len, batch, input_size): tensor containing the features of the input sequence.
+- F (seq_len, batch, input_size): tensor containing the forget gate values, assumed in range [0, 1].
+- hidden_init (batch, input_size): tensor containing the initial hidden state for the recurrence (h_{t-1}).
+- use_cuda: If True, use the fast element-wise CUDA kernel for recurrence. If False, uses naive for loop. Default: True.</code></pre>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="http://docs.fast.ai/models.qrnn.forget_mult.html#ForgetMult"><code>ForgetMult</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=forward></a><code>forward</code></h4>
+<p>(<code>f</code>, <code>x</code>, <code>hidden_init</code>=<code>None</code>, <code>use_cuda</code>=<code>True</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L174">[source]</a></div></p>
+<p>Should be overridden by all subclasses.</p>
+<p>.. note::
+    Although the recipe for forward pass needs to be defined within
+    this function, one should call the :class:<code>Module</code> instance afterwards
+    instead of this since the former takes care of running the
+    registered hooks while the latter silently ignores them.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>ForgetMult.forward</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=GPUForgetMult></a><em>class</em> <code>GPUForgetMult</code>() :: Inherits (<a href="https://pytorch.org/docs/stable/autograd.html#torch.autograd.Function"><code>Function</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L96">[source]</a></div></h3>
+<p>Every operation performed on :class:<code>Tensor</code> s creates a new function
+object, that performs the computation, and records that it happened.
+The history is retained in the form of a DAG of functions, with edges
+denoting data dependencies (<code>input &lt;- output</code>). Then, when backward is
+called, the graph is processed in the topological ordering, by calling
+:func:<code>backward</code> methods of each :class:<code>Function</code> object, and passing
+returned gradients on to next :class:<code>Function</code> s.</p>
+<p>Normally, the only way users interact with functions is by creating
+subclasses and defining new operations. This is a recommended way of
+extending torch.autograd.</p>
+<p>Each function object is meant to be used only once (in the forward pass).</p>
+<p>Examples::</p>
+
+<pre><code>&gt;&gt;&gt; class Exp(Function):
+&gt;&gt;&gt;
+&gt;&gt;&gt;     @staticmethod
+&gt;&gt;&gt;     def forward(ctx, i):
+&gt;&gt;&gt;         result = i.exp()
+&gt;&gt;&gt;         ctx.save_for_backward(result)
+&gt;&gt;&gt;         return result
+&gt;&gt;&gt;
+&gt;&gt;&gt;     @staticmethod
+&gt;&gt;&gt;     def backward(ctx, grad_output):
+&gt;&gt;&gt;         result, = ctx.saved_tensors
+&gt;&gt;&gt;         return grad_output * result</code></pre>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="http://docs.fast.ai/models.qrnn.forget_mult.html#GPUForgetMult"><code>GPUForgetMult</code></a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=backward></a><code>backward</code>(<code>grad_h</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L138">[source]</a></div></h4>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context :attr:<code>ctx</code> as the first argument, followed by
+as many outputs did :func:<code>forward</code> return, and it should return as many
+tensors, as there were inputs to :func:<code>forward</code>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute :attr:<code>ctx.needs_input_grad</code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+:func:<code>backward</code> will have <code>ctx.needs_input_grad[0] = True</code> if the
+first input to :func:<code>forward</code> needs gradient computated w.r.t. the
+output.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>GPUForgetMult.backward</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=compile></a><code>compile</code>()<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L102">[source]</a></div></h4>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>GPUForgetMult.compile</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=forward></a><code>forward</code>(<code>f</code>, <code>x</code>, <code>hidden_init</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/models/qrnn/forget_mult.py#L122">[source]</a></div></h4>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>GPUForgetMult.forward</code></p>
+
+</div>
+</div>
+</div>
+</div>
+ 
+

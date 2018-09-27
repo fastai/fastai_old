@@ -59,7 +59,7 @@ def format_ft_def(func, full_name:str=None)->str:
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty: arg_str += f" -> {anno_repr(sig.return_annotation)}"
     if is_fastai_class(type(func)):        arg_str += f" :: {link_type(type(func))}"
-    if len(arg_str)>80: res += "\n"
+    if len(arg_str)>30: res += "\n"
     return res + arg_str
 
 def get_enum_doc(elt, full_name:str) -> str:
@@ -72,7 +72,7 @@ def get_cls_doc(elt, full_name:str) -> str:
     "Class definition"
     parent_class = inspect.getclasstree([elt])[-1][0][1][0]
     doc = f'<em>class</em> ' + format_ft_def(elt, full_name)
-    if parent_class != object: doc += f' :: Inherits ({link_type(parent_class, include_bt=True)})'
+    if parent_class != object: doc += f' :: {link_type(parent_class, include_bt=True)}'
     return doc
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str='',
