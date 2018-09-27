@@ -155,8 +155,14 @@ entries:
     title: Doc authoring
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: developers.html
+    - output: web
+      title: Style guide
+      url: style.html
+    - output: web
+      title: Abbreviation
+      url: abbr.html
     output: web
     title: Library development
   output: web
