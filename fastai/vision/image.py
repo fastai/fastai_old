@@ -7,7 +7,7 @@ import PIL
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
            'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
            'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop',
-           'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'show_images', 'uniform', 'uniform_int']
+           'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
@@ -256,14 +256,6 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
         for i in range(y.size(0)): _draw_rect(ax, bb2hw(y[i]))
 
 Image.show = _show
-
-def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
-    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()):
-        show_image(x[i], ax=ax)
-        ax.set_title(classes[y[i]])
-    plt.tight_layout()
 
 class Transform():
     "Utility class for adding probability and wrapping support to transform funcs"

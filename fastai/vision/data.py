@@ -6,7 +6,7 @@ from ..data import *
 
 __all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'SegmentationDataset', 'denormalize', 
            'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
-           'show_image_batch', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
+           'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
            'imagenet_denorm']
 
 TfmList = Collection[Transform]
@@ -27,6 +27,20 @@ def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figs
     x = x[:rows*rows].cpu()
     if denorm: x = denorm(x)
     show_images(x,y[:rows*rows].cpu(),rows, classes)
+
+def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
+    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
+    fig, axs = plt.subplots(rows,rows,figsize=figsize)
+    for i, ax in enumerate(axs.flatten()):
+        show_image(x[i], ax=ax)
+        ax.set_title(classes[y[i]])
+    plt.tight_layout()
+
+def show_xy_images(x:Tensor,y:Tensor,rows:int,figsize:tuple=(9,9)):
+    "Shows a selection of images and targets from a given batch."
+    fig, axs = plt.subplots(rows,rows,figsize=figsize)
+    for i, ax in enumerate(axs.flatten()): show_image(x[i], y=y[i], ax=ax)
+    plt.tight_layout()
 
 class ImageDataset(LabelDataset):
     "Dataset for folders of images in style {folder}/{class}/{images}"
@@ -103,12 +117,6 @@ class SegmentationDataset(DatasetBase):
 
     def __getitem__(self, i:int) -> Tuple[Image,ImageMask]:
         return open_image(self.x[i]), open_mask(self.y[i])
-
-def show_xy_images(x:Tensor,y:Tensor,rows:int,figsize:tuple=(9,9)):
-    "Shows a selection of images and targets from a given batch."
-    fig, axs = plt.subplots(rows,rows,figsize=figsize)
-    for i, ax in enumerate(axs.flatten()): show_image(x[i], y=y[i], ax=ax)
-    plt.tight_layout()
 
 @dataclass
 class CoordTargetDataset(Dataset):
