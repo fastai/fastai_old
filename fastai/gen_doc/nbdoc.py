@@ -1,9 +1,10 @@
+"`gen_doc.nbdoc` generates notebook documentation from module functions and links to correct places"
+
 import inspect,importlib,enum,os,re
 from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
 from .core import *
-
 __all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
 

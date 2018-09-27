@@ -1,3 +1,4 @@
+"`fastai.layers` provides essential functions to building and modifying `model` architectures"
 from .torch_core import *
 
 __all__ = ['AdaptiveConcatPool2d', 'CrossEntropyFlat', 'Debugger', 'Flatten', 'Lambda', 'PoolFlatten', 'ResizeBatch', 

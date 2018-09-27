@@ -1,3 +1,4 @@
+"1-Cycle style training as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
 from ..core import *
 from ..callback import *
 from ..basic_train import Learner
@@ -6,7 +7,7 @@ __all__ = ['OneCycleScheduler']
 
 @dataclass
 class OneCycleScheduler(Callback):
-    "Manages 1-Cycle style traing as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
+    "Manages 1-Cycle style training as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
     learn:Learner
     lr_max:float
     moms:Floats=(0.95,0.85)

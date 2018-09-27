@@ -1,3 +1,4 @@
+"Utility functions to help deal with tensors"
 from .imports.torch import *
 from .core import *
 

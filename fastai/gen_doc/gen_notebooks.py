@@ -203,14 +203,32 @@ def get_doc_path(mod, dest_path):
     strip_name = strip_fastai(mod.__name__)
     return os.path.join(dest_path,f'{strip_name}.ipynb')
 
+def update_module_metadata(mod, dest_path='.', title=None, summary=None, keywords=None, overwrite=True):
+    "Creates jekyll metadata. Always overwrites existing"
+    if not (title or summary or keywords): return
+    doc_path = get_doc_path(mod, dest_path)
+    nb = read_nb(doc_path)
+    jm = {'title':title,'summary':summary,'keywords':keywords}
+    update_nb_metadata(nb, jm, overwrite)
+    json.dump(nb, open(doc_path,'w'))
 
-def update_module_page(mod, dest_path):
+def update_nb_metadata(nb, data, overwrite=True):
+    "Creates jekyll metadata. Always overwrites existing"
+    data = {k:v for (k,v) in data.items() if v is not None} # remove none values
+    if not data: return
+    if 'metadata' not in nb: nb['metadata'] = {}
+    if overwrite: nb['metadata']['jekyll'] = data
+    else: nb['metadata']['jekyll'] = nb['metadata'].get('jekyll', {}).update(data)
+
+def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
     doc_path = get_doc_path(mod, dest_path)
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(doc_path)
-    cells = nb['cells']
 
+    update_nb_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
+
+    cells = nb['cells']
     link_markdown_cells(cells, mod)
 
     type_dict = read_nb_types(cells)
@@ -237,11 +255,12 @@ def update_module_page(mod, dest_path):
                 if name not in pos_dict.keys():
                     cells, pos_dict = insert_cells(cells, pos_dict, name)
     nb['cells'] = cells
+
     json.dump(nb, open(doc_path,'w'))
     #execute_nb(doc_path)
 
 
-def update_all(pkg_name, dest_path, exclude=None, create_missing=True):
+def update_all(pkg_name, dest_path='.', exclude=None, create_missing=True):
     "Updates all the notebooks in `pkg_name`"
     if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)

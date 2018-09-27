@@ -8,4 +8,4 @@ from .metrics import *
 from .torch_core import *
 from .train import *
 from .tta import *
-
+from .version import __version__

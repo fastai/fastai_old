@@ -1,3 +1,4 @@
+"`Learner` support for computer vision"
 from ..torch_core import *
 from ..basic_train import *
 from ..data import *

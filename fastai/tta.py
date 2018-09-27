@@ -1,3 +1,4 @@
+"Module brings TTA (Test Time Functionality) to the `Learner` class. Use `learner.TTA()` instead"
 from .torch_core import *
 from .basic_train import *
 from .vision.transform import *
