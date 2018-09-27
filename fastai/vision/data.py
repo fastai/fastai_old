@@ -224,6 +224,3 @@ DataBunch.labels_to_csv = _labels_to_csv
 def image_data_from_csv(path:PathOrStr, folder:PathOrStr, csv_labels:PathOrStr, valid_pct:float=0.2, 
                         test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
     "Create `DataBunch` from a subfolder with the labels in a csv file."
-
-
->>>>>>> f6d79b8621befcfc23d300002417fb629a7ac0e5

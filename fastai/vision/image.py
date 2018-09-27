@@ -250,7 +250,9 @@ def _show(self:Image, ax:plt.Axes=None, y:Image=None, **kwargs):
         is_bb = isinstance(y, ImageBBox)
         y=y.data
     if y is None or not is_bb: return show_image(self.data, ax=ax, y=y, **kwargs)
-    ax = _show_image(self.data, ax=ax)
+    title=kwargs.pop('title') if 'title' in kwargs else None
+    ax = _show_image(self.data, ax=ax, **kwargs)
+    if title: ax.set_title(title)
     if len(y.size()) == 1: _draw_rect(ax, bb2hw(y))
     else:
         for i in range(y.size(0)): _draw_rect(ax, bb2hw(y[i]))
