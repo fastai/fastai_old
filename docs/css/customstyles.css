@@ -312,6 +312,10 @@ div#toc ul li ul li::before {
     content: "–  ";
 }
 
+div#toc ul li ul li.hide_content::before {
+    content: none;
+}
+
 div#toc >ul::before {
     content: "Table of Contents";
     font-weight: 500;
@@ -972,17 +976,6 @@ span.soft {
     color: white;
     background-color: #444;
     padding:10px;
-}
-
-/* this part adds an icon after external links, using FontAwesome*/
-a[href^="http://"]:after, a[href^="https://"]:after {
-    content: "\f08e";
-    font-family: FontAwesome;
-    font-weight: normal;
-    font-style: normal;
-    display: inline-block;
-    text-decoration: none;
-    padding-left: 3px;
 }
 
 /* Strip the outbound icon when this class is present */
