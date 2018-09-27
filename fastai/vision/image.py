@@ -213,7 +213,7 @@ class ImageBBox(ImageMask):
         pxls = torch.zeros(len(bboxes),h, w).long()
         for i,bbox in enumerate(bboxes):
             pxls[i,bbox[0]:bbox[2]+1,bbox[1]:bbox[3]+1] = 1
-        return cls(pxls)
+        return cls(pxls.float())
 
     @property
     def data(self)->LongTensor:
