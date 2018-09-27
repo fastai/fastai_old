@@ -165,8 +165,8 @@ def tilt(c, img_size, direction:rand_int, magnitude:uniform=0):
     elif direction == 1: targ_pts = [[-1,-1-magnitude], [-1,1+magnitude], [1,-1], [1,1]]
     elif direction == 2: targ_pts = [[-1,-1], [-1-magnitude,1], [1,-1], [1+magnitude,1]]
     elif direction == 3: targ_pts = [[-1-magnitude,-1], [-1,1], [1+magnitude,-1], [1,1]]
-    coeffs = find_coeffs(orig_pts, targ_pts)
-    return apply_perspective(c, coeffs)
+    coeffs = _find_coeffs(orig_pts, targ_pts)
+    return _apply_perspective(c, coeffs)
 
 @TfmCoord
 def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
@@ -180,8 +180,8 @@ def skew(c, img_size, direction:rand_int, magnitude:uniform=0):
     elif direction == 5: targ_pts = [[-1,-1], [-1,1], [1,-1-magnitude], [1,1]]
     elif direction == 6: targ_pts = [[-1,-1], [-1,1], [1,-1], [1+magnitude,1]]
     elif direction == 7: targ_pts = [[-1,-1], [-1,1], [1,-1], [1,1+magnitude]]
-    coeffs = find_coeffs(orig_pts, targ_pts)
-    return apply_perspective(c, coeffs)
+    coeffs = _find_coeffs(orig_pts, targ_pts)
+    return _apply_perspective(c, coeffs)
 
 def get_transforms(do_flip:bool=True, flip_vert:bool=False, max_rotate:float=10., max_zoom:float=1.1,
                    max_lighting:float=0.2, max_warp:float=0.2, p_affine:float=0.75,

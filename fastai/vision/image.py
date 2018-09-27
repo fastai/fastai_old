@@ -7,30 +7,28 @@ import PIL
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
            'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
            'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop',
-           'rand_int', 'resolve_tfms', 'round_multiple', 'show_image', 'uniform', 'uniform_int']
+           'resolve_tfms', 'round_multiple', 'show_image', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
 
-def uniform(low:Number, high:Number=None, size:List[int]=None)->FloatOrTensor:
+def uniform(low:Number, high:Number=None, size:Optional[List[int]]=None)->FloatOrTensor:
     "Draw 1 or shape=`size` random floats from uniform dist: min=`low`, max=`high`"
     if high is None: high=low
     return random.uniform(low,high) if size is None else torch.FloatTensor(*listify(size)).uniform_(low,high)
 
-def log_uniform(low, high, size=None)->FloatOrTensor:
+def log_uniform(low, high, size:Optional[List[int]]=None)->FloatOrTensor:
     "Draw 1 or shape=`size` random floats from uniform dist: min=log(`low`), max=log(`high`)"
     res = uniform(log(low), log(high), size)
     return exp(res) if size is None else res.exp_()
 
-def rand_bool(p:float, size=None)->BoolOrTensor:
-    "Draw 1 or shape=`size` random booleans (True occuring probability p)"
+def rand_bool(p:float, size:Optional[List[int]]=None)->BoolOrTensor:
+    "Draw 1 or shape=`size` random booleans (True occuring probability `p`)"
     return uniform(0,1,size)<p
 
-def rand_int(low:int,high:int)->int: return random.randint(low, high)
-
-def uniform_int(low:Number, high:Number, size:Optional[List[int]]=None)->FloatOrTensor:
-    "Generate int or tensor `size` of ints from uniform(`low`,`high`)"
-    return random.randint(low,high) if size is None else torch.randint(low,high,size)
+def uniform_int(low:int, high:int, size:Optional[List[int]]=None)->IntOrTensor:
+    "Generate int or tensor `size` of ints between `low` and `high` (included)"
+    return random.randint(low,high) if size is None else torch.randint(low,high+1,size)
 
 def pil2tensor(image:NPImage)->TensorImage:
     "Convert PIL style `image` array to torch style image tensor `get_image_files`"
@@ -75,13 +73,13 @@ class ImageBase(ItemBase):
         return self
 
     def clone(self)->'ImageBase':
-        "Clones this item and its `data`"
+        "Clone this item and its `data`."
         return self.__class__(self.data.clone())
 
 class Image(ImageBase):
-    "Supports applying transforms to image data"
+    "Support applying transforms to image data."
     def __init__(self, px:Tensor):
-        "create from raw tensor image data `px`"
+        "Create from raw tensor image data `px`."
         self._px = px
         self._logit_px=None
         self._flow=None
@@ -89,13 +87,9 @@ class Image(ImageBase):
         self.sample_kwargs = {}
 
     @property
-    def shape(self)->Tuple[int,int,int]:
-        "Returns (ch, h, w) for this image"
-        return self._px.shape
+    def shape(self)->Tuple[int,int,int]: return self._px.shape
     @property
-    def size(self)->Tuple[int,int]:
-        "Returns (h, w) for this image"
-        return self.shape[-2:]
+    def size(self)->Tuple[int,int]: return self.shape[-2:]
     @property
     def device(self)->torch.device: return self._px.device
 
@@ -109,7 +103,7 @@ class Image(ImageBase):
             return str_buffer.getvalue()
 
     def refresh(self)->None:
-        "Applies any logit, flow, or affine transfers that have been sent to the `Image`"
+        "Appliy any logit, flow, or affine transfers that have been sent to the `Image`."
         if self._logit_px is not None:
             self._px = self._logit_px.sigmoid_()
             self._logit_px = None
@@ -121,17 +115,17 @@ class Image(ImageBase):
 
     @property
     def px(self)->TensorImage:
-        "Get the tensor pixel buffer"
+        "Get the tensor pixel buffer."
         self.refresh()
         return self._px
     @px.setter
     def px(self,v:TensorImage)->None:
-        "Set the pixel buffer to `v`"
+        "Set the pixel buffer to `v`."
         self._px=v
 
     @property
     def flow(self)->FlowField:
-        "Access the flow-field grid after applying queued affine transforms"
+        "Access the flow-field grid after applying queued affine transforms."
         if self._flow is None:
             self._flow = affine_grid(self.shape)
         if self._affine_mat is not None:
@@ -143,28 +137,28 @@ class Image(ImageBase):
     def flow(self,v:FlowField): self._flow=v
 
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any):
-        "Equivalent to `image = sigmoid(func(logit(image)))`"
+        "Equivalent to `image = sigmoid(func(logit(image)))`."
         self.logit_px = func(self.logit_px, *args, **kwargs)
         return self
 
     def pixel(self, func:PixelFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.px = func(image.px)`"
+        "Equivalent to `image.px = func(image.px)`."
         self.px = func(self.px, *args, **kwargs)
         return self
 
     def coord(self, func:CoordFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.flow = func(image.flow, image.size)`"
+        "Equivalent to `image.flow = func(image.flow, image.size)`."
         self.flow = func(self.flow, self.shape, *args, **kwargs)
         return self
 
     def affine(self, func:AffineFunc, *args, **kwargs)->'Image':
-        "Equivalent to `image.affine_mat = image.affine_mat @ func()`"
+        "Equivalent to `image.affine_mat = image.affine_mat @ func()`."
         m = tensor(func(*args, **kwargs)).to(self.device)
         self.affine_mat = self.affine_mat @ m
         return self
 
     def resize(self, size:Union[int,TensorImageSize])->'Image':
-        "Resize the image to `size`, size can be a single int"
+        "Resize the image to `size`, size can be a single int."
         assert self._flow is None
         if isinstance(size, int): size=(self.shape[0], size, size)
         self.flow = affine_grid(size)
@@ -172,7 +166,7 @@ class Image(ImageBase):
 
     @property
     def affine_mat(self)->AffineMatrix:
-        "Get the affine matrix that will be applied by `refresh`"
+        "Get the affine matrix that will be applied by `refresh`."
         if self._affine_mat is None:
             self._affine_mat = torch.eye(3).to(self.device)
         return self._affine_mat
@@ -181,7 +175,7 @@ class Image(ImageBase):
 
     @property
     def logit_px(self)->LogitTensorImage:
-        "Get logit(image.px)"
+        "Get logit(image.px)."
         if self._logit_px is None: self._logit_px = logit_(self.px)
         return self._logit_px
     @logit_px.setter
@@ -189,7 +183,7 @@ class Image(ImageBase):
 
     @property
     def data(self)->TensorImage:
-        "Returns this images pixels as a tensor"
+        "Return this images pixels as a tensor."
         return self.px
 
 class ImageMask(Image):
@@ -302,7 +296,7 @@ class RandTransform():
     def __post_init__(self): functools.update_wrapper(self, self.tfm)
 
     def resolve(self)->None:
-        "Bind any random variables needed tfm calc"
+        "Binds any random variables in the transform."
         if not self.is_random:
             self.resolved = {**self.tfm.def_args, **self.kwargs}
             return
