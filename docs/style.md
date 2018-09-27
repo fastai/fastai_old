@@ -1,4 +1,7 @@
-# Jeremy's notes on fastai coding style
+---
+title: "Jeremy's notes on fastai coding style"
+sidebar: home_sidebar
+---
 
 ## Introduction
 

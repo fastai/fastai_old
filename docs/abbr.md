@@ -1,4 +1,8 @@
-## Fastai Abbreviation Guide
+---
+title: "fastai Abbreviation Guide"
+sidebar: home_sidebar
+---
+
 As mentioned in the [fastai style](https://github.com/fastai/fastai/blob/master/docs/style.md), 
 we name symbols following the *Huffman Coding* principle, which basically means 
 
@@ -87,7 +91,7 @@ Note that there are always exceptions, especially when we try to comply with the
 |                  | batch size                          | bs             |                                                  |
 |                  | multiple targets                    | multi          | is_multi                                         |
 |                  | regression                          | reg            | is_reg                                           |
-|                  | iterate, iterator                   | iter           | trn_iter, val_iter                               |
+|                  | iterate, iterator                   | iter           | train_iter, valid_iter                               |
 |                  |                                     |                |                                                  |
 |                  | torch input                         | x              |                                                  |
 |                  | target                              | y              |                                                  |
