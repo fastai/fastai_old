@@ -26,7 +26,10 @@ with open('HISTORY.md') as history_file:
 # pip doesn't think that 0.5.0a0+1637729 >=0.5.0, must use >=0.4.9 instead
 # XXX: change to torch>=0.5.0 once it's available as a pip wheel
 # XXX: change to torchvision>=0.2.1 once it's available as a pip wheel
-requirements = ['cupy', 'dataclasses', 'fast_progress', 'fire', 'ipython', 'jupyter_contrib_nbextensions', 'matplotlib', 'nbconvert', 'nbformat', 'numpy>=1.12', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.1', 'torchvision>=0.2.1', 'traitlets', 'typing']
+requirements = ['cupy', 'dataclasses', 'fastprogress', 'fire', 'ipython', 'matplotlib', 'nbconvert', 'nbformat', 'numpy>=1.12', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.1', 'torchvision>=0.2.1', 'traitlets', 'typing']
+
+# requirements to skip:
+# jupyter_contrib_nbextensions - only needed for internal tools - it's not on conda and requires too many of its own dependencies which aren't on conda either
 
 setup_requirements = ['pytest-runner', 'conda-build', ]
 
