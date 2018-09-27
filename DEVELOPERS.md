@@ -93,11 +93,13 @@ The same can be repeated for getting test requirements, just repeat the same pro
 
 ## Prep
 
-1. You need to register with:
+1. You need to register (free) with:
 
   - PyPI (​https://pypi.org/account/register/)
   - TestPyPI (https://test.pypi.org/account/register/)
   - anaconda.org (​https://anaconda.org/​)
+
+After registration, to upload to fastai project, you will need to ask Jeremy to add your username to PyPI and anaconda.
 
 2. Create file `~/.pypirc` with the following content:
 
@@ -115,9 +117,14 @@ The same can be repeated for getting test requirements, just repeat the same pro
     username: your testpypi username
     password: your testpypi password
 
-3. Install build tools:
+3. You can also setup your client to have transparent access to anaconda tools, see [docs](https://anaconda.org/stason/settings/access).
+
+You don't really need it, as the anaconda client cashes your credentials so you need to login only infrequently.
+
+4. Install build tools:
 
     conda install conda-verify conda-build anaconda-client
+
 
 
 ## Publish
@@ -175,7 +182,7 @@ May be add: `--force-reinstall` or manually remove preinstalled `fastai` first f
 
 XXX: When writing user documentation, the instruction will need to include:
 
-    conda install fastai -c pytorch
+    conda install fastai -c pytorch -c fastai
 
 If `conda-build` fails with:
 
@@ -207,7 +214,7 @@ Or upload them first and then install normally via `conda install`.
 
 
 
-#### Testing
+#### Uploading and Testing
 
 Adding the `--label` option tells conda to make the upload visible only to users who specify that label:
 
@@ -217,11 +224,11 @@ Any label name can be used. `main` is the only special, implicit label if none o
 
 To test, see that you can find it:
 
-    conda search --override -c fastai/label/test fastai
+    conda search --override -c fastai -c fastai/label/test fastai
 
 and then validate that the installation works correctly:
 
-    conda install --override -c pytorch -c fastai/label/test fastai
+    conda install --override -c pytorch -c fastai -c fastai/label/test fastai
 
 Once the testing is successful, copy all of the test package(s) back to the `main` label:
 
@@ -235,7 +242,12 @@ XXX: sort this one out
 
 Replace OLD with the old label, NEW with the new label, and SPEC with the package to move. SPEC can be either `user/package/version/file`, or `user/package/version` in which case it moves all files in that version.
 
+`anaconda` client won't let you upload a new package with the same final name, i.e. `fastai-1.0.0-py_1.tar.bz2`, so to release an update with the same module version you either need to first delete it from anaconda.org, or to change `meta.yaml` and bump the `number` in:
 
+    build:
+      number: 1
+
+Now you need to rebuild the package, and if you changed the `number` to `2`, the package will now become `'fastai-1.0.0-py_2.tar.bz2`.
 
 
 #### Various Helper Tools

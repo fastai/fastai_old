@@ -1,7 +1,7 @@
 # You need to enable this configuration once after checking out the repo
-# for the first time (assuming you checked it out into fastai_v1 dir):
+# for the first time (assuming you checked it out into fastai_pytorch dir):
 #
-# cd fastai_v1
+# cd fastai_pytorch
 # git config --local include.path ../.gitconfig
 #
 # If you need to disable this instrumentation do:
