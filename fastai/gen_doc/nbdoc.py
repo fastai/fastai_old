@@ -5,7 +5,7 @@ from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
 from .core import *
-__all__ = ['get_class_toc', 'get_fn_link', 'link_docstring', 'get_module_toc', 'show_doc', 'show_doc_from_name', 'get_ft_names',
+__all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
 
 MODULE_NAME = 'fastai'
@@ -76,7 +76,7 @@ def get_cls_doc(elt, full_name:str) -> str:
     return doc
 
 def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=None, title_level=None, alt_doc_string:str='',
-             ignore_warn:bool=False):
+             ignore_warn:bool=False, markdown=True):
     "Show documentation for element `elt`. Supported types: class, Callable, and enum"
     arg_comments = ifnone(arg_comments, {})
     if full_name is None and hasattr(elt, '__name__'): full_name = elt.__name__
@@ -91,7 +91,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
-    display(title_md(link+doc, title_level))
+    display(title_md(link+doc, title_level, markdown=markdown))
 
 def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_warn:bool=False) -> str:
     "merges and formats the docstring definition with arg_comments and alt_doc_string"
@@ -249,10 +249,10 @@ def get_source_link(ft) -> str:
     link = f"{SOURCE_URL}{github_path}.py#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
-def title_md(s:str, title_level:int):
+def title_md(s:str, title_level:int, markdown=True):
     res = '#' * title_level
     if title_level: res += ' '
-    return Markdown(res+s)
+    return Markdown(res+s) if markdown else (res+s)
 
 def create_anchor(text, title_level=0, name=None):
     if name is None: name=str2id(text)

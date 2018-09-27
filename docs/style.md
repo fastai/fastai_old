@@ -128,7 +128,7 @@ import PIL, os, numpy as np, math, collections, threading
 - If you're implementing a paper or following some other external document, include a link to it in your code.
 - If you're using nearly all the stuff provided by a module, just `import *`. There's no need to list all the things
   you are importing separately! To avoid exporting things which are really meant for internal use, define
-  [`__all__`](https://stackoverflow.com/questions/44834/can-someone-explain-all-in-python). (As I write this, we're not
+  [`__all__`](https://stackoverflow.com/questions/44834/can-someone-explain-all-in-python).
   currently following the `__all__` guideline, and welcome PRs to fix this.)
 - Assume the user has a modern editor or IDE and knows how to use it. E.g. if they want to browse the methods and
   classes, they can use code folding - they don't need to rely on having two lines between classes. If they want to see
@@ -137,14 +137,12 @@ import PIL, os, numpy as np, math, collections, threading
 - Don't use an automatic linter like autopep8 or formatter like yapf. No automatic tool can lay out your code with the care and domain understanding that you can. And it'll break all the care and domain understanding that previous contributors have used in that file!
 - Keep your PRs small, and for anything controversial or tricky discuss it on [the forums](http://forums.fast.ai)
   first.
-- When submitting a PR on a notebook, don't re-run the whole thing such that the diff ends up with changes for every
-  bit of meta-data. Just change the bits of code you have to, and double-check the diff only contains those code
-  changes before you push.
 
 ### Documentation
 
-- We haven't figured out something we're happy with here yet. We're working on it...
-- My ideal would be to have a decorator with a single line of documentation that links to a more detailed markdown doc.
+- Documentation largely goes in the notebooks in `docs_src`, which is used to create the HTML docs
+- In the code, add a one-line docstring which includes back-quoted references to the main params by name
+- The [Python re module](https://docs.python.org/3/library/re.html) is a good role model for the documentation style we're looking for.
 
 ## FAQ
 
