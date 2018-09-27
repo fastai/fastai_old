@@ -35,7 +35,7 @@ def convert_nb(fname, dest_path='.'):
     fname = Path(fname)
     dest_name = fname.with_suffix('.html').name
     meta = nb['metadata']
-    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {'title': fname.with_suffix('.html').name}
+    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {'title': fname.with_suffix('').name}
     with open(f'{dest_path}/{dest_name}','w') as f:
         f.write(exporter.from_notebook_node(nb, resources=meta_jekyll)[0])
 
