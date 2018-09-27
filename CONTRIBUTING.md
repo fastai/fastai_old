@@ -65,8 +65,6 @@ This is done automatically during `diff`/`commit` git operations, but you need t
 
 Therefore, your developing process will always start with:
 
-    git clone https://github.com/fastai/fastai_pytorch
-    cd fastai_pytorch
     tools/trust-origin-git-config
 
 The last command tells git to invoke configuration stored in `fastai_pytorch/.gitconfig`, so your `git diff` and `git commit` invocations for this particular repository will now go via `tools/fastai-nbstripout` which will do all the work for you.
