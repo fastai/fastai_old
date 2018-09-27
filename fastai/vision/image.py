@@ -74,10 +74,6 @@ class ImageBase(ItemBase):
         self.sample_kwargs = kwargs
         return self
 
-    def clone(self)->'ImageBase':
-        "Clones this item and its `data`"
-        return self.__class__(self.data.clone())
-
 class Image(ImageBase):
     "Supports applying transforms to image data"
     def __init__(self, px:Tensor):
@@ -88,6 +84,9 @@ class Image(ImageBase):
         self._affine_mat=None
         self.sample_kwargs = {}
 
+    def clone(self):
+        return self.__class__(self.px.clone())
+    
     @property
     def shape(self)->Tuple[int,int,int]:
         "Returns (ch, h, w) for this image"
@@ -191,20 +190,23 @@ class Image(ImageBase):
     def data(self)->TensorImage:
         "Returns this images pixels as a tensor"
         return self.px
-
+    
 class ImageMask(Image):
     "Class for image segmentation target"
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image': return self
-
+    
     def refresh(self):
         self.sample_kwargs['mode'] = 'nearest'
         return super().refresh()
+    
+    @property
+    def data(self)->TensorImage:
+        "Returns this images pixels as a tensor"
+        return self.px.long()
 
 class ImageBBox(ImageMask):
     "Image class for bbox-style annotations"
-    def clone(self):
-        return self.__class__(self.px.clone())
-
+    
     @classmethod
     def create(cls, bboxes:Collection[Collection[int]], h:int, w:int)->'ImageBBox':
         "Creates an ImageBBox object from bboxes"
@@ -227,9 +229,9 @@ def open_image(fn:PathOrStr)->Image:
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
-def open_mask(fn:PathOrStr)->ImageMask:
+def open_mask(fn:PathOrStr)->ImageMask: 
     "Return `ImageMask` object create from mask in file `fn`"
-    return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
+    return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 
 def _show_image(img:Image, ax:plt.Axes=None, figsize:tuple=(3,3), hide_axis:bool=True, cmap:str='binary',
                 alpha:float=None)->plt.Axes:
@@ -400,7 +402,7 @@ def get_resize_target(img, crop_target, do_crop=False)->TensorImageSize:
 def apply_tfms(tfms:TfmList, x:TensorImage, do_resolve:bool=True,
                xtra:Optional[Dict[Transform,dict]]=None, size:Optional[Union[int,TensorImageSize]]=None,
                mult:int=32, do_crop:bool=True, padding_mode:str='reflection', **kwargs:Any)->TensorImage:
-    "Apply all `tfms` to `x` - `do_resolve`: bind random args - size,mult used to crop/pad"
+    "Apply all `tfms` to `x` - `do_resolve`: bind random args - `size`, `mult` used to crop/pad"
     if tfms or xtra or size:
         if not xtra: xtra={}
         tfms = sorted(listify(tfms), key=lambda o: o.tfm.order)

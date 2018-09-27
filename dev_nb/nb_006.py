@@ -14,6 +14,12 @@ class ImageMask(Image):
         self.sample_kwargs['mode'] = 'nearest'
         return super().refresh()
 
+    @property
+    def data(self)->TensorImage:
+        "Returns this images pixels as a tensor"
+        return self.px.long()
+
+
 def open_mask(fn:PathOrStr) -> ImageMask: return ImageMask(pil2tensor(PIL.Image.open(fn)).long())
 
 # Same as `show_image`, but renamed with _ prefix
