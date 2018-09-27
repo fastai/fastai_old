@@ -167,7 +167,7 @@ def _get_init_state(): return {'epoch':0, 'iteration':0, 'num_batch':0}
 
 @dataclass
 class CallbackHandler():
-    "Manages all of the registered callback objects, beta is for smoothing loss"
+    "Manages all of the registered callback objects, smoothing loss by momentum `beta`"
     callbacks:CallbackList
     beta:float=0.98
 

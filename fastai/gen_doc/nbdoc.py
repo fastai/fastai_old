@@ -59,7 +59,7 @@ def format_ft_def(func, full_name:str=None)->str:
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty: arg_str += f" -> {anno_repr(sig.return_annotation)}"
     if is_fastai_class(type(func)):        arg_str += f" :: {link_type(type(func))}"
-    if len(arg_str)>30: res += "\n"
+    if len(str(sig))>80: res += "\n"
     return res + arg_str
 
 def get_enum_doc(elt, full_name:str) -> str:
@@ -223,8 +223,8 @@ def show_video_from_youtube(code, start=0):
 def fn_name(ft)->str:
     if hasattr(ft, '__name__'):   return ft.__name__
     elif hasattr(ft,'_name'): return ft._name
-    elif hasattr(ft,'__class__'): return ft.__class__.__name__
-    else:                         return str(ft)
+    #elif hasattr(ft,'__class__'): return ft.__class__.__name__
+    else:                         return str(ft).split('.')[-1]
 
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
