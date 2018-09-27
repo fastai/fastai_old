@@ -39,7 +39,7 @@ def update_notebooks(source_path=None, dest_path=None, update_html=False, update
         if update_nb: 
             try: doc_path = update_module_page(mod, dest_path)
             except FileNotFoundError: doc_path = create_module_page(mod, dest_path)
-        if update_html: convert_nb(doc_path, dest_path)
+        if update_html: convert_nb(doc_path, html_path)
     else:
         if update_nb: update_all(source_path, dest_path, create_missing=create_missing)
         if update_html: convert_all(dest_path, html_path)
