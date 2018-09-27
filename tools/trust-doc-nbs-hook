@@ -3,7 +3,7 @@
 # This script signs all notebooks in the docs_src directory as trusted
 # It's is used as a git post-merge hook
 
-import nbformat.sign, sys
+import nbformat.sign, sys, os
 from pathlib import Path
 
 print("Attention! Changing all notebooks under docs_src to be *trusted*")
