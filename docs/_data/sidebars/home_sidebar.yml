@@ -2,7 +2,7 @@ entries:
 - folders:
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: overview.html
     - output: web
       title: imports
@@ -36,7 +36,7 @@ entries:
     title: Core
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: training.html
     - output: web
       title: callback
@@ -82,7 +82,7 @@ entries:
     title: Training
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: applications.html
     - output: web
       title: colab
