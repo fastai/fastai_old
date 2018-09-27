@@ -1,6 +1,6 @@
 from ..torch_core import *
 from ..layers import *
-from ..callbacks.hooks import model_sizes
+from ..callbacks.hooks import *
 
 __all__ = ['DynamicUnet', 'UnetBlock']
 
