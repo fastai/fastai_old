@@ -9,7 +9,7 @@ we name symbols following the *Huffman Coding* principle, which basically means
 
 > Commonly used and generic concepts should be named shorter. You shouldn't waste short sequences on less common concepts. 
 
-Fastai also follows the life-cycle naming principle:
+fastai also follows the life-cycle naming principle:
 > The shorter life a symbol, the shorter name it should have.
 
 which means:

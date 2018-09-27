@@ -14,7 +14,7 @@ args = parser.parse_args()
 # define which fields need to be kept:
 cell_metadata_keep_code = []
 cell_metadata_keep_docs = ['hide_input']
-nb_metadata_keep        = ['kernelspec']
+nb_metadata_keep        = ['kernelspec', 'jekyll']
 
 def clean_cell_outputs(o):
     if 'execution_count' in o: o['execution_count'] = None
@@ -77,5 +77,4 @@ if not args.files and input_stream:
     output_stream.write(x)
     output_stream.write("\n")
     output_stream.flush()
-
 

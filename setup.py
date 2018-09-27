@@ -3,8 +3,8 @@
 
 """The setup script."""
 
+import sys
 from pathlib import Path
-
 from setuptools import setup, find_packages
 
 def create_version_file(version):
@@ -14,7 +14,7 @@ def create_version_file(version):
         f.write("__version__ = '{}'\n".format(version))
 
 # version
-version = '1.0.0b1'
+version = '1.0.0b3'
 create_version_file(version)
 
 with open('README.md') as readme_file:
@@ -23,17 +23,42 @@ with open('README.md') as readme_file:
 with open('HISTORY.md') as history_file:
     history = history_file.read()
 
+def to_list(buffer): return list(filter(None, buffer.splitlines()))
+
 # pip doesn't think that 0.5.0a0+1637729 >=0.5.0, must use >=0.4.9 instead
-# XXX: change to torch>=0.5.0 once it's available as a pip wheel
-# XXX: change to torchvision>=0.2.1 once it's available as a pip wheel
-requirements = ['cupy', 'dataclasses', 'fastprogress', 'fire', 'ipython', 'matplotlib', 'nbconvert', 'nbformat', 'numpy>=1.12', 'pandas', 'Pillow', 'scipy', 'spacy', 'torch>=0.4.1', 'torchvision>=0.2.1', 'traitlets', 'typing']
+# XXX: change to torch>=1.0.0 once it's released
+requirements = to_list("""
+fastprogress
+ipython
+matplotlib
+numpy>=1.12
+pandas
+Pillow
+scipy
+spacy
+torch>=0.4.9
+torchvision>=0.2.1
+typing
+""")
 
-# requirements to skip:
-# jupyter_contrib_nbextensions - only needed for internal tools - it's not on conda and requires too many of its own dependencies which aren't on conda either
+if sys.version_info < (3,7): requirements.append('dataclasses')
 
-setup_requirements = ['pytest-runner', 'conda-build', ]
+# optional requirements to skip for now:
+# cupy - is only required for QRNNs - sgguger thinks later he will get rid of this dep.
+# fire - will be eliminated shortly
+# nbconvert
+# nbformat
+# traitlets
+# jupyter_contrib_nbextensions
 
-test_requirements = ['pytest', 'numpy', 'torch>=0.4.1']
+setup_requirements = to_list("""
+pytest-runner
+""")
+
+test_requirements = to_list("""
+pytest
+numpy>=1.12
+""")
 
 # list of classifiers: https://pypi.org/pypi?%3Aaction=list_classifiers
 setup(
@@ -51,6 +76,7 @@ setup(
     install_requires=requirements,
     license="Apache Software License 2.0",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/markdown',
     include_package_data=True,
     keywords='fastai',
     name='fastai',

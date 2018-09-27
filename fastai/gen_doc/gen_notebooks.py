@@ -74,7 +74,8 @@ def get_global_vars(mod):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
             key,lineno = node.targets[0].id,node.targets[0].lineno-1
             codestr = flines[lineno]
-            if re.match(f"^{key}\s*=\s*.*", codestr): # only top level assignment
+            match = re.match(f"^({key})\s*=\s*.*", codestr)
+            if match and match.group(1) != '__all__': # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
 
@@ -126,6 +127,7 @@ def create_module_page(mod, dest_path, force=False):
     doc_path = get_doc_path(mod, dest_path)
     json.dump(nb, open(doc_path, 'w' if force else 'x'))
     execute_nb(doc_path)
+    return doc_path
 
 _default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py', 'imports']
 
@@ -205,15 +207,17 @@ def get_doc_path(mod, dest_path):
     return os.path.join(dest_path,f'{strip_name}.ipynb')
 
 def update_module_metadata(mod, dest_path='.', title=None, summary=None, keywords=None, overwrite=True):
-    "Creates jekyll metadata. Always overwrites existing"
-    if not (title or summary or keywords): return
-    doc_path = get_doc_path(mod, dest_path)
-    nb = read_nb(doc_path)
-    jm = {'title':title,'summary':summary,'keywords':keywords}
-    update_nb_metadata(nb, jm, overwrite)
-    json.dump(nb, open(doc_path,'w'))
+    "Creates jekyll metadata for given module"
+    update_nb_metadata(get_doc_path(mod, dest_path), title, summary, keywords, overwrite)
 
-def update_nb_metadata(nb, data, overwrite=True):
+def update_nb_metadata(nb_path, title=None, summary=None, keywords=None, overwrite=True):
+    "Creates jekyll metadata for given notebook path"
+    nb = read_nb(nb_path)
+    jm = {'title': title, 'summary': summary, 'keywords': keywords}
+    update_nb_metadata(nb, jm, overwrite)
+    json.dump(nb, open(nb_path, 'w'))
+
+def update_metadata(nb, data, overwrite=True):
     "Creates jekyll metadata. Always overwrites existing"
     data = {k:v for (k,v) in data.items() if v is not None} # remove none values
     if not data: return
@@ -227,7 +231,7 @@ def update_module_page(mod, dest_path='.'):
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(doc_path)
 
-    update_nb_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
+    update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
 
     cells = nb['cells']
     link_markdown_cells(cells, mod)
@@ -258,10 +262,10 @@ def update_module_page(mod, dest_path='.'):
     nb['cells'] = cells
 
     json.dump(nb, open(doc_path,'w'))
+    return doc_path
     #execute_nb(doc_path)
 
-
-def update_all(pkg_name, dest_path='.', exclude=None, create_missing=True):
+def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
     "Updates all the notebooks in `pkg_name`"
     if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)
