@@ -23,7 +23,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: models.html
         - output: web
           title: models.rnn
@@ -57,7 +57,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: callbacks.html
         - output: web
           title: callbacks.rnn
@@ -91,7 +91,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: text.html
         - output: web
           title: text.learner
@@ -106,7 +106,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: tabular.html
         - output: web
           title: tabular.transform
@@ -118,7 +118,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: vision.html
         - output: web
           title: vision.learner
@@ -137,7 +137,7 @@ entries:
     title: Applications
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: gen_doc.html
     - output: web
       title: gen_doc.sgen_notebooks
@@ -153,5 +153,11 @@ entries:
       url: gen_doc.convert2html.html
     output: web
     title: Doc authoring
+  - folderitems:
+    - output: web
+      title: overview
+      url: developers.html
+    output: web
+    title: Library development
   output: web
   title: Sidebar

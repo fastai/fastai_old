@@ -1,5 +1,8 @@
-
-# Notes for Developers
+---
+title: "Notes for Developers"
+keywords: fastai
+sidebar: home_sidebar
+---
 
 ## Project Build
 
