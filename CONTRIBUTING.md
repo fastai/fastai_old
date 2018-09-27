@@ -51,7 +51,7 @@ Make sure you follow this recipe:
     cd fastai_pytorch
     tools/run-after-git-clone
 
-This will take care of (almost) everything that is explained next. That is `tools/run-after-git-clone` will execute the scripts that are otherwise explained individually below.
+This will take care of everything that is explained in the following two sections. That is `tools/run-after-git-clone` will execute the scripts that are explained individually below. You still need to know what they do, but you need to execute just one script.
 
 Note: windows users, not using bash emulation, will need to invoke the command as:
 
