@@ -81,9 +81,9 @@ default_spec_tok = [BOS, FLD, UNK, PAD]
 
 class Tokenizer():
     "Put together rules, a tokenizer function and a language to tokenize text with multiprocessing."
-    def __init__(self, tok_fn:Callable=SpacyTokenizer, lang:str='en', rules:ListRules=None,
+    def __init__(self, tok_func:Callable=SpacyTokenizer, lang:str='en', rules:ListRules=None,
                  special_cases:Collection[str]=None, n_cpus:int=None):
-        self.tok_fn,self.lang,self.special_cases = tok_fn,lang,special_cases
+        self.tok_func,self.lang,self.special_cases = tok_func,lang,special_cases
         self.rules = rules if rules else default_rules
         self.special_cases = special_cases if special_cases else default_spec_tok
         self.n_cpus = n_cpus or num_cpus()//2
@@ -93,22 +93,22 @@ class Tokenizer():
         for rule in self.rules: res += f' - {rule.__name__}\n'
         return res
 
-    def proc_text(self, t:str, tok:BaseTokenizer) -> List[str]:
-        "Processe one text."
+    def process_text(self, t:str, tok:BaseTokenizer) -> List[str]:
+        "Processe one text `t` with tokenizer `tok`."
         for rule in self.rules: t = rule(t)
         return tok.tokenizer(t)
 
-    def process_all_1(self, texts:Collection[str]) -> List[List[str]]:
-        "Processe a list of texts in one process."
-        tok = self.tok_fn(self.lang)
+    def _process_all_1(self, texts:Collection[str]) -> List[List[str]]:
+        "Process a list of `texts` in one process."
+        tok = self.tok_func(self.lang)
         if self.special_cases: tok.add_special_cases(self.special_cases)
-        return [self.proc_text(t, tok) for t in texts]
+        return [self.process_text(t, tok) for t in texts]
 
     def process_all(self, texts:Collection[str]) -> List[List[str]]:
-        "Processe a list of texts in several processes."
+        "Process a list of `texts`."
         if self.n_cpus <= 1: return self.process_all_1(texts)
         with ProcessPoolExecutor(self.n_cpus) as e:
-            return sum(e.map(self.process_all_1, partition_by_cores(texts, self.n_cpus)), [])
+            return sum(e.map(self._process_all_1, partition_by_cores(texts, self.n_cpus)), [])
 
 class Vocab():
     "Contain the correspondance between numbers and tokens and numericalize."
