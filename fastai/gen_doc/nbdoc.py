@@ -52,14 +52,13 @@ def format_param(p):
 def format_ft_def(func, full_name:str=None)->str:
     "Formats and links function definition to show in documentation"
     sig = inspect.signature(func)
-    res = f'`{ifnone(full_name, func.__name__)}`'
+    name = f'`{ifnone(full_name, func.__name__)}`'
     fmt_params = [format_param(param) for name,param
                   in sig.parameters.items() if name not in ('self','cls')]
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation != sig.empty: arg_str += f" -> {anno_repr(sig.return_annotation)}"
     if is_fastai_class(type(func)):        arg_str += f" :: {link_type(type(func))}"
-    if len(str(sig))>80: res += "\n"
-    return res + arg_str
+    return f'{name}\n{name}{arg_str}'
 
 def get_enum_doc(elt, full_name:str) -> str:
     "Formatted enum documentation"
@@ -86,9 +85,10 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     else: doc = f'doc definition not supported for {full_name}'
     title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
-    if is_fastai_class(elt): doc += '\n' + get_function_source(elt)
+    doc += '\n'
     if doc_string and (inspect.getdoc(elt) or arg_comments):
-        doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
+        doc += format_docstring(elt, arg_comments, alt_doc_string, ignore_warn) + ' '
+    if is_fastai_class(elt): doc += get_function_source(elt)
     #return link+doc
     display(title_md(link+doc, title_level, markdown=markdown))
 
@@ -253,7 +253,7 @@ def get_source_link(mod, lineno) -> str:
     "returns link to  line in source code"
     github_path = mod.__name__.replace('.', '/')
     link = f"{SOURCE_URL}{github_path}.py#L{lineno}"
-    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
+    return f'<a href="{link}">[source]</a>'
 
 def get_function_source(ft) -> str:
     "returns link to  line in source code"
