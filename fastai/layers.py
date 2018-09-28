@@ -96,9 +96,12 @@ class CrossEntropyFlat(nn.CrossEntropyLoss):
         n,c,*_ = input.shape
         return super().forward(input.view(n, c, -1), target.view(n, -1))
 
-def simple_cnn(actns:Collection[int], kernel_szs:Collection[int],
-               strides:Collection[int]) -> nn.Sequential:
+def simple_cnn(actns:Collection[int], kernel_szs:Collection[int]=None,
+               strides:Collection[int]=None) -> nn.Sequential:
     "CNN with `conv2d_relu` layers defined by `actns`, `kernel_szs` and `strides`"
+    nl = len(actns)-1
+    kernel_szs = ifnone(kernel_szs, [3]*nl)
+    strides    = ifnone(strides   , [2]*nl)
     layers = [conv2d_relu(actns[i], actns[i+1], kernel_szs[i], stride=strides[i])
         for i in range(len(strides))]
     layers.append(PoolFlatten())

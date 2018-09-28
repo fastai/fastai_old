@@ -1,6 +1,7 @@
 ---
 title: "fastai Abbreviation Guide"
 keywords: fastai
+summary: "Establishes the abbreviation guidelines for contributing to the library"
 sidebar: home_sidebar
 ---
 

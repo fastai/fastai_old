@@ -1,6 +1,7 @@
 ---
 title: "Style guide"
 keywords: fastai
+summary: "Establishes the style guidelines for contributing to the library"
 sidebar: home_sidebar
 ---
 

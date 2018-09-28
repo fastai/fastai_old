@@ -6,21 +6,20 @@ from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, 
 from .docstrings import *
 from .core import *
 __all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
-           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
+           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod', 'get_source_link']
 
 MODULE_NAME = 'fastai'
 SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
 PYTORCH_DOCS = 'https://pytorch.org/docs/stable/'
-DOCS_URL = 'http://docs.fast.ai/'
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
-def link_type(argtype, include_bt:bool=True):
+def link_type(arg_type, arg_name=None, include_bt:bool=True):
     "creates link to documentation"
-    arg_name = fn_name(argtype)
+    arg_name = arg_name or fn_name(arg_type)
     if include_bt: arg_name = code_esc(arg_name)
-    if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
-    if belongs_to_module(argtype, 'torch') and ('Tensor' not in arg_name): return f'[{arg_name}]({get_pytorch_link(argtype)})'
+    if is_fastai_class(arg_type): return f'[{arg_name}]({get_fn_link(arg_type)})'
+    if belongs_to_module(arg_type, 'torch') and ('Tensor' not in arg_name): return f'[{arg_name}]({get_pytorch_link(arg_type)})'
     return arg_name
 
 def is_fastai_class(t): return belongs_to_module(t, MODULE_NAME)
@@ -34,7 +33,7 @@ def code_esc(s): return f'<code>{s}</code>'
 
 def type_repr(t):
     if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
-    elif hasattr(t, '__args__'):
+    elif getattr(t, '__args__', None):
         args = t.__args__
         if len(args)==2 and args[1] == type(None):
             return f'`Optional`[{type_repr(args[0])}]'
@@ -87,7 +86,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     else: doc = f'doc definition not supported for {full_name}'
     title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
-    if is_fastai_class(elt): doc += get_source_link(elt)
+    if is_fastai_class(elt): doc += '\n' + get_function_source(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
@@ -98,7 +97,7 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
     parsed = ""
     doc = parse_docstring(inspect.getdoc(elt))
     description = alt_doc_string or doc['long_description'] or doc['short_description']
-    if description: parsed += f'\n\n{link_docstring(elt, description)}'
+    if description: parsed += f'\n\n{link_docstring(inspect.getmodule(elt), description)}'
 
     resolved_comments = {**doc.get('comments', {}), **arg_comments} # arg_comments takes priority
     args = inspect.getfullargspec(elt).args if not is_enum(elt.__class__) else elt.__members__.keys()
@@ -113,15 +112,16 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
 
 # Finds all places with a backtick or <code> but only if it hasn't already been linked
 BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
-def link_docstring(elt, docstring:str) -> str:
+def link_docstring(modules, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
-    mod = inspect.getmodule(elt)
-    modvars = mod.__dict__
+    mods = listify(modules)
+    modvars = {}
+    for mod in mods: modvars.update(mod.__dict__)
     for m in BT_REGEX.finditer(docstring):
-        if m.group(1) in modvars:
-            link_elt = modvars[m.group(1)]
-            link = link_type(link_elt)
-            docstring = docstring.replace(m.group(0), link)
+        keyword = m.group(1)
+        if keyword in modvars:
+            link = link_type(modvars[keyword], arg_name=keyword)
+            docstring = docstring.replace(m.group(0), link) # group(0) = replace whole link with new one
     return docstring
 
 
@@ -172,7 +172,7 @@ def get_inner_fts(elt) -> List[str]:
     "return methods belonging to class"
     fts = []
     for ft_name in elt.__dict__.keys():
-        if ft_name[:2] == '__': continue
+        if ft_name.startswith('_'): continue
         ft = getattr(elt, ft_name)
         if inspect.isfunction(ft): fts.append(f'{elt.__name__}.{ft_name}')
         if inspect.isclass(ft): fts += [f'{elt.__name__}.{n}' for n in get_inner_fts(ft)]
@@ -222,32 +222,43 @@ def show_video_from_youtube(code, start=0):
 
 def fn_name(ft)->str:
     if hasattr(ft, '__name__'):   return ft.__name__
-    elif hasattr(ft,'_name'): return ft._name
+    elif hasattr(ft,'_name') and ft._name: return ft._name
     #elif hasattr(ft,'__class__'): return ft.__class__.__name__
+    elif hasattr(ft,'__origin__'): return str(ft.__origin__).split('.')[-1]
     else:                         return str(ft).split('.')[-1]
 
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
-    strip_name = strip_fastai(ft.__module__)
-    return f'{DOCS_URL}{strip_name}.html#{fn_name(ft)}'
+    strip_name = strip_fastai(get_module_name(ft))
+    return f'/{strip_name}.html#{fn_name(ft)}'
+
+def get_module_name(ft) -> str: return ft.__name__ if inspect.ismodule(ft) else ft.__module__
 
 def get_pytorch_link(ft) -> str:
     "returns link to pytorch docs"
     name = ft.__name__
-    paths = str(ft.__module__).split('.')
+    if name.startswith('torch.nn') and inspect.ismodule(ft): # nn.functional is special case
+        nn_link = name.replace('.', '-')
+        return f'{PYTORCH_DOCS}nn.html#{nn_link}'
+    paths = get_module_name(ft).split('.')
     if len(paths) == 1: return f'{PYTORCH_DOCS}{paths[0]}.html#{paths[0]}.{name}'
 
     offset = 1 if paths[1] == 'utils' else 0 # utils is a pytorch special case
     doc_path = paths[1+offset]
-    plink = '.'.join(paths[:(2+offset)])
-    return f'{PYTORCH_DOCS}{doc_path}.html#{plink}.{name}'
+    fnlink = '.'.join(paths[:(2+offset)]+[name])
+    return f'{PYTORCH_DOCS}{doc_path}.html#{fnlink}'
 
-def get_source_link(ft) -> str:
+
+def get_source_link(mod, lineno) -> str:
     "returns link to  line in source code"
-    lineno = inspect.getsourcelines(ft)[1]
-    github_path = inspect.getmodule(ft).__name__.replace('.', '/')
+    github_path = mod.__name__.replace('.', '/')
     link = f"{SOURCE_URL}{github_path}.py#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
+
+def get_function_source(ft) -> str:
+    "returns link to  line in source code"
+    lineno = inspect.getsourcelines(ft)[1]
+    return get_source_link(inspect.getmodule(ft), lineno)
 
 def title_md(s:str, title_level:int, markdown=True):
     res = '#' * title_level

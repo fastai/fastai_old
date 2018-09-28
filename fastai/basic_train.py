@@ -88,7 +88,7 @@ def fit(epochs:int, model:Model, loss_fn:LossFunction, opt:optim.Optimizer,
 
 @dataclass
 class Learner():
-    "Object that wraps together some data, a model, a loss function and an optimizer"
+    "Trains `model` using `data` to minimize `loss_fn` with optimizer `opt_fn`."
     data:DataBunch
     model:nn.Module
     opt_fn:Callable=AdamW
@@ -164,7 +164,7 @@ class Learner():
         torch.save(self.model.state_dict(), self.path/self.model_dir/f'{name}.pth')
 
     def load(self, name:PathOrStr):
-        "load model `name` from `self.model_dir"
+        "load model `name` from `self.model_dir`"
         self.model.load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
 @dataclass

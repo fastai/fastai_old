@@ -6,8 +6,10 @@ import nbformat.sign
 from pathlib import Path
 from .core import *
 from .nbdoc import *
+from .convert2html import convert_all, convert_nb
 
-__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
+__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all', 'link_all', 'import_mod',
+           'link_nb', 'update_notebooks']
 
 def get_empty_notebook():
     "a default notbook with the minimum metadata"
@@ -72,19 +74,12 @@ def get_global_vars(mod):
     d = {}
     for node in ast.walk(ast.parse(fstr)):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
-            key,lineno = node.targets[0].id,node.targets[0].lineno-1
+            key,lineno = node.targets[0].id,node.targets[0].lineno
             codestr = flines[lineno]
             match = re.match(f"^({key})\s*=\s*.*", codestr)
             if match and match.group(1) != '__all__': # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
-
-def get_source_link(mod, lineno) -> str:
-    "Returns link to line number in source code"
-    fpath = os.path.realpath(inspect.getfile(mod))
-    relpath = os.path.relpath(fpath, os.getcwd())
-    link = f"{relpath}#L{lineno}"
-    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def execute_nb(fname):
     "Execute notebook `fname`"
@@ -174,10 +169,11 @@ def read_nb_types(cells):
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
 
-def link_markdown_cells(cells, mod):
+def link_markdown_cells(cells, modules):
+    "Creates documentation links for all cells in markdown with backticks"
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            cell['source'] = link_docstring(mod, cell['source'])
+            cell['source'] = link_docstring(modules, cell['source'])
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -225,6 +221,16 @@ def update_metadata(nb, data, overwrite=True):
     if overwrite: nb['metadata']['jekyll'] = data
     else: nb['metadata']['jekyll'] = nb['metadata'].get('jekyll', {}).update(data)
 
+IMPORT_RE = re.compile(r"from (fastai[\.\w_]*)")
+def get_imported_modules(cells):
+    module_names = ['fastai']
+    for cell in cells:
+        if cell['cell_type'] == 'code':
+            for m in IMPORT_RE.finditer(cell['source']):
+                if m.group(1) not in module_names: module_names.append(m.group(1))
+    mods = [import_mod(m) for m in module_names]
+    return [m for m in mods if m is not None]
+
 def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
     doc_path = get_doc_path(mod, dest_path)
@@ -234,7 +240,7 @@ def update_module_page(mod, dest_path='.'):
     update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
 
     cells = nb['cells']
-    link_markdown_cells(cells, mod)
+    link_markdown_cells(cells, get_imported_modules(cells))
 
     type_dict = read_nb_types(cells)
     gvar_map = get_global_vars(mod)
@@ -265,6 +271,17 @@ def update_module_page(mod, dest_path='.'):
     return doc_path
     #execute_nb(doc_path)
 
+def link_nb(nb_path):
+    nb = read_nb(nb_path)
+    cells = nb['cells']
+    link_markdown_cells(cells, get_imported_modules(cells))
+    json.dump(nb, open(nb_path,'w'))
+
+def link_all(path_dir):
+    "Links documentation to all the notebooks in `pkg_name`"
+    files = Path(path_dir).glob('*.ipynb')
+    for f in files: link_nb(f)
+
 def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
     "Updates all the notebooks in `pkg_name`"
     if exclude is None: exclude = _default_exclude
@@ -277,3 +294,48 @@ def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
         elif create_missing:
             print(f'Creating module page of {f}')
             create_module_page(mod, dest_path)
+
+def resolve_path(path):
+    "Creates absolute path if relative is provided"
+    p = Path(path)
+    if p.is_absolute(): return p
+    return Path.cwd()/path
+
+def get_module_from_path(source_path):
+    "Finds module given a source path. Assumes it belongs to fastai directory"
+    fpath = Path(source_path).resolve()
+    if 'fastai' not in fpath.parts: 
+        print(f'Could not resolve file {fpath}. source_path must be inside `fastai` directory', fpath)
+        return []
+    fastai_idx = list(reversed(fpath.parts)).index('fastai')
+    dirpath = fpath.parents[fastai_idx]
+    relpath = fpath.relative_to(dirpath)
+    return '.'.join(relpath.with_suffix('').parts)
+
+def update_notebooks(source_path=None, dest_path=None, update_html=True, update_nb=False, update_nb_links=True, html_path=None, create_missing=False):
+    "`source_path` can be a directory or a file. Assumes all modules reside in the fastai directory."
+    fpath = Path(__file__).resolve()
+    fastai_idx = list(reversed(fpath.parts)).index('fastai')
+    dirpath = fpath.parents[fastai_idx] # should return 'fastai_pytorch'
+    if source_path is None: source_path = dirpath/'fastai'
+    else: source_path = resolve_path(source_path)
+    if dest_path is None: dest_path = dirpath/'docs_src'
+    else: dest_path = resolve_path(dest_path)
+    if html_path is None: html_path = dirpath/'docs'
+    else: html_path = resolve_path(html_path)
+
+    if source_path.is_file():
+        doc_path = source_path
+        if update_nb and (source_path.suffix == '.py'):
+            mod = import_mod(get_module_from_path(source_path))
+            if not mod: return print('Could not find module for path:', source_path)
+            try: doc_path = update_module_page(mod, dest_path)
+            except FileNotFoundError: doc_path = create_module_page(mod, dest_path)
+        if update_nb_links: link_nb(doc_path)
+        if update_html: convert_nb(doc_path, html_path)
+    elif source_path.is_dir():
+        if update_nb: update_all(source_path, dest_path, create_missing=create_missing)
+        if update_html: convert_all(dest_path, html_path)
+        if update_nb_links: link_all(dest_path)
+    else: print('Could not resolve source file:', source_path)
+
