@@ -84,7 +84,7 @@ class Tokenizer():
         self.n_cpus = n_cpus or num_cpus()//2
 
     def __repr__(self) -> str:
-        res = f'Tokenizer {self.tok_fn.__name__} in {self.lang} with the following rules:\n'
+        res = f'Tokenizer {self.tok_func.__name__} in {self.lang} with the following rules:\n'
         for rule in self.rules: res += f' - {rule.__name__}\n'
         return res
 

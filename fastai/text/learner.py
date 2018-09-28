@@ -26,16 +26,16 @@ def convert_weights(wgts:Weights, stoi_wgts:Dict[str,int], itos_new:Collection[s
 
 def lm_split(model:Model) -> List[Model]:
     "Split a RNN model in groups for differential learning rates."
-    groups = [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
-    groups.append(nn.Sequential(model[0].encoder, model[0].encoder_dp, model[1]))
+    groups = [[rnn, dp] for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
+    groups.append([model[0].encoder, model[0].encoder_dp, model[1]])
     return groups
 
 
 def rnn_classifier_split(model:Model) -> List[Model]:
     "Split a RNN model in groups for differential learning rates."
-    groups = [nn.Sequential(model[0].encoder, model[0].encoder_dp)]
-    groups += [nn.Sequential(rnn, dp) for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
-    groups.append(model[1])
+    groups = [[model[0].encoder, model[0].encoder_dp]]
+    groups += [[rnn, dp] for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
+    groups.append([model[1]])
     return groups
 
 

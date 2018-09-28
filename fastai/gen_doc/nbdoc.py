@@ -117,13 +117,25 @@ def link_docstring(modules, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mods = listify(modules)
     modvars = {}
-    for mod in mods: modvars.update(mod.__dict__)
+    for mod in mods: modvars.update(mod.__dict__) # concat all module definitions
     for m in BT_REGEX.finditer(docstring):
         keyword = m.group(1)
-        if keyword in modvars:
-            link = link_type(modvars[keyword], arg_name=keyword)
-            docstring = docstring.replace(m.group(0), link) # group(0) = replace whole link with new one
+        elt = find_elt(modvars, keyword)
+        if elt is None: continue
+        link = link_type(elt, arg_name=keyword)
+        docstring = docstring.replace(m.group(0), link) # group(0) = replace whole link with new one
     return docstring
+
+def find_elt(modvars, keyword, match_last=True):
+    "Attempts to resolve keywords such as Learner.lr_find. `match_last` starts matching from last component."
+    if keyword in modvars: return modvars[keyword]
+    if '.' not in keyword: return None
+    comps = keyword.split('.')
+    if match_last: return modvars.get(comps[-1])
+    comp_elt = modvars.get(comps[0])
+    if hasattr(comp_elt, '__dict__'):
+        return find_elt(comp_elt.__dict__, '.'.join(comps[1:]))
+
 
 
 def import_mod(mod_name:str):
