@@ -87,7 +87,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     else: doc = f'doc definition not supported for {full_name}'
     title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
-    if is_fastai_class(elt): doc += get_function_source(elt)
+    if is_fastai_class(elt): doc += '\n' + get_function_source(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
