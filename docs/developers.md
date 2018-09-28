@@ -173,6 +173,7 @@ To run an individual test file:
    pytest tests/test_core.py
    ```
 
+When building a `fastai` conda package, it runs a basic `import fastai` test in a fresh environment. That's it.
 
 
 ## Publish
