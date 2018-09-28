@@ -32,11 +32,7 @@ Now you can install `fastai`. Note, that this is a beta test version at the mome
 
 ### Conda Install
 
-First install the nightly `pytorch` build:
-
-    conda install -c pytorch pytorch-nightly
-
-Then, find out also which CUDA version you need to install [here] (https://pytorch.org/get-started/locally/).
+First, find out also which CUDA version you need to install [here] (https://pytorch.org/get-started/locally/).
 
 For example for CUDA9.2 it will be:
 
@@ -45,6 +41,10 @@ For example for CUDA9.2 it will be:
 You can also search the available cuda packages with:
 
     conda search "cuda*" -c pytorch
+
+Then, install the nightly `pytorch` build:
+
+    conda install -c pytorch pytorch-nightly
 
 Once `pytorch-nightly` and the correct `cudaXX` package are installed then comes `torchvision`:
 
