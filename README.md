@@ -42,6 +42,8 @@ You can also search the available cuda packages with:
 
     conda search "cuda*" -c pytorch
 
+If your setup doesn't have CUDA-support you will most likely have to wait till pytorch.org releases 1.0.0 packages for `pytorch` and `torchvision`.
+
 Then, install the nightly `pytorch` build:
 
     conda install -c pytorch pytorch-nightly
