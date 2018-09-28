@@ -29,16 +29,16 @@ def belongs_to_module(t, module_name):
     if not inspect.getmodule(t): return False
     return inspect.getmodule(t).__name__.startswith(module_name)
 
-def code_esc(s): return f'<code>{s}</code>'
+def code_esc(s): return f'`{s}`'
 
 def type_repr(t):
     if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
     elif getattr(t, '__args__', None):
         args = t.__args__
         if len(args)==2 and args[1] == type(None):
-            return f'`Optional`[{type_repr(args[0])}]'
+            return f'`Optional`\[{type_repr(args[0])}\]'
         reprs = ', '.join([type_repr(o) for o in t.__args__])
-        return f'{link_type(t)}[{reprs}]'
+        return f'{link_type(t)}\[{reprs}\]'
     else: return link_type(t)
 
 def anno_repr(a): return type_repr(a)
@@ -90,7 +90,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += format_docstring(elt, arg_comments, alt_doc_string, ignore_warn) + ' '
     if is_fastai_class(elt): doc += get_function_source(elt)
-    #return link+doc
+    # return link+doc
     display(title_md(link+doc, title_level, markdown=markdown))
 
 def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_warn:bool=False) -> str:
@@ -111,8 +111,8 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
     if return_comment: parsed += f'\n\n*return*: {return_comment}'
     return parsed
 
-# Finds all places with a backtick or <code> but only if it hasn't already been linked
-BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
+# Finds all places with a backtick but only if it hasn't already been linked
+BT_REGEX = re.compile("\[?`([^`<]*)`\]?(?:\([^)]*\))?")
 def link_docstring(modules, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mods = listify(modules)
@@ -231,7 +231,8 @@ def fn_name(ft)->str:
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
     strip_name = strip_fastai(get_module_name(ft))
-    return f'/{strip_name}.html#{fn_name(ft)}'
+    func_name = strip_fastai(fn_name(ft))
+    return f'/{strip_name}.html#{func_name}'
 
 def get_module_name(ft) -> str: return ft.__name__ if inspect.ismodule(ft) else ft.__module__
 

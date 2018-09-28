@@ -19,10 +19,10 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The <code>text</code> module of the fastai library contains all the necessary functions to define a Dataset suitable for the various NLP (Natural Language Processing) tasks and quickly generate models you can use for them. Specifically:</p>
+<p>The <a href="/text.html#text"><code>text</code></a> module of the fastai library contains all the necessary functions to define a Dataset suitable for the various NLP (Natural Language Processing) tasks and quickly generate models you can use for them. Specifically:</p>
 <ul>
 <li><code>text.transform</code> contains all the scripts to preprocess your data, from raw text to token ids,</li>
-<li><code>text.data</code> contains the definition of <code>TextDataset</code>, which the main class you'll need in NLP,</li>
+<li><code>text.data</code> contains the definition of <a href="/text.data.html#TextDataset"><code>TextDataset</code></a>, which the main class you'll need in NLP,</li>
 <li><code>text.learner</code> contains helper functions to quickly create a language model or an RNN classifier.</li>
 </ul>
 
@@ -231,10 +231,10 @@ summary:
 
  
  
-<div id="2c563ad4-8b2d-45db-827f-a5dc0904ee2d"></div>
+<div id="fe7666b8-3055-4dbb-b44e-005194024624"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#2c563ad4-8b2d-45db-827f-a5dc0904ee2d');
+var element = $('#fe7666b8-3055-4dbb-b44e-005194024624');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -258,7 +258,7 @@ var element = $('#2c563ad4-8b2d-45db-827f-a5dc0904ee2d');
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Note that to avoid redoing this step (which can be quite time-consuming if you have a very large dataset), the fastai library has created a 'tmp' directory in the folder given, to store the tokens (in _tok.npy files), the labels (in _lbl.npy files), the ids of the tokens (in _id.npy files) and the dictionary (itos.pkl). When you reexecute the line in the future, it will directly load those informations.</p>
-<p>To get a <code>DataBunch</code> quickly, there are also several factory methods depending on how our data is structured. They are all detailed in <code>transform.data</code>, here we'll use <code>text_data_from_csv</code>.</p>
+<p>To get a <a href="/data.html#DataBunch"><code>DataBunch</code></a> quickly, there are also several factory methods depending on how our data is structured. They are all detailed in <code>transform.data</code>, here we'll use <a href="/text.data.html#text_data_from_csv"><code>text_data_from_csv</code></a>.</p>
 
 </div>
 </div>
@@ -294,10 +294,10 @@ var element = $('#2c563ad4-8b2d-45db-827f-a5dc0904ee2d');
 
  
  
-<div id="1dbc2e0e-1b52-441b-855b-e16ec0b76cb5"></div>
+<div id="cfe3421c-ac13-4a62-a56a-d69bc51c07a1"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#1dbc2e0e-1b52-441b-855b-e16ec0b76cb5');
+var element = $('#cfe3421c-ac13-4a62-a56a-d69bc51c07a1');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -320,7 +320,7 @@ var element = $('#1dbc2e0e-1b52-441b-855b-e16ec0b76cb5');
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Note that <code>TextDataset</code> was called behind the scenes for 'train.csv' and 'valid.csv' but as explained earlier, it only preprocessed the validation set since it had stored the result for the training set. The <code>data_func</code> argument here tells the <code>text_data_from_csv</code> function how to organize the data. In the first one, we prepare it for a language model, and in the second one, for a classifier (see the differences in <code>text.data</code>).</p>
+<p>Note that <a href="/text.data.html#TextDataset"><code>TextDataset</code></a> was called behind the scenes for 'train.csv' and 'valid.csv' but as explained earlier, it only preprocessed the validation set since it had stored the result for the training set. The <code>data_func</code> argument here tells the <a href="/text.data.html#text_data_from_csv"><code>text_data_from_csv</code></a> function how to organize the data. In the first one, we prepare it for a language model, and in the second one, for a classifier (see the differences in <code>text.data</code>).</p>
 
 </div>
 </div>
@@ -384,10 +384,10 @@ var element = $('#1dbc2e0e-1b52-441b-855b-e16ec0b76cb5');
 
  
  
-<div id="a97e89f6-f493-44cf-8841-6193e5a1dfcf"></div>
+<div id="554c04eb-d963-4332-b62b-53c65b578bd5"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#a97e89f6-f493-44cf-8841-6193e5a1dfcf');
+var element = $('#554c04eb-d963-4332-b62b-53c65b578bd5');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -441,10 +441,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="2c8b5e08-3cde-43fe-85ac-ccedf6e626f3"></div>
+<div id="123df435-b8eb-46c8-839a-7a634fcd5eca"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#2c8b5e08-3cde-43fe-85ac-ccedf6e626f3');
+var element = $('#123df435-b8eb-46c8-839a-7a634fcd5eca');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -530,10 +530,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="f52c3752-3ded-4174-9fcc-63c42928b5ef"></div>
+<div id="f57bbf98-c9c5-45ca-8642-0fb5a6ddbad1"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#f52c3752-3ded-4174-9fcc-63c42928b5ef');
+var element = $('#f57bbf98-c9c5-45ca-8642-0fb5a6ddbad1');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -587,10 +587,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="92894c1d-df4b-465b-bd74-c28d6d22f948"></div>
+<div id="4cbee2f0-259c-4db5-9153-1b79230f54a3"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#92894c1d-df4b-465b-bd74-c28d6d22f948');
+var element = $('#4cbee2f0-259c-4db5-9153-1b79230f54a3');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -637,10 +637,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="ed77fe48-d877-4fed-931f-6b578bfca777"></div>
+<div id="5be56865-9562-4c61-befc-6de43cf02f3a"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#ed77fe48-d877-4fed-931f-6b578bfca777');
+var element = $('#5be56865-9562-4c61-befc-6de43cf02f3a');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
