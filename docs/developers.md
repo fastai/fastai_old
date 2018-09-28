@@ -120,7 +120,7 @@ After registration, to upload to fastai project, you will need to ask Jeremy to 
     username: your testpypi username
     password: your testpypi password
 
-3. You can also setup your client to have transparent access to anaconda tools, see [docs](https://anaconda.org/stason/settings/access).
+3. You can also setup your client to have transparent access to anaconda tools, see https://anaconda.org/YOURUSERNAME/settings/access (adjust the url to insert your username).
 
 You don't really need it, as the anaconda client cashes your credentials so you need to login only infrequently.
 
@@ -132,7 +132,7 @@ You don't really need it, as the anaconda client cashes your credentials so you 
 
 ## Publish
 
-`fastai` package is distributed via [PyPI](https://pypi.org/)) and [anaconda](https://anaconda.org/​)). Therefore we need to make two different builds and upload them to their respective servers upon a new release.
+`fastai` package is distributed via [PyPI](https://pypi.org/) and [anaconda](https://anaconda.org/). Therefore we need to make two different builds and upload them to their respective servers upon a new release.
 
 XXX: travis-ci.org as well.
 
@@ -152,7 +152,7 @@ XXX: travis-ci.org as well.
 
     twine check dist/*
 
-3. Publish:
+4. Publish:
 
     twine upload --repository testpypi dist/*
 
@@ -162,8 +162,7 @@ If you haven't created `~/.pypirc` as explained earlier, use this instead:
 
 Note: PyPI won't allow re-uploading the same package filename, even if it's a minor fix. If you delete the file from pypi or test.pypi it still won't let you do it. So either a micro-level version needs to be bumped (A.B.C++) or some [post release string added](https://www.python.org/dev/peps/pep-0440/#post-releases) in `setup.py`.
 
-
-4. Test:
+5. Test:
 
 Test the webpage:
 
@@ -171,9 +170,9 @@ Test the webpage:
 
 Test installation (use pypi.org for packages that aren't on test.pypi.org)
 
-    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b2
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b3
 
-Hmm, it looks like it wants an explicit `fastai==1.0.0b2` argument, otherwise it tries to install `fastai-0.7`.
+Hmm, it looks like it wants an explicit `fastai==1.0.0b3` argument, otherwise it tries to install `fastai-0.7`.
 
 May be add: `--force-reinstall` or manually remove preinstalled `fastai` first from your python installation: e.g. `python3.6/site-packages/fastai*`, run `python -m site` to find out the location.
 
@@ -272,7 +271,7 @@ To test, see that you can find it:
 
 and then validate that the installation works correctly:
 
-    conda install --override -c pytorch -c fastai -c fastai/label/test fastai
+    conda install -c pytorch -c fastai -c fastai/label/test fastai
 
 Once the testing is successful, copy all of the test package(s) back to the `main` label:
 
@@ -308,6 +307,13 @@ Now you need to rebuild the package, and if you changed the `number` to `2`, the
 
     conda-verify ./conda/
 
+* To find out the dependencies of the package:
+
+    conda search --info -c fastai/label/test fastai
+
+Another hacky way to find out what the exact dependencies for a given conda package (added `-c fastai/label/test` to make it check our test package):
+
+    conda create --dry-run --json -n dummy fastai -c fastai/label/test
 
 
 ### Documentation
