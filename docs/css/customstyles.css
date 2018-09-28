@@ -70,19 +70,17 @@ body {
 .gi-5x{font-size: 5em;}
 
 
-
-
-
 .breadcrumb > .active {color: #777 !important;}
 
 /* make room for the nav bar */
-h1[id],
-h2[id],
+h1[id]
+/*,h2[id],
 h3[id],
 h4[id],
 h5[id],
 h6[id],
-dt[id]{
+dt[id]*/
+{
 padding-top: 60px;
 margin-top: -40px
 }
@@ -310,6 +308,10 @@ div#toc ul li ul {
 
 div#toc ul li ul li::before {
     content: "–  ";
+}
+
+div#toc ul li ul li.hide_content::before {
+    content: none;
 }
 
 div#toc >ul::before {
@@ -712,7 +714,10 @@ button.cursorNorm {
 h2  {
     font-size:24px;
     line-height:29px;
+    border-top: 3px solid blue;
+    padding-top: 5px;
 }
+
 span.otherProgrammingLanguages {
     font-style: normal;
 }
@@ -974,17 +979,6 @@ span.soft {
     padding:10px;
 }
 
-/* this part adds an icon after external links, using FontAwesome*/
-a[href^="http://"]:after, a[href^="https://"]:after {
-    content: "\f08e";
-    font-family: FontAwesome;
-    font-weight: normal;
-    font-style: normal;
-    display: inline-block;
-    text-decoration: none;
-    padding-left: 3px;
-}
-
 /* Strip the outbound icon when this class is present */
 a[href].noCrossRef::after,
 a.no_icon:after
@@ -1060,12 +1054,13 @@ span.label.label-primary {
     color: black;
     }
 
-a code {
-    color: #248EC2;
+code {
+        color: #1d1f5b;
+        background-color: #f3f3f3;
 }
 
-code + a > code {
-    margin-left: -7px;
+a code {
+    color: #0082C2;
 }
 
 table th code {
@@ -1247,4 +1242,18 @@ h4.panel-title {
     .collapse.in{
         display:block !important;
     }
+}
+
+.input_area  pre {
+        padding-bottom: 3;
+        margin-top: 10px;
+        background-color: #f5f1e0;
+        border: 0px;
+}
+.output_area pre {
+        padding-top: 3;
+        margin-top: -25px;
+        margin-bottom: 10px;
+        border: 0px;
+        padding-left: 2em;
 }

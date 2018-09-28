@@ -1,12 +1,15 @@
+"`gen_doc.nbdoc` generates notebook documentation from module functions and links to correct places"
 import pkgutil, inspect, sys,os, importlib,json,enum,warnings,nbformat,re
 from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
-import nbformat.sign
+from nbformat.sign import NotebookNotary
 from pathlib import Path
 from .core import *
 from .nbdoc import *
+from .convert2html import convert_all, convert_nb
 
-__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
+__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all', 'link_all', 'import_mod',
+           'link_nb', 'update_notebooks']
 
 def get_empty_notebook():
     "a default notbook with the minimum metadata"
@@ -71,18 +74,12 @@ def get_global_vars(mod):
     d = {}
     for node in ast.walk(ast.parse(fstr)):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
-            key,lineno = node.targets[0].id,node.targets[0].lineno-1
+            key,lineno = node.targets[0].id,node.targets[0].lineno
             codestr = flines[lineno]
-            if re.match(f"^{key}\s*=\s*.*", codestr): # only top level assignment
+            match = re.match(f"^({key})\s*=\s*.*", codestr)
+            if match and match.group(1) != '__all__': # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
-
-def get_source_link(mod, lineno) -> str:
-    "Returns link to line number in source code"
-    fpath = os.path.realpath(inspect.getfile(mod))
-    relpath = os.path.relpath(fpath, os.getcwd())
-    link = f"{relpath}#L{lineno}"
-    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def execute_nb(fname):
     "Execute notebook `fname`"
@@ -92,7 +89,7 @@ def execute_nb(fname):
     ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
     ep.preprocess(nb, {})
     with open(fname, 'wt') as f: nbformat.write(nb, f)
-    nbformat.sign.NotebookNotary().sign(nb)
+    NotebookNotary().sign(nb)
 
 def _symbol_skeleton(name): return [get_doc_cell(name), get_md_cell(f"`{name}`")]
 
@@ -125,6 +122,7 @@ def create_module_page(mod, dest_path, force=False):
     doc_path = get_doc_path(mod, dest_path)
     json.dump(nb, open(doc_path, 'w' if force else 'x'))
     execute_nb(doc_path)
+    return doc_path
 
 _default_exclude = ['.ipynb_checkpoints', '__pycache__', '__init__.py', 'imports']
 
@@ -171,10 +169,11 @@ def read_nb_types(cells):
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
 
-def link_markdown_cells(cells, mod):
+def link_markdown_cells(cells, modules):
+    "Creates documentation links for all cells in markdown with backticks"
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            cell['source'] = link_docstring(mod, cell['source'])
+            cell['source'] = link_docstring(modules, cell['source'])
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -204,15 +203,17 @@ def get_doc_path(mod, dest_path):
     return os.path.join(dest_path,f'{strip_name}.ipynb')
 
 def update_module_metadata(mod, dest_path='.', title=None, summary=None, keywords=None, overwrite=True):
-    "Creates jekyll metadata. Always overwrites existing"
-    if not (title or summary or keywords): return
-    doc_path = get_doc_path(mod, dest_path)
-    nb = read_nb(doc_path)
-    jm = {'title':title,'summary':summary,'keywords':keywords}
-    update_nb_metadata(nb, jm, overwrite)
-    json.dump(nb, open(doc_path,'w'))
+    "Creates jekyll metadata for given module"
+    update_nb_metadata(get_doc_path(mod, dest_path), title, summary, keywords, overwrite)
 
-def update_nb_metadata(nb, data, overwrite=True):
+def update_nb_metadata(nb_path, title=None, summary=None, keywords=None, overwrite=True):
+    "Creates jekyll metadata for given notebook path"
+    nb = read_nb(nb_path)
+    jm = {'title': title, 'summary': summary, 'keywords': keywords}
+    update_nb_metadata(nb, jm, overwrite)
+    json.dump(nb, open(nb_path, 'w'))
+
+def update_metadata(nb, data, overwrite=True):
     "Creates jekyll metadata. Always overwrites existing"
     data = {k:v for (k,v) in data.items() if v is not None} # remove none values
     if not data: return
@@ -220,16 +221,26 @@ def update_nb_metadata(nb, data, overwrite=True):
     if overwrite: nb['metadata']['jekyll'] = data
     else: nb['metadata']['jekyll'] = nb['metadata'].get('jekyll', {}).update(data)
 
+IMPORT_RE = re.compile(r"from (fastai[\.\w_]*)")
+def get_imported_modules(cells):
+    module_names = ['fastai']
+    for cell in cells:
+        if cell['cell_type'] == 'code':
+            for m in IMPORT_RE.finditer(cell['source']):
+                if m.group(1) not in module_names: module_names.append(m.group(1))
+    mods = [import_mod(m) for m in module_names]
+    return [m for m in mods if m is not None]
+
 def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
     doc_path = get_doc_path(mod, dest_path)
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(doc_path)
 
-    update_nb_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
+    update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
 
     cells = nb['cells']
-    link_markdown_cells(cells, mod)
+    link_markdown_cells(cells, get_imported_modules(cells))
 
     type_dict = read_nb_types(cells)
     gvar_map = get_global_vars(mod)
@@ -257,10 +268,22 @@ def update_module_page(mod, dest_path='.'):
     nb['cells'] = cells
 
     json.dump(nb, open(doc_path,'w'))
+    return doc_path
     #execute_nb(doc_path)
 
+def link_nb(nb_path):
+    nb = read_nb(nb_path)
+    cells = nb['cells']
+    link_markdown_cells(cells, get_imported_modules(cells))
+    json.dump(nb, open(nb_path,'w'))
+    NotebookNotary().sign(read_nb(nb_path))
 
-def update_all(pkg_name, dest_path='.', exclude=None, create_missing=True):
+def link_all(path_dir):
+    "Links documentation to all the notebooks in `pkg_name`"
+    files = Path(path_dir).glob('*.ipynb')
+    for f in files: link_nb(f)
+
+def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
     "Updates all the notebooks in `pkg_name`"
     if exclude is None: exclude = _default_exclude
     mod_files = get_module_names(Path(pkg_name), exclude)
@@ -272,3 +295,50 @@ def update_all(pkg_name, dest_path='.', exclude=None, create_missing=True):
         elif create_missing:
             print(f'Creating module page of {f}')
             create_module_page(mod, dest_path)
+
+def resolve_path(path):
+    "Creates absolute path if relative is provided"
+    p = Path(path)
+    if p.is_absolute(): return p
+    return Path.cwd()/path
+
+def get_module_from_path(source_path):
+    "Finds module given a source path. Assumes it belongs to fastai directory"
+    fpath = Path(source_path).resolve()
+    if 'fastai' not in fpath.parts: 
+        print(f'Could not resolve file {fpath}. source_path must be inside `fastai` directory', fpath)
+        return []
+    fastai_idx = list(reversed(fpath.parts)).index('fastai')
+    dirpath = fpath.parents[fastai_idx]
+    relpath = fpath.relative_to(dirpath)
+    return '.'.join(relpath.with_suffix('').parts)
+
+def update_notebooks(source_path, dest_path=None, do_all=False, update_html=True, update_nb=False,
+                     update_nb_links=True, html_path=None, create_missing_docs=False):
+    "`source_path` can be a directory or a file. Assumes all modules reside in the fastai directory."
+    fpath = Path(__file__).resolve()
+    fastai_idx = list(reversed(fpath.parts)).index('fastai')
+    dirpath = fpath.parents[fastai_idx] # should return 'fastai_pytorch'
+    source_path = resolve_path(source_path)
+    if dest_path is None: dest_path = dirpath/'docs_src'
+    else: dest_path = resolve_path(dest_path)
+    if html_path is None: html_path = dirpath/'docs'
+    else: html_path = resolve_path(html_path)
+
+    if source_path.is_file():
+        doc_path = source_path
+        if update_nb and (source_path.suffix == '.py'):
+            mod = import_mod(get_module_from_path(source_path))
+            if not mod: return print('Could not find module for path:', source_path)
+            try: doc_path = update_module_page(mod, dest_path)
+            except FileNotFoundError:
+                if create_missing_docs: doc_path = create_module_page(mod, dest_path)
+                else: print(f'Could not update file {source_path}. Please set create_missing_docs=True')
+        if update_nb_links: link_nb(doc_path)
+        if update_html: convert_nb(doc_path, html_path)
+    elif source_path.is_dir():
+        if update_nb: update_all(source_path, dest_path, create_missing=create_missing_docs)
+        if update_nb_links: link_all(dest_path)
+        if update_html: convert_all(dest_path, html_path)
+    else: print('Could not resolve source file:', source_path)
+

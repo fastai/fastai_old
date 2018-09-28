@@ -88,7 +88,7 @@ def fit(epochs:int, model:Model, loss_fn:LossFunction, opt:optim.Optimizer,
 
 @dataclass
 class Learner():
-    "Object that wraps together some data, a model, a loss function and an optimizer"
+    "Trains `model` using `data` to minimize `loss_fn` with optimizer `opt_fn`."
     data:DataBunch
     model:nn.Module
     opt_fn:Callable=AdamW
@@ -112,7 +112,7 @@ class Learner():
         if not self.layer_groups: self.layer_groups = [nn.Sequential(*flatten_model(self.model))]
         self.callbacks = listify(self.callbacks)
         self.callback_fns = [Recorder] + listify(self.callback_fns)
-    
+
     def init(self, init): apply_init(self.model, init)
 
     def lr_range(self, lr:Union[float,slice])->np.ndarray:
@@ -138,8 +138,8 @@ class Learner():
 
     def split(self, split_on:SplitFuncOrIdxList)->None:
         "split the model at `split_on`"
-        if isinstance(split_on,Callable): self.layer_groups = split_on(self.model)
-        else: self.layer_groups = split_model(self.model, split_on)
+        if isinstance(split_on,Callable): split_on = split_on(self.model)
+        self.layer_groups = split_model(self.model, split_on)
 
     def freeze_to(self, n:int)->None:
         "freeze layers up to layer `n`"
@@ -164,7 +164,7 @@ class Learner():
         torch.save(self.model.state_dict(), self.path/self.model_dir/f'{name}.pth')
 
     def load(self, name:PathOrStr):
-        "load model `name` from `self.model_dir"
+        "load model `name` from `self.model_dir`"
         self.model.load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
 @dataclass

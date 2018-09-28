@@ -1,4 +1,4 @@
-"1-Cycle style training as outlined in Leslie Smith's [paper](https://arxiv.org/pdf/1803.09820.pdf)"
+"Supports 1-Cycle style training"
 from ..core import *
 from ..callback import *
 from ..basic_train import Learner
@@ -14,7 +14,9 @@ class OneCycleScheduler(Callback):
     div_factor:float=25.
     pct_start:float=0.5
 
-    def __post_init__(self): self.moms=tuple(listify(self.moms,2))
+    def __post_init__(self):
+        self.moms=tuple(listify(self.moms,2))
+        if is_listy(self.lr_max): self.lr_max = np.array(self.lr_max)
 
     def steps(self, *steps_cfg:StartOptEnd):
         "Build anneal schedule for all of the parameters"

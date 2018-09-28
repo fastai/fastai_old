@@ -3,30 +3,53 @@ title: vision.learner
 keywords: 
 sidebar: home_sidebar
 tags: 
-summary: `Learner` support for computer vision
+summary: "`Learner` support for computer vision"
 ---
 
 <div class="container" id="notebook-container">
     
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="vision.learner">vision.learner<a class="anchor-link" href="#vision.learner">&#182;</a></h1>
+<h1 id="Computer-Vision-Learner">Computer Vision Learner<a class="anchor-link" href="#Computer-Vision-Learner">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Type an introduction of the package here.</p>
+<p><code>vision.learner</code> is the module that defines the <code>Conv_Learner</code> class, to easily get a model suitable for transfer learning.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">fastai.vision</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">fastai</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">fastai.docs</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+
+</div>
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+<h2 id="Transfer-learning:">Transfer learning:<a class="anchor-link" href="#Transfer-learning:">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Transfer learning is a technique where you use a model trained on a very large dataset (usually <a href="http://image-net.org/">ImageNet</a> in computer vision) and then adapt it to your own dataset. The idea is that it has learned to recognize many features on all of this data, and that you will benefit from this knowledge, especially if your dataset is small, compared to starting from a randomly initiliazed model. It has been proved in <a href="https://arxiv.org/abs/1805.08974">this article</a> on a wide range of tasks that transfer learning nearly always give better results.</p>
+<p>In practice, you need to change the last part of your model to be adapted to your own number of classes. Most convolutional models end with a few linear layers (a part will call head). The last convolutional layer will have analyzed features in the image that went through the model, and the job of the head is to convert those in predictions for each of our classes. In transfer learning we will keep all the convolutional layers (called the body or the backbone of the model) with their weights pretrained on ImageNet but will define a new head initiliazed randomly.</p>
+<p>Then we will train the model we obtain in two phases: first we freeze the body weights and only train the head (to convert those analyzed features into predictions for our own data), then we unfreeze the layers of the backbone (gradually if necessary) and fine-tune the whole model (possily using differential learning rates).</p>
+<p>The <a href="/vision.learner.html#ConvLearner"><code>ConvLearner</code></a> class helps you to automatically get a pretrained model from a given architecture with a custom head that is suitable for your data.</p>
+
 </div>
 </div>
 </div>
@@ -40,9 +63,8 @@ summary: `Learner` support for computer vision
 
 <div class="output_markdown rendered_html output_subarea ">
 <h3><a id=ConvLearner></a><em>class</em> <code>ConvLearner</code></h3>
-<p>(<code>data</code>:<a href="fastai.data.html#DataBunch"><code>DataBunch</code></a>, <code>arch</code>:<code>Callable</code>[], <code>cut</code>=<code>None</code>, <code>pretrained</code>:<code>bool</code>=<code>True</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>None</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>, <code>custom_head</code>:<code>Optional</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>split_on</code>:<code>None</code>[<code>Callable</code>[], <code>Collection</code>[<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]], <code>NoneType</code>]=<code>None</code>, <code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code> :: Inherits (<a href="fastai.basic_train.html#Learner"><code>Learner</code></a>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L46">[source]</a></div></p>
-<p>Builds convnet style learners</p>
-
+<p>(<code>data</code>:<a href="/data.html#DataBunch"><code>DataBunch</code></a>, <code>arch</code>:<code>Callable</code>, <code>cut</code>=<code>None</code>, <code>pretrained</code>:<code>bool</code>=<code>True</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>, <code>custom_head</code>:<code>Optional</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>split_on</code>:<code>Union</code>[<code>Callable</code>, <code>Collection</code>[<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]], <code>NoneType</code>]=<code>None</code>, <code>kwargs</code>:<code>Any</code>) -&gt; <code>None</code> :: <a href="/basic_train.html#Learner"><code>Learner</code></a></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L47">[source]</a></div>
 </div>
 
 </div>
@@ -53,7 +75,107 @@ summary: `Learner` support for computer vision
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="http://docs.fast.ai/vision.learner.html#ConvLearner"><code>ConvLearner</code></a></p>
+<p>This class creates a <a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><code>Learner</code></a></a></a> object from the <a href="/vision.data.html#vision.data"><code>data</code></a> object and model inferred from it with the backbone given in <code>arch</code>. Specifically, it will cut the model defined by <code>arch</code> (randomly initialized if <code>pretrained</code> is False) at the last convolutional layer by default (or as defined in <code>cut</code>, see below) and add:</p>
+<ul>
+<li>an <a href="/layers.html#AdaptiveConcatPool2d"><code>AdaptiveConcatPool2d</code></a> layer,</li>
+<li>a <a href="/layers.html#Flatten"><code>Flatten</code></a> layer,</li>
+<li>blocks of [<code>nn.BatchNorm1d</code>, <code>nn.Dropout</code>, <code>nn.Linear</code>, <code>nn.ReLU</code>] layers.</li>
+</ul>
+<p>The blocks are defined by the <code>lin_ftrs</code> and <code>ps</code> arguments. Specifically, the first block will have a number of inputs inferred from the backbone <code>arch</code> and the last one will have a number of outputs equal to <code>data.c</code> (which contains the number of classes of the data) and the intermediate blocks have a number of inputs/outputs determined by <code>lin_frs</code> (of course a block has a number of inputs equal to the number of outputs of the previous block). The dropouts all have a the same value <code>ps</code> if you pass a float, or the corresponding values if you pass a list. Default is to have an intermediate hidden size of 512 (which makes two blocks model_activation -&gt; 512 -&gt; n_classes).</p>
+<p>Note that the very last block doesn't have a <code>nn.ReLU</code> activation, to allow you to use any final activation you want (generally included in the loss function in pytorch). Also, the backbone will be frozen if you choose <code>pretrained</code>=True (so only the head will train if you call <a href="/basic_train.html#fit"><code>fit</code></a>) so that you can immediately start phase one of training as described above.</p>
+<p>Alternatively, you can define your own <code>custom_head</code> to put on top of the backbone. If you want to specify where to split <code>arch</code> you should so in the argument <code>cut</code> which can either be the index of a specific layer (the result will not include that layer) or a function that, when passed the model, will return the backbone you want.</p>
+<p>The final model obtained by stacking the backbone and the head (custom or defined as we saw) is then separated in groups for gradual unfreezeing or differential learning rates. You can specify of to split the backbone in groups with the optional argument <code>split_on</code> (should be a function that returns those groups when given the backbone).</p>
+<p>The <code>kwargs</code> will be passed on to <a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><code>Learner</code></a></a></a>, so you can put here anything that <a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><code>Learner</code></a></a></a> will accept (<a href="/metrics.html#metrics"><code>metrics</code></a>, <code>loss_fn</code>, <code>opt_fn</code>...)</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Uncomment to extract the MNIST sample dataset</span>
+<span class="c1">#untar_mnist()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learner</span> <span class="o">=</span> <span class="n">ConvLearner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tvm</span><span class="o">.</span><span class="n">resnet34</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">accuracy</span><span class="p">])</span>
+<span class="n">learner</span><span class="o">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+
+ 
+ 
+<div id="281697c6-311b-4fd2-ac4b-cde65a441388"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#281697c6-311b-4fd2-ac4b-cde65a441388');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Total time: 00:14
+epoch  train loss  valid loss  accuracy
+0      0.113352    0.045578    0.980864  (00:14)
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Customize-to-your-model">Customize to your model<a class="anchor-link" href="#Customize-to-your-model">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If you want to create a <a href="/vision.learner.html#ConvLearner"><code>ConvLearner</code></a> customized to your own architecture, you'll probably need to use the following helper functions. Note that you can include your own models default <code>cut</code> and <code>split_on</code> by adding it to the dictionary <code>model_meta</code>. The key should be your model and the value should be a dictionary with the keys <code>cut</code> and <code>split_on</code> (see the source code for examples).</p>
 
 </div>
 </div>
@@ -68,8 +190,8 @@ summary: `Learner` support for computer vision
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=create_body></a><code>create_body</code></h4>
-<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>cut</code>:<code>Optional</code>[<code>int</code>]=<code>None</code>, <code>body_fn</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L8">[source]</a></div></p>
-<p>Cut off the body of a typically pretrained model at <code>cut</code> or as specified by <code>body_fn</code></p>
+<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>cut</code>:<code>Optional</code>[<code>int</code>]=<code>None</code>, <code>body_fn</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>)</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L9">[source]</a></div><p>Cut off the body of a typically pretrained <code>model</code> at <code>cut</code> or as specified by <code>body_fn</code>.</p>
 
 </div>
 
@@ -78,13 +200,6 @@ summary: `Learner` support for computer vision
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="http://docs.fast.ai/vision.learner.html#create_body"><code>create_body</code></a></p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -96,12 +211,8 @@ summary: `Learner` support for computer vision
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=create_head></a><code>create_head</code></h4>
-<p>(<code>nf</code>:<code>int</code>, <code>nc</code>:<code>int</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>None</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L18">[source]</a></div></p>
-<p>Model head that takes <code>nf</code> features, runs through <code>lin_ftrs</code>, and about <code>nc</code> classes.</p>
-<ul>
-<li><em>ps</em>: dropout, can be a single float or a list for each layer</li>
-</ul>
-
+<p>(<code>nf</code>:<code>int</code>, <code>nc</code>:<code>int</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>)</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L19">[source]</a></div>
 </div>
 
 </div>
@@ -112,7 +223,7 @@ summary: `Learner` support for computer vision
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="http://docs.fast.ai/vision.learner.html#create_head"><code>create_head</code></a></p>
+<p>Model head that takes <code>nf</code> features, runs through <code>lin_ftrs</code>, and endw with <code>nc</code> classes. <code>ps</code> represent the probability of the dropouts, and can be a single float or a list for each layer.</p>
 
 </div>
 </div>
@@ -126,9 +237,8 @@ summary: `Learner` support for computer vision
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=num_features></a><code>num_features</code></h4>
-<p>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>) -&gt; <code>int</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L13">[source]</a></div></p>
-<p>Return the number of output features for a model</p>
+<h4><a id=num_features></a><code>num_features</code>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>) -&gt; <code>int</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L14">[source]</a></div><p>Return the number of output features for a <code>model</code>.</p>
 
 </div>
 
@@ -137,13 +247,6 @@ summary: `Learner` support for computer vision
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="http://docs.fast.ai/vision.learner.html#num_features"><code>num_features</code></a></p>
-
-</div>
-</div>
 </div>
 </div>
  

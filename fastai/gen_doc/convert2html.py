@@ -3,7 +3,6 @@ from nbconvert.preprocessors import Preprocessor
 from nbconvert import HTMLExporter
 from traitlets.config import Config
 from pathlib import Path
-import fire
 
 __all__ = ['HandleLinksPreprocessor', 'read_nb', 'convert_nb', 'convert_all']
 
@@ -33,10 +32,11 @@ def read_nb(fname):
 def convert_nb(fname, dest_path='.'):
     "Converts a notebook `fname` to html file in `dest_path` "
     nb = read_nb(fname)
-    new_name = re.sub(r"(.*)\.ipynb",r"\1.html",str(fname))
+    fname = Path(fname)
+    dest_name = fname.with_suffix('.html').name
     meta = nb['metadata']
-    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {}
-    with open(f'{dest_path}/{new_name}','w') as f:
+    meta_jekyll = meta['jekyll'] if 'jekyll' in meta else {'title': fname.with_suffix('').name}
+    with open(f'{dest_path}/{dest_name}','w') as f:
         f.write(exporter.from_notebook_node(nb, resources=meta_jekyll)[0])
 
 def convert_all(folder, dest_path='.'):
@@ -44,5 +44,3 @@ def convert_all(folder, dest_path='.'):
     path = Path(folder)
     nb_files = path.glob('*.ipynb')
     for file in nb_files: convert_nb(file, dest_path=dest_path)
-
-if __name__ == 'main': fire.Fire(convert_all)
