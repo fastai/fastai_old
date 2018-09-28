@@ -72,19 +72,12 @@ def get_global_vars(mod):
     d = {}
     for node in ast.walk(ast.parse(fstr)):
         if isinstance(node,ast.Assign) and hasattr(node.targets[0], 'id'):
-            key,lineno = node.targets[0].id,node.targets[0].lineno-1
+            key,lineno = node.targets[0].id,node.targets[0].lineno
             codestr = flines[lineno]
             match = re.match(f"^({key})\s*=\s*.*", codestr)
             if match and match.group(1) != '__all__': # only top level assignment
                 d[key] = f'`{codestr}` {get_source_link(mod, lineno)}'
     return d
-
-def get_source_link(mod, lineno) -> str:
-    "Returns link to line number in source code"
-    fpath = os.path.realpath(inspect.getfile(mod))
-    relpath = os.path.relpath(fpath, os.getcwd())
-    link = f"{relpath}#L{lineno}"
-    return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
 
 def execute_nb(fname):
     "Execute notebook `fname`"

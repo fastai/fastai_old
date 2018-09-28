@@ -40,7 +40,9 @@ Now you can install `fastai`. Note, that this is a beta test version at the mome
 
 Currently only `linux-64`/`python3.6` conda build is available:
 
-    conda install -c pytorch -c fastai -c fastai/label/test fastai
+    conda install -c fastai -c fastai/label/test fastai torchvision=0.2.1=pyhe7f20fa_0
+
+We had to build a special version of torchvision which depends on `pytorch-nightly`.
 
 For other setups/platforms use `pip install` at the moment (see above).
 
