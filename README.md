@@ -55,7 +55,7 @@ For other setups/platforms use `pip install` at the moment (see above).
 ### Developer Install
 
     conda install pytorch-nightly -c pytorch
-    conda install torchvision -c pytorch
+    conda install -c fastai/label/test torchvision=0.2.1=pyhe7f20fa_0
     git clone https://github.com/fastai/fastai_pytorch
     cd fastai_pytorch
     pip install -e .
