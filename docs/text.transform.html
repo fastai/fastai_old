@@ -10,18 +10,103 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
     
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="text.transform">text.transform<a class="anchor-link" href="#text.transform">&#182;</a></h1>
+<h1 id="NLP-Preprocessing">NLP Preprocessing<a class="anchor-link" href="#NLP-Preprocessing">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The <code>text.tranform</code> module contains the function that deal behind the scenes with the two main tasks to prepare texts for the models: tokenization and numericalization.</p>
+<p>The first one consists in splitting the raw texts into tokens (wich can be words, or punctuation signs...). The most basic way to do this would be to separate according to spaces, but it's possible to be more subtle; for instance, the contractions like "isn't" or "don't" should be split in ["is","n't"] or ["do","n't"].</p>
+<p>The second one is easier as it just consists in attributing a unique id to each token and mapping each of those tokens to their respective ids.</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Type an introduction of the package here.</p>
+<h2 id="Tokenization">Tokenization<a class="anchor-link" href="#Tokenization">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This step is actually divided in two phases: first, we apply a certain list of <code>rules</code> to the raw texts as preprocessing, then we use the tokenizer to split them in lists of tokens. Combining together those <code>rules</code>, the <code>tok_func</code>and the <code>lang</code> to process the texts is the role of the <a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a> class.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=Tokenizer></a><em>class</em> <code>Tokenizer</code></h3>
+<p><code>Tokenizer</code>(<code>tok_func</code>:<code>Callable</code>=<code>&lt;class 'fastai.text.transform.SpacyTokenizer'&gt;</code>, <code>lang</code>:<code>str</code>=<code>'en'</code>, <code>rules</code>:<code>Collection</code>[<code>Callable</code>[<code>str</code>, <code>str</code>]]=<code>None</code>, <code>special_cases</code>:<code>Collection</code>[<code>str</code>]=<code>None</code>, <code>n_cpus</code>:<code>int</code>=<code>None</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L82">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This class will process texts by appling them the <code>rules</code> then tokenizing them with <code>tok_func(lang)</code>. <code>special_cases</code> are a list of tokens passed as special to the tokenizer and <code>n_cpus</code> is the number of cpus to use for multi-processing (by default, half the cpus available). We don't directly pass a tokenizer for multi-processing purposes: each process needs to initiate a tokenizer of its own.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=process_text></a><code>process_text</code></h4>
+<p><code>process_text</code>(<code>t</code>:<code>str</code>, <code>tok</code>:<a href="/text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a>) -&gt; <code>List</code>[<code>str</code>]</p>
+<p>Processe one text <code>t</code> with tokenizer <code>tok</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L96">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=process_all></a><code>process_all</code></h4>
+<p><code>process_all</code>(<code>texts</code>:<code>Collection</code>[<code>str</code>]) -&gt; <code>List</code>[<code>List</code>[<code>str</code>]]</p>
+<p>Process a list of <code>texts</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L107">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
@@ -198,34 +283,6 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><code>SpacyTokenizer.tokenizer</code></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h3><a id=Tokenizer></a><em>class</em> <code>Tokenizer</code></h3>
-<p>(<code>tok_fn</code>:<code>Callable</code>[]=<code>&lt;class 'fastai.text.transform.SpacyTokenizer'&gt;</code>, <code>lang</code>:<code>str</code>=<code>'en'</code>, <code>rules</code>:<code>Collection</code>[<code>Callable</code>[<code>str</code>, <code>str</code>]]=<code>None</code>, <code>special_cases</code>:<code>Collection</code>[<code>str</code>]=<code>None</code>, <code>n_cpus</code>:<code>int</code>=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/transform.py#L81">[source]</a></div></p>
-<p>Puts together rules, a tokenizer function and a language to process text with multiprocessing</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a></p>
 
 </div>
 </div>
