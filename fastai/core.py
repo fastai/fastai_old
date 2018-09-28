@@ -49,15 +49,15 @@ def is_listy(x:Any)->bool: return isinstance(x, (tuple,list))
 def is_tuple(x:Any)->bool: return isinstance(x, tuple)
 def noop(x): return x
 
-def ifnone(a:bool,b:Any):
-    "`a` if its not None, otherwise `b`"
+def ifnone(a:Any,b:Any)->Any:
+    "`a` if `a` is not None, otherwise `b`"
     return b if a is None else a
 
 def uniqueify(x:Series) -> List[Any]: return list(OrderedDict.fromkeys(x).keys())
 def idx_dict(a): return {v:k for k,v in enumerate(a)}
 
 def find_classes(folder:Path)->FilePathList:
-    "Return class subdirectories in imagenet style train `folder`"
+    "List of label subdirectories in imagenet-style `folder`"
     classes = [d for d in folder.iterdir()
                if d.is_dir() and not d.name.startswith('.')]
     assert(len(classes)>0)

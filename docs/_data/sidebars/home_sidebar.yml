@@ -2,7 +2,7 @@ entries:
 - folders:
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: overview.html
     - output: web
       title: imports
@@ -23,7 +23,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: models.html
         - output: web
           title: models.rnn
@@ -36,7 +36,7 @@ entries:
     title: Core
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: training.html
     - output: web
       title: callback
@@ -50,14 +50,11 @@ entries:
     - output: web
       title: train
       url: train.html
-    - output: web
-      title: tta
-      url: tta.html
       subfolders:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: callbacks.html
         - output: web
           title: callbacks.rnn
@@ -82,7 +79,7 @@ entries:
     title: Training
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: applications.html
     - output: web
       title: colab
@@ -91,7 +88,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: text.html
         - output: web
           title: text.learner
@@ -106,7 +103,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: tabular.html
         - output: web
           title: tabular.transform
@@ -118,7 +115,7 @@ entries:
       - output: web
         subfolderitems:
         - output: web
-          title: overview
+          title: Overview
           url: vision.html
         - output: web
           title: vision.learner
@@ -137,7 +134,7 @@ entries:
     title: Applications
   - folderitems:
     - output: web
-      title: overview
+      title: Overview
       url: gen_doc.html
     - output: web
       title: gen_doc.sgen_notebooks
@@ -153,5 +150,17 @@ entries:
       url: gen_doc.convert2html.html
     output: web
     title: Doc authoring
+  - folderitems:
+    - output: web
+      title: Overview
+      url: developers.html
+    - output: web
+      title: Style guide
+      url: style.html
+    - output: web
+      title: Abbreviation
+      url: abbr.html
+    output: web
+    title: Library development
   output: web
   title: Sidebar
