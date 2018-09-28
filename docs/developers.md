@@ -157,6 +157,23 @@ The same can be repeated for getting test requirements, just repeat the same pro
    pip install twine>=1.12
    ```
 
+## Test Suite
+
+Before building the packages make sure the test suite runs successfully:
+
+   ```
+   python setup.py test
+   ```
+
+At the moment there are only a few tests, so we need to start expanding it!
+
+To run an individual test file:
+
+   ```
+   pytest tests/test_core.py
+   ```
+
+
 
 ## Publish
 
