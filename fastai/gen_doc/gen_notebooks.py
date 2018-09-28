@@ -7,7 +7,7 @@ from pathlib import Path
 from .core import *
 from .nbdoc import *
 
-__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all']
+__all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all', 'link_all', 'import_mod', 'link_nb']
 
 def get_empty_notebook():
     "a default notbook with the minimum metadata"
@@ -274,15 +274,16 @@ def update_module_page(mod, dest_path='.'):
     return doc_path
     #execute_nb(doc_path)
 
+def link_nb(nb_path):
+    nb = read_nb(nb_path)
+    cells = nb['cells']
+    add_doc_links(cells)
+    json.dump(nb, open(nb_path,'w'))
 
 def link_all(path_dir):
     "Links documentation to all the notebooks in `pkg_name`"
     files = Path(path_dir).glob('*.ipynb')
-    for f in files:
-        nb = read_nb(f)
-        cells = nb['cells']
-        add_doc_links(cells)
-        json.dump(nb, open(f,'w'))
+    for f in files: link_nb(f)
         
 
 def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
