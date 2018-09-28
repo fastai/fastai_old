@@ -55,7 +55,7 @@ class ShowGraph(LearnerCallback):
             return False
 
 class BnFreeze(LearnerCallback):
-    "Set all bntypes layers in `learn` to eval() on_epoch_begin"
+    "Freezes moving average statistics in all non-trainable batchnorm layers"
     def on_epoch_begin(self, **kwargs:Any)->None:
         "Put bn layers in eval mode on epoch_begin"
         set_bn_eval(self.learn.model)
