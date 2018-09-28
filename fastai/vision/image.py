@@ -5,8 +5,9 @@ from io import BytesIO
 import PIL
 
 _all__ = ['Image', 'ImageBBox', 'ImageBase', 'ImageMask', 'RandTransform', 'TfmAffine', 'TfmCoord', 'TfmCrop', 'TfmLighting',
-          'TfmPixel', 'Transform', 'apply_tfms', 'bb2hw', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 
-          'rand_crop', 'show_image', 'uniform', 'uniform_int']
+           'TfmPixel', 'Transform', 'affine_grid', 'affine_mult', 'apply_tfms', 'bb2hw', 'get_crop_target', 'get_default_args',
+           'get_resize_target', 'grid_sample', 'image2np', 'log_uniform', 'logit', 'logit_', 'pil2tensor', 'rand_bool', 'rand_crop',
+           'resolve_tfms', 'round_multiple', 'show_image', 'uniform', 'uniform_int']
 
 def logit(x:Tensor)->Tensor:  return -(1/x-1).log()
 def logit_(x:Tensor)->Tensor: return (x.reciprocal_().sub_(1)).log_().neg_()
@@ -88,7 +89,7 @@ class Image(ImageBase):
     def clone(self):
         "Mimic the behavior of torch.clone for `Image` objects."
         return self.__class__(self.px.clone())
-    
+
     @property
     def shape(self)->Tuple[int,int,int]: return self._px.shape
     @property
@@ -188,15 +189,15 @@ class Image(ImageBase):
     def data(self)->TensorImage:
         "Return this images pixels as a tensor."
         return self.px
-    
+
 class ImageMask(Image):
     "Class for image segmentation target."
     def lighting(self, func:LightingFunc, *args:Any, **kwargs:Any)->'Image': return self
-    
+
     def refresh(self):
         self.sample_kwargs['mode'] = 'nearest'
         return super().refresh()
-    
+
     @property
     def data(self)->TensorImage:
         "Return this images pixels as a `LongTensor`."
@@ -204,7 +205,7 @@ class ImageMask(Image):
 
 class ImageBBox(ImageMask):
     "Image class for bbox-style annotations."
-    
+
     @classmethod
     def create(cls, bboxes:Collection[Collection[int]], h:int, w:int)->'ImageBBox':
         "Create an ImageBBox object from `bboxes`."
@@ -227,7 +228,7 @@ def open_image(fn:PathOrStr)->Image:
     x = PIL.Image.open(fn).convert('RGB')
     return Image(pil2tensor(x).float().div_(255))
 
-def open_mask(fn:PathOrStr)->ImageMask: 
+def open_mask(fn:PathOrStr)->ImageMask:
     "Return `ImageMask` object create from mask in file `fn`."
     return ImageMask(pil2tensor(PIL.Image.open(fn)).float())
 

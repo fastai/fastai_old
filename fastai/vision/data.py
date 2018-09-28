@@ -4,9 +4,9 @@ from .image import *
 from .transform import *
 from ..data import *
 
-__all__ = ['DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'ObjectDetectDataset', 'SegmentationDataset', 'denormalize', 
-           'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_funcs', 
-           'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
+__all__ = ['DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'ObjectDetectDataset', 'SegmentationDataset', 'denormalize',
+           'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs',
+           'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm',
            'imagenet_denorm']
 
 TfmList = Collection[Transform]
@@ -92,10 +92,10 @@ class ImageMultiDataset(LabelDataset):
         res = np.zeros((self.c,), np.float32)
         res[x] = 1.
         return res
-    
+
     def get_labels(self, idx:int) -> ImgLabels: return [self.classes[i] for i in self.y[idx]]
     def __getitem__(self,i:int) -> Tuple[Image, ImgLabels]: return open_image(self.x[i]), self.encode(self.y[i])
-    
+
     @classmethod
     def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
         "Typically used for test set; label all images in `folder` with `classes[0]`."
@@ -104,7 +104,7 @@ class ImageMultiDataset(LabelDataset):
         return cls(fnames, labels, classes=classes)
 
     @classmethod
-    def from_folder(cls, path:PathOrStr, folder:PathOrStr, fns:pd.Series, labels:ImgLabels, valid_pct:float=0.2, 
+    def from_folder(cls, path:PathOrStr, folder:PathOrStr, fns:pd.Series, labels:ImgLabels, valid_pct:float=0.2,
         classes:Optional[Classes]=None):
         train,valid = random_split(valid_pct, f'{path}/{folder}/' + fns, labels)
         train_ds = cls(*train, classes=classes)
@@ -159,10 +159,10 @@ def transform_datasets(train_ds:Dataset, valid_ds:Dataset, test_ds:Optional[Data
     if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
     return res
 
-def normalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage:   
+def normalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage:
     "Normalize `x` with `mean` and `std`."
     return (x-mean[...,None,None]) / std[...,None,None]
-def denormalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage: 
+def denormalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage:
     "Denormalize `x` with `mean` and `std`."
     return x*std[...,None,None] + mean[...,None,None]
 
@@ -227,7 +227,7 @@ DataBunch.labels_to_csv = _labels_to_csv
 
 def uniqueify(x:Series) -> List[Any]: return list(OrderedDict.fromkeys(x).keys())
 
-def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1, 
+def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1,
                       label_delim:str=' ', header:Optional[Union[int,str]]='infer', suffix:Optional[str]=None):
     df = pd.read_csv(csv_path, header=header)
     df.iloc[:,label_col] = list(csv.reader(df.iloc[:,label_col], delimiter=label_delim))
@@ -235,12 +235,12 @@ def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1,
     fnames = df.iloc[:,fn_col]
     if suffix: fnames = fnames + suffix
     return fnames, labels
-    
-def image_data_from_csv(path:PathOrStr, folder:PathOrStr='.', csv_labels:PathOrStr='labels.csv', valid_pct:float=0.2, 
+
+def image_data_from_csv(path:PathOrStr, folder:PathOrStr='.', csv_labels:PathOrStr='labels.csv', valid_pct:float=0.2,
                         test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
     fnames, labels = csv_to_fns_labels(csv_labels, suffix=suffix)
     path=Path(path)
     datasets = ImageMultiDataset.from_folder(path, folder, fnames, labels, valid_pct=valid_pct)
     if test: datasets.append(ImageMultiDataset.from_single_folder(path/test, classes=datasets[0].classes))
     return DataBunch.create(*datasets, path=path, **kwargs)
-    
+
