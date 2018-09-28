@@ -19,7 +19,7 @@ class BaseTokenizer():
 
 #export
 class SpacyTokenizer(BaseTokenizer):
-    "Little wrapper around a `spacy` tokenizer"
+    "Wrapper around a `spacy` tokenizer to make it a `BaseTokenizer`."
 
     def __init__(self, lang:str):
         self.tok = spacy.load(lang)
@@ -32,20 +32,20 @@ class SpacyTokenizer(BaseTokenizer):
             self.tok.tokenizer.add_special_case(w, [{ORTH: w}])
 
 def sub_br(t:str) -> str:
-    "Replaces the <br /> by \n"
+    "Replace the <br /> by \n in `t`."
     re_br = re.compile(r'<\s*br\s*/?>', re.IGNORECASE)
     return re_br.sub("\n", t)
 
 def spec_add_spaces(t:str) -> str:
-    "Add spaces between special characters"
+    "Add spaces between special characters in `t`."
     return re.sub(r'([/#])', r' \1 ', t)
 
 def rm_useless_spaces(t:str) -> str:
-    "Remove multiple spaces"
+    "Remove multiple spaces."
     return re.sub(' {2,}', ' ', t)
 
 def replace_rep(t:str) -> str:
-    "Replace repetitions at the character level"
+    "Replace repetitions at the character level in `t`."
     def _replace_rep(m:Collection[str]) -> str:
         c,cc = m.groups()
         return f' {TK_REP} {len(cc)+1} {c} '
@@ -53,7 +53,7 @@ def replace_rep(t:str) -> str:
     return re_rep.sub(_replace_rep, t)
 
 def replace_wrep(t:str) -> str:
-    "Replace word repetitions"
+    "Replace word repetitions in `t`."
     def _replace_wrep(m:Collection[str]) -> str:
         c,cc = m.groups()
         return f' {TK_WREP} {len(cc.split())+1} {c} '
@@ -61,14 +61,14 @@ def replace_wrep(t:str) -> str:
     return re_wrep.sub(_replace_wrep, t)
 
 def deal_caps(t:str) -> str:
-    "Replace words in all caps"
+    "Replace words in all caps in `t`."
     res = []
     for s in re.findall(r'\w+|\W+', t):
         res += ([f' {TK_UP} ',s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
     return ''.join(res)
 
 def fixup(x:str) -> str:
-    "List of replacements from html strings"
+    "List of replacements from html strings in `x`."
     re1 = re.compile(r'  +')
     x = x.replace('#39;', "'").replace('amp;', '&').replace('#146;', "'").replace(
         'nbsp;', ' ').replace('#36;', '$').replace('\\n', "\n").replace('quot;', "'").replace(
@@ -80,7 +80,7 @@ default_rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, r
 default_spec_tok = [BOS, FLD, UNK, PAD]
 
 class Tokenizer():
-    "Puts together rules, a tokenizer function and a language to process text with multiprocessing"
+    "Put together rules, a tokenizer function and a language to tokenize text with multiprocessing."
     def __init__(self, tok_fn:Callable=SpacyTokenizer, lang:str='en', rules:ListRules=None,
                  special_cases:Collection[str]=None, n_cpus:int=None):
         self.tok_fn,self.lang,self.special_cases = tok_fn,lang,special_cases
@@ -94,35 +94,35 @@ class Tokenizer():
         return res
 
     def proc_text(self, t:str, tok:BaseTokenizer) -> List[str]:
-        "Processes one text"
+        "Processe one text."
         for rule in self.rules: t = rule(t)
         return tok.tokenizer(t)
 
     def process_all_1(self, texts:Collection[str]) -> List[List[str]]:
-        "Processes a list of texts in one process"
+        "Processe a list of texts in one process."
         tok = self.tok_fn(self.lang)
         if self.special_cases: tok.add_special_cases(self.special_cases)
         return [self.proc_text(t, tok) for t in texts]
 
     def process_all(self, texts:Collection[str]) -> List[List[str]]:
-        "Processes a list of texts in several processes"
+        "Processe a list of texts in several processes."
         if self.n_cpus <= 1: return self.process_all_1(texts)
         with ProcessPoolExecutor(self.n_cpus) as e:
             return sum(e.map(self.process_all_1, partition_by_cores(texts, self.n_cpus)), [])
 
 class Vocab():
-    "Contains the correspondance between numbers and tokens and numericalizes"
+    "Contain the correspondance between numbers and tokens and numericalize."
 
     def __init__(self, path:PathOrStr):
         self.itos = pickle.load(open(path/'itos.pkl', 'rb'))
         self.stoi = collections.defaultdict(int,{v:k for k,v in enumerate(self.itos)})
 
     def numericalize(self, t:Collection[str]) -> List[int]:
-        "Converts a list of tokens to their ids"
+        "Convert a list of tokens to their ids."
         return [self.stoi[w] for w in t]
 
     def textify(self, nums:Collection[int]) -> List[str]:
-        "Converts a list of ids to their tokens"
+        "Convert a list of ids to their tokens."
         return ' '.join([self.itos[i] for i in nums])
 
     @classmethod

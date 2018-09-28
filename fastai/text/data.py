@@ -3,17 +3,22 @@ from ..torch_core import *
 from .transform import *
 from ..data import *
 
-__all__ = ['LanguageModelLoader', 'SortSampler', 'SortishSampler', 'TextDataset', 'TextMtd', 'classifier_data', 'lm_data', 'pad_collate', 
-           'standard_data', 'text_data_from_csv', 'text_data_from_folder', 'text_data_from_ids', 'text_data_from_tokens',]
+__all__ = ['LanguageModelLoader', 'SortSampler', 'SortishSampler', 'TextDataset', 'TextMtd', 'classifier_data', 'lm_data', 
+           'pad_collate', 'read_classes', 'standard_data', 'text_data_from_csv', 'text_data_from_folder', 'text_data_from_ids',
+           'text_data_from_tokens']
 
 TextMtd = IntEnum('TextMtd', 'CSV TOK IDS')
+
+def read_classes(fname):
+    with open(fname, 'r') as f:
+        return [l[:-1] for l in f.readlines()]
 
 class TextDataset():
     "Basic dataset for NLP tasks."
 
     def __init__(self, path:PathOrStr, tokenizer:Tokenizer, vocab:Vocab=None, max_vocab:int=60000, chunksize:int=10000,
                  name:str='train', min_freq:int=2, n_labels:int=1, create_mtd:TextMtd=TextMtd.CSV, classes:Classes=None):
-        self.path,self.tokenizer,self.max_vocab,self.min_freq = Path(path/'tmp'),tokenizer,max_vocab,min_freq
+        self.path,self.tokenizer,self.max_vocab,self.min_freq = Path(path)/'tmp',tokenizer,max_vocab,min_freq
         self.chunksize,self.name,self.n_labels,self.create_mtd = chunksize,name,n_labels,create_mtd
         self.vocab=vocab
         os.makedirs(self.path, exist_ok=True)
@@ -25,20 +30,22 @@ class TextDataset():
         if os.path.isfile(self.path/f'{self.name}_lbl.npy'):
             self.labels = np.load(self.path/f'{self.name}_lbl.npy')
         else: self.labels = np.zeros((len(self.ids),), dtype=np.int64)
-        self.classes = classes if classes else np.unique(self.labels)
+        if classes: self.classes = classes 
+        elif os.path.isfile(self.path/'classes.txt'): self.classes = read_classes(self.path/'classes.txt') 
+        else: self.classes = np.unique(self.labels)
 
     def __getitem__(self, idx:int) -> Tuple[int,int]: return self.ids[idx],self.labels[idx]
     def __len__(self) -> int: return len(self.ids)
 
     def general_check(self, pre_files:Collection[PathOrStr], post_files:Collection[PathOrStr]):
-        "Checks that post_files exist and were modified after all the prefiles."
+        "Check that post_files exist and were modified after all the prefiles."
         if not np.all([os.path.isfile(fname) for fname in post_files]): return False
         for pre_file in pre_files:
             if os.path.getmtime(pre_file) > os.path.getmtime(post_files[0]): return False
         return True
 
     def check_ids(self) -> bool:
-        "Checks if a new numericalization is needed."
+        "Check if a new numericalization is needed."
         if self.create_mtd >= TextMtd.IDS: return True
         if not self.general_check([self.tok_files[0],self.id_files[1]], self.id_files): return False
         itos = pickle.load(open(self.id_files[1], 'rb'))
@@ -50,7 +57,7 @@ class TextDataset():
         return True
 
     def check_toks(self) -> bool:
-        "Checks if a new tokenization is needed."
+        "Check if a new tokenization is needed."
         if self.create_mtd >= TextMtd.TOK: return True
         if not self.general_check([self.csv_file], self.tok_files): return False
         with open(self.tok_files[1]) as f:
@@ -58,7 +65,7 @@ class TextDataset():
         return True
 
     def tokenize(self):
-        "Tokenizes the texts in the csv file"
+        "Tokenize the texts in the csv file."
         print(f'Tokenizing {self.name}. This might take a while so you should grab a coffee.')
         curr_len = get_chunk_length(self.csv_file, self.chunksize)
         dfs = pd.read_csv(self.csv_file, header=None, chunksize=self.chunksize)
@@ -77,7 +84,7 @@ class TextDataset():
         with open(self.tok_files[1],'w') as f: f.write(repr(self.tokenizer))
 
     def numericalize(self):
-        "Numericalizes the tokens in the token file"
+        "Numericalize the tokens in the token file."
         print(f'Numericalizing {self.name}.')
         toks = np.load(self.tok_files[0])
         if self.vocab is None: self.vocab = Vocab.create(self.path, toks, self.max_vocab, self.min_freq)
@@ -85,7 +92,7 @@ class TextDataset():
         np.save(self.id_files[0], ids)
 
     def clear(self):
-        "Removes temporary files"
+        "Remove all temporary files."
         files = [self.path/f'{self.name}_{suff}.npy' for suff in ['ids','tok','lbl']]
         files.append(self.path/f'{self.name}.csv')
         for file in files:
@@ -102,7 +109,7 @@ class TextDataset():
     @classmethod
     def from_ids(cls, folder:PathOrStr, name:str, id_suff:str='_ids', lbl_suff:str='_lbl',
                  itos:str='itos.pkl', **kwargs) -> 'TextDataset':
-        "Creates a dataset from an id, a dictionary and label file."
+        "Create a dataset from an id, a dictionary and label file."
         orig = [Path(folder/file) for file in [f'{name}{id_suff}.npy', f'{name}{lbl_suff}.npy', itos]]
         dest = [Path(folder)/'tmp'/file for file in [f'{name}_ids.npy', f'{name}_lbl.npy', 'itos.pkl']]
         maybe_copy(orig, dest)
@@ -111,7 +118,7 @@ class TextDataset():
     @classmethod
     def from_tokens(cls, folder:PathOrStr, name:str, tok_suff:str='_tok', lbl_suff:str='_lbl',
                     **kwargs) -> 'TextDataset':
-        "Creates a dataset from a token and label file."
+        "Create a dataset from a token and label file."
         orig = [Path(folder/file) for file in [f'{name}{tok_suff}.npy', f'{name}{lbl_suff}.npy']]
         dest = [Path(folder)/'tmp'/file for file in [f'{name}_tok.npy', f'{name}_lbl.npy']]
         maybe_copy(orig, dest)
@@ -119,7 +126,7 @@ class TextDataset():
 
     @classmethod
     def from_csv(cls, folder:PathOrStr, tokenizer:Tokenizer, name:str, **kwargs) -> 'TextDataset':
-        "Creates a dataset from texts in a csv file."
+        "Create a dataset from texts in a csv file."
         orig = [Path(folder)/f'{name}.csv']
         dest = [Path(folder)/'tmp'/f'{name}.csv']
         maybe_copy(orig, dest)
@@ -128,10 +135,11 @@ class TextDataset():
     @classmethod
     def from_folder(cls, folder:PathOrStr, tokenizer:Tokenizer, name:str, classes:Classes=None,
                     shuffle:bool=True, **kwargs) -> 'TextDataset':
-        "Creates a dataset from a folder"
+        "Create a dataset from a folder"
         path = Path(folder)/'tmp'
         os.makedirs(path, exist_ok=True)
         if classes is None: classes = [cls.name for cls in find_classes(Path(folder)/name)]
+        (path/'classes.txt').open('w').writelines(f'{o}\n' for o in classes)
         texts,labels = [],[]
         for idx,label in enumerate(classes):
             for fname in (Path(folder)/name/label).glob('*.*'):
@@ -149,7 +157,7 @@ class TextDataset():
         return cls(folder, tokenizer, name=name, classes=classes, **kwargs)
 
 class LanguageModelLoader():
-    "Creates a dataloader with bptt slightly changing."
+    "Create a dataloader with bptt slightly changing."
     def __init__(self, dataset:TextDataset, bs:int=64, bptt:int=70, backwards:bool=False):
         self.dataset,self.bs,self.bptt,self.backwards = dataset,bs,bptt,backwards
         self.data = self.batchify(np.concatenate(dataset.ids))
@@ -171,19 +179,19 @@ class LanguageModelLoader():
     def __len__(self) -> int: return (self.n-1) // self.bptt
 
     def batchify(self, data:np.ndarray) -> LongTensor:
-        "Splits the corpus in batches."
+        "Split the corpus `data` in batches."
         nb = data.shape[0] // self.bs
         data = np.array(data[:nb*self.bs]).reshape(self.bs, -1).T
         if self.backwards: data=data[::-1]
         return LongTensor(data)
 
     def get_batch(self, i:int, seq_len:int) -> Tuple[LongTensor, LongTensor]:
-        "Creates a batch of a given seq_len"
+        "Create a batch at `i` of a given `seq_len`."
         seq_len = min(seq_len, len(self.data) - 1 - i)
         return self.data[i:i+seq_len], self.data[i+1:i+1+seq_len].contiguous().view(-1)
 
 class SortSampler(Sampler):
-    "Go through the text data by order of length"
+    "Go through the text data by order of length."
 
     def __init__(self, data_source:NPArrayList, key:KeyFunc): self.data_source,self.key = data_source,key
     def __len__(self) -> int: return len(self.data_source)
@@ -192,7 +200,7 @@ class SortSampler(Sampler):
 
 
 class SortishSampler(Sampler):
-    "Go through the text data by order of length with a bit of randomness"
+    "Go through the text data by order of length with a bit of randomness."
 
     def __init__(self, data_source:NPArrayList, key:KeyFunc, bs:int):
         self.data_source,self.key,self.bs = data_source,key,bs
@@ -213,7 +221,7 @@ class SortishSampler(Sampler):
         return iter(sort_idx)
 
 def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tuple[LongTensor, LongTensor]:
-    "Function that collect samples and adds padding"
+    "Function that collect samples and adds padding."
     max_len = max([len(s[0]) for s in samples])
     res = torch.zeros(max_len, len(samples)).long() + pad_idx
     for i,s in enumerate(samples): res[-len(s[0]):,i] = LongTensor(s[0])
@@ -222,16 +230,16 @@ def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tup
 DataFunc = Callable[[Collection[DatasetBase], PathOrStr, KWArgs], DataBunch]
 
 def standard_data(datasets:Collection[DatasetBase], path:PathOrStr, **kwargs) -> DataBunch:
-    "Simply creates a `DataBunch` from the `datasets`"
+    "Simply create a `DataBunch` from the `datasets`."
     return DataBunch.create(*datasets, path=path, **kwargs)
 
 def lm_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
-    "Creates a `DataBunch` from the `datasets` for language modelling"
+    "Create a `DataBunch` from the `datasets` for language modelling."
     dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
     return DataBunch(*dataloaders, path=path)
 
 def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
-    "Function that transform the `datasets` in a `DataBunch` for classification"
+    "Function that transform the `datasets` in a `DataBunch` for classification."
     bs = kwargs.pop('bs') if 'bs' in kwargs else 64
     pad_idx = kwargs.pop('pad_idx') if 'pad_idx' in kwargs else 1
     train_sampler = SortishSampler(datasets[0].ids, key=lambda x: len(datasets[0].ids[x]), bs=bs//2)
@@ -244,7 +252,7 @@ def classifier_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) 
 
 def text_data_from_ids(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, itos:str='itos.pkl', **kwargs) -> DataBunch:
-    "Creates a `DataBunch` from ids, labels and a dictionary."
+    "Create a `DataBunch` from ids, labels and a dictionary."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'id_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_ids(path, train, itos=itos, **txt_kwargs)
@@ -254,7 +262,7 @@ def text_data_from_ids(path:PathOrStr, train:str='train', valid:str='valid', tes
 
 def text_data_from_tokens(path:PathOrStr, train:str='train', valid:str='valid', test:Optional[str]=None,
                          data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
-    "Creates a `DataBunch` from tokens and labels."
+    "Create a `DataBunch` from tokens and labels."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels', 'tok_suff', 'lbl_suff'], kwargs)
     train_ds = TextDataset.from_tokens(path, train, vocab=vocab, **txt_kwargs)
@@ -264,7 +272,7 @@ def text_data_from_tokens(path:PathOrStr, train:str='train', valid:str='valid', 
 
 def text_data_from_csv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                       data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs) -> DataBunch:
-    "Creates a `DataBunch` from texts in csv files."
+    "Create a `DataBunch` from texts in csv files."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_csv(path, tokenizer, train, vocab=vocab, **txt_kwargs)
@@ -274,7 +282,7 @@ def text_data_from_csv(path:PathOrStr, tokenizer:Tokenizer, train:str='train', v
 
 def text_data_from_folder(path:PathOrStr, tokenizer:Tokenizer, train:str='train', valid:str='valid', test:Optional[str]=None,
                          shuffle:bool=True, data_func:DataFunc=standard_data, vocab:Vocab=None, **kwargs):
-    "Creates a `DataBunch` from text files in folders."
+    "Create a `DataBunch` from text files in folders."
     path=Path(path)
     txt_kwargs, kwargs = extract_kwargs(['max_vocab', 'chunksize', 'min_freq', 'n_labels'], kwargs)
     train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)
