@@ -138,8 +138,8 @@ class Learner():
 
     def split(self, split_on:SplitFuncOrIdxList)->None:
         "split the model at `split_on`"
-        if isinstance(split_on,Callable): self.layer_groups = split_on(self.model)
-        else: self.layer_groups = split_model(self.model, split_on)
+        if isinstance(split_on,Callable): split_on = split_on(self.model)
+        self.layer_groups = split_model(self.model, split_on)
 
     def freeze_to(self, n:int)->None:
         "freeze layers up to layer `n`"

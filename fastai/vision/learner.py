@@ -28,13 +28,10 @@ def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floa
         layers += bn_drop_lin(ni,no,True,p,actn)
     return nn.Sequential(*layers)
 
-def _default_split(m:Model):
-    "By default split models between first and second layer."
-    return split_model(m, m[1])
-
-def _resnet_split(m:Model):
-    "Split a resnet style model."
-    return split_model(m, (m[0][6],m[1]))
+# By default split models between first and second layer
+def _default_split(m:Model): return (m[1],)
+# Split a resnet style model
+def _resnet_split(m:Model): return (m[0][6],m[1])
 
 _default_meta = {'cut':-1, 'split':_default_split}
 _resnet_meta  = {'cut':-2, 'split':_resnet_split }

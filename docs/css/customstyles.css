@@ -714,6 +714,8 @@ button.cursorNorm {
 h2  {
     font-size:24px;
     line-height:29px;
+    border-top: 3px solid blue;
+    padding-top: 5px;
 }
 span.otherProgrammingLanguages {
     font-style: normal;
@@ -1051,8 +1053,13 @@ span.label.label-primary {
     color: black;
     }
 
+code {
+        color: #1d1f5b;
+        background-color: #f3f3f3;
+}
+
 a code {
-    color: #248EC2;
+    color: #0082C2;
 }
 
 table th code {
@@ -1249,5 +1256,3 @@ h4.panel-title {
         border: 0px;
         padding-left: 2em;
 }
-
-
