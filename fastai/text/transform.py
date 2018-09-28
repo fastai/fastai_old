@@ -1,9 +1,9 @@
 "Module helps with formatting NLP data. Tokenizes text and creates vocab indexes"
 from ..torch_core import *
 
-__all__ = ['BaseTokenizer', 'SpacyTokenizer', 'Tokenizer', 'Vocab', 'deal_caps', 'fixup', 'replace_rep', 'replace_wrep', 
-           'rm_useless_spaces', 'spec_add_spaces', 'sub_br', 'BOS', 'FLD', 'UNK', 'PAD', 'TK_UP', 'TK_REP', 'TK_REP',
-           'TK_WREP', 'default_rules', 'default_spec_tok']
+__all__ = ['BaseTokenizer', 'SpacyTokenizer', 'Tokenizer', 'Vocab', 'deal_caps', 'fix_html', 'replace_rep', 'replace_wrep', 
+           'rm_useless_spaces', 'spec_add_spaces', 'BOS', 'FLD', 'UNK', 'PAD', 'TK_UP', 'TK_REP', 'TK_REP', 'TK_WREP', 
+           'default_rules', 'default_spec_tok']
 
 BOS,FLD,UNK,PAD = 'xxbos','xxfld','xxunk','xxpad'
 TK_UP,TK_REP,TK_WREP = 'xxup','xxrep','xxwrep'
@@ -14,34 +14,29 @@ class BaseTokenizer():
     def __init__(self, lang:str):
         self.lang = lang
 
-    def tokenizer(self, t:spacy.tokens.doc.Doc) -> List[str]: raise NotImplementedError
-    def add_special_cases(self, toks:Collection[str]):        raise NotImplementedError
+    def tokenizer(self, t:str) -> List[str]:            raise NotImplementedError
+    def add_special_cases(self, toks:Collection[str]):  raise NotImplementedError
 
 #export
 class SpacyTokenizer(BaseTokenizer):
-    "Wrapper around a `spacy` tokenizer to make it a `BaseTokenizer`."
+    "Wrapper around a spacy tokenizer to make it a `BaseTokenizer`."
 
     def __init__(self, lang:str):
         self.tok = spacy.load(lang)
 
-    def tokenizer(self, t:spacy.tokens.doc.Doc) -> List[str]:
+    def tokenizer(self, t:str) -> List[str]:
         return [t.text for t in self.tok.tokenizer(t)]
 
     def add_special_cases(self, toks:Collection[str]):
         for w in toks:
             self.tok.tokenizer.add_special_case(w, [{ORTH: w}])
 
-def sub_br(t:str) -> str:
-    "Replace the <br /> by \n in `t`."
-    re_br = re.compile(r'<\s*br\s*/?>', re.IGNORECASE)
-    return re_br.sub("\n", t)
-
 def spec_add_spaces(t:str) -> str:
-    "Add spaces between special characters in `t`."
+    "Add spaces around / and # in `t`."
     return re.sub(r'([/#])', r' \1 ', t)
 
 def rm_useless_spaces(t:str) -> str:
-    "Remove multiple spaces."
+    "Remove multiple spaces in `t`."
     return re.sub(' {2,}', ' ', t)
 
 def replace_rep(t:str) -> str:
@@ -67,7 +62,7 @@ def deal_caps(t:str) -> str:
         res += ([f' {TK_UP} ',s.lower()] if (s.isupper() and (len(s)>2)) else [s.lower()])
     return ''.join(res)
 
-def fixup(x:str) -> str:
+def fix_html(x:str) -> str:
     "List of replacements from html strings in `x`."
     re1 = re.compile(r'  +')
     x = x.replace('#39;', "'").replace('amp;', '&').replace('#146;', "'").replace(
@@ -76,7 +71,7 @@ def fixup(x:str) -> str:
         ' @-@ ','-').replace('\\', ' \\ ')
     return re1.sub(' ', html.unescape(x))
 
-default_rules = [fixup, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces, sub_br]
+default_rules = [fix_html, replace_rep, replace_wrep, deal_caps, spec_add_spaces, rm_useless_spaces]
 default_spec_tok = [BOS, FLD, UNK, PAD]
 
 class Tokenizer():
@@ -114,15 +109,15 @@ class Vocab():
     "Contain the correspondance between numbers and tokens and numericalize."
 
     def __init__(self, path:PathOrStr):
-        self.itos = pickle.load(open(path/'itos.pkl', 'rb'))
+        self.itos = pickle.load(open(Path(path)/'itos.pkl', 'rb'))
         self.stoi = collections.defaultdict(int,{v:k for k,v in enumerate(self.itos)})
 
     def numericalize(self, t:Collection[str]) -> List[int]:
-        "Convert a list of tokens to their ids."
+        "Convert a list of tokens `t` to their ids."
         return [self.stoi[w] for w in t]
 
     def textify(self, nums:Collection[int]) -> List[str]:
-        "Convert a list of ids to their tokens."
+        "Convert a list of `nums` to their tokens."
         return ' '.join([self.itos[i] for i in nums])
 
     @classmethod
@@ -133,7 +128,7 @@ class Vocab():
         itos.insert(0, PAD)
         if UNK in itos: itos.remove(UNK)
         itos.insert(0, UNK)
-        pickle.dump(itos, open(path/'itos.pkl', 'wb'))
+        pickle.dump(itos, open(Path(path)/'itos.pkl', 'wb'))
         h = hashlib.sha1(np.array(itos))
-        with open(path/'numericalize.log','w') as f: f.write(h.hexdigest())
+        with open(Path(path)/'numericalize.log','w') as f: f.write(h.hexdigest())
         return cls(path)
