@@ -4,10 +4,10 @@ from .image import *
 from .transform import *
 from ..data import *
 
-__all__ = ['CoordTargetDataset', 'DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'SegmentationDataset', 'denormalize', 
+__all__ = ['DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'ObjectDetectDataset', 'SegmentationDataset', 'denormalize', 
            'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs', 
            'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm', 
-           'imagenet_denorm', 'image_data_from_csv', ]
+           'imagenet_denorm']
 
 TfmList = Collection[Transform]
 
@@ -21,7 +21,7 @@ def get_image_files(c:Path, check_ext:bool=True)->FilePathList:
 
 def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figsize:Tuple[int,int]=(12,15),
                      denorm:Callable=None) -> None:
-    "Show a few images from a batch"
+    "Show a few images from a batch."
     x,y = next(iter(dl))
     if rows is None: rows = int(math.sqrt(len(x)))
     x = x[:rows*rows].cpu()
@@ -29,7 +29,7 @@ def show_image_batch(dl:DataLoader, classes:Collection[str], rows:int=None, figs
     show_images(x,y[:rows*rows].cpu(),rows, classes, figsize)
 
 def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], figsize:Tuple[int,int]=(9,9))->None:
-    "Plot images (`x[i]`) from `x` titled according to classes[y[i]]"
+    "Plot images (`x[i]`) from `x` titled according to `classes[y[i]]`."
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()):
         show_image(x[i], ax=ax)
@@ -37,13 +37,13 @@ def show_images(x:Collection[Image],y:int,rows:int, classes:Collection[str], fig
     plt.tight_layout()
 
 def show_xy_images(x:Tensor,y:Tensor,rows:int,figsize:tuple=(9,9)):
-    "Shows a selection of images and targets from a given batch."
+    "Show a selection of images and targets from a given batch."
     fig, axs = plt.subplots(rows,rows,figsize=figsize)
     for i, ax in enumerate(axs.flatten()): show_image(x[i], y=y[i], ax=ax)
     plt.tight_layout()
 
 class ImageDataset(LabelDataset):
-    "Dataset for folders of images in style {folder}/{class}/{images}"
+    "Dataset for folders of images in style {folder}/{class}/{images}."
     def __init__(self, fns:FilePathList, labels:ImgLabels, classes:Optional[Classes]=None):
         self.classes = ifnone(classes, list(set(labels)))
         self.class2idx = {v:k for k,v in enumerate(self.classes)}
@@ -54,13 +54,13 @@ class ImageDataset(LabelDataset):
 
     @staticmethod
     def _folder_files(folder:Path, label:ImgLabel, check_ext=True)->Tuple[FilePathList,ImgLabels]:
-        "From `folder` return image files and labels. The labels are all `label`. `check_ext` means only image files"
+        "From `folder` return image files and labels. The labels are all `label`. `check_ext` means only image files."
         fnames = get_image_files(folder, check_ext=check_ext)
         return fnames,[label]*len(fnames)
 
     @classmethod
     def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
-        "Typically used for test set. label all images in `folder` with `classes[0]`"
+        "Typically used for test set. label all images in `folder` with `classes[0]`."
         fns,labels = cls._folder_files(folder, classes[0], check_ext=check_ext)
         return cls(fns, labels, classes=classes)
 
@@ -88,7 +88,7 @@ class ImageMultiDataset(LabelDataset):
                   for l in labels]
 
     def encode(self, x:Collection[int]):
-        "One-hot encodes the target"
+        "One-hot encode the target."
         res = np.zeros((self.c,), np.float32)
         res[x] = 1.
         return res
@@ -98,7 +98,7 @@ class ImageMultiDataset(LabelDataset):
     
     @classmethod
     def from_single_folder(cls, folder:PathOrStr, classes:Classes, check_ext=True):
-        "Typically used for test set. label all images in `folder` with `classes[0]`"
+        "Typically used for test set; label all images in `folder` with `classes[0]`."
         fnames = get_image_files(folder, check_ext=check_ext)
         labels = [[classes[0]]] * len(fnames)
         return cls(fnames, labels, classes=classes)
@@ -111,7 +111,7 @@ class ImageMultiDataset(LabelDataset):
         return [train_ds,cls(*valid, classes=train_ds.classes)]
 
 class SegmentationDataset(DatasetBase):
-    "A dataset for segmentation task"
+    "A dataset for segmentation task."
     def __init__(self, x:Collection[PathOrStr], y:Collection[PathOrStr]):
         assert len(x)==len(y)
         self.x,self.y = np.array(x),np.array(y)
@@ -120,8 +120,8 @@ class SegmentationDataset(DatasetBase):
         return open_image(self.x[i]), open_mask(self.y[i])
 
 @dataclass
-class CoordTargetDataset(Dataset):
-    "A dataset with annotated images"
+class ObjectDetectDataset(Dataset):
+    "A dataset with annotated images."
     x_fns:Collection[Path]
     bbs:Collection[Collection[int]]
     def __post_init__(self): assert len(self.x_fns)==len(self.bbs)
@@ -132,7 +132,7 @@ class CoordTargetDataset(Dataset):
         return x, ImageBBox.create(self.bbs[i], *x.size)
 
 class DatasetTfm(Dataset):
-    "`Dataset` that applies a list of transforms to every item drawn"
+    "`Dataset` that applies a list of transforms to every item drawn."
     def __init__(self, ds:Dataset, tfms:TfmList=None, tfm_y:bool=False, **kwargs:Any):
         "this dataset will apply `tfms` to `ds`"
         self.ds,self.tfms,self.kwargs,self.tfm_y = ds,tfms,kwargs,tfm_y
@@ -153,24 +153,28 @@ class DatasetTfm(Dataset):
 
 def transform_datasets(train_ds:Dataset, valid_ds:Dataset, test_ds:Optional[Dataset]=None,
                        tfms:Optional[Tuple[TfmList,TfmList]]=None, **kwargs:Any):
-    "Create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)"
+    "Create train, valid and maybe test DatasetTfm` using `tfms` = (train_tfms,valid_tfms)."
     res = [DatasetTfm(train_ds, tfms[0],  **kwargs),
            DatasetTfm(valid_ds, tfms[1],  **kwargs)]
     if test_ds is not None: res.append(DatasetTfm(test_ds, tfms[1],  **kwargs))
     return res
 
-def normalize(x:TensorImage, mean:float,std:float)->TensorImage:   return (x-mean[...,None,None]) / std[...,None,None]
-def denormalize(x:TensorImage, mean:float,std:float)->TensorImage: return x*std[...,None,None] + mean[...,None,None]
+def normalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage:   
+    "Normalize `x` with `mean` and `std`."
+    return (x-mean[...,None,None]) / std[...,None,None]
+def denormalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage: 
+    "Denormalize `x` with `mean` and `std`."
+    return x*std[...,None,None] + mean[...,None,None]
 
-def normalize_batch(b:Tuple[Tensor,Tensor], mean:float, std:float, do_y:bool=False)->Tuple[Tensor,Tensor]:
-    "`b` = `x`,`y` - normalize `x` array of imgs and `do_y` optionally `y`"
+def normalize_batch(b:Tuple[Tensor,Tensor], mean:FloatTensor, std:FloatTensor, do_y:bool=False)->Tuple[Tensor,Tensor]:
+    "`b` = `x`,`y` - normalize `x` array of imgs and `do_y` optionally `y`."
     x,y = b
     x = normalize(x,mean,std)
     if do_y: y = normalize(y,mean,std)
     return x,y
 
-def normalize_funcs(mean:float, std, do_y=False, device=None)->[Callable,Callable]:
-    "Create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`"
+def normalize_funcs(mean:FloatTensor, std:FloatTensor, do_y=False, device=None)->[Callable,Callable]:
+    "Create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`."
     if device is None: device=default_device
     return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
             partial(denormalize,     mean=mean,           std=std))
@@ -183,7 +187,7 @@ imagenet_norm,imagenet_denorm = normalize_funcs(*imagenet_stats)
 def _create_with_tfm(train_ds, valid_ds, test_ds=None,
                path='.', bs=64, ds_tfms=None, num_workers=default_cpus,
                tfms=None, device=None, size=None, **kwargs)->'DataBunch':
-        "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`"
+        "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`."
         datasets = [train_ds,valid_ds]
         if test_ds is not None: datasets.append(test_ds)
         if ds_tfms: datasets = transform_datasets(*datasets, tfms=ds_tfms, size=size, **kwargs)
@@ -195,7 +199,7 @@ DataBunch.create = _create_with_tfm
 
 def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOrStr='valid',
                           test:Optional[PathOrStr]=None, **kwargs:Any) -> DataBunch:
-    "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders"
+    "Create `DataBunch` from imagenet style dataset in `path` with `train`,`valid`,`test` subfolders."
     path=Path(path)
     train_ds = ImageDataset.from_folder(path/train)
     datasets = [train_ds, ImageDataset.from_folder(path/valid, classes=train_ds.classes)]
@@ -204,11 +208,11 @@ def image_data_from_folder(path:PathOrStr, train:PathOrStr='train', valid:PathOr
     return DataBunch.create(*datasets, path=path, **kwargs)
 
 def _get_fns(ds, path):
-    "List of all file names relative to `path`"
+    "List of all file names relative to `path`."
     return [str(fn.relative_to(path)) for fn in ds.x]
 
 def _labels_to_csv(self, dest:str):
-    "Save file names and labels in `data` as CSV to file name `dest`"
+    "Save file names and labels in `data` as CSV to file name `dest`."
     fns = _get_fns(self.train_ds)
     y = list(self.train_ds.y)
     fns += _get_fns(self.valid_ds)
@@ -225,8 +229,6 @@ def uniqueify(x:Series) -> List[Any]: return list(OrderedDict.fromkeys(x).keys()
 
 def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1, 
                       label_delim:str=' ', header:Optional[Union[int,str]]='infer', suffix:Optional[str]=None):
-    import pandas as pd
-    import csv
     df = pd.read_csv(csv_path, header=header)
     df.iloc[:,label_col] = list(csv.reader(df.iloc[:,label_col], delimiter=label_delim))
     labels = df.iloc[:,label_col]
@@ -234,7 +236,7 @@ def csv_to_fns_labels(csv_path:PathOrStr, fn_col:int=0, label_col:int=1,
     if suffix: fnames = fnames + suffix
     return fnames, labels
     
-def image_data_from_csv(path:PathOrStr, folder:PathOrStr, csv_labels:PathOrStr, valid_pct:float=0.2, 
+def image_data_from_csv(path:PathOrStr, folder:PathOrStr='.', csv_labels:PathOrStr='labels.csv', valid_pct:float=0.2, 
                         test:Optional[PathOrStr]=None, suffix:str=None, **kwargs:Any) -> DataBunch:
     fnames, labels = csv_to_fns_labels(csv_labels, suffix=suffix)
     path=Path(path)
