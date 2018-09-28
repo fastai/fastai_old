@@ -5,7 +5,7 @@ from .transform import *
 from ..data import *
 
 __all__ = ['DatasetTfm', 'ImageDataset', 'ImageMultiDataset', 'ObjectDetectDataset', 'SegmentationDataset', 'denormalize',
-           'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_batch', 'normalize_funcs',
+           'get_image_files', 'image_data_from_csv', 'image_data_from_folder', 'normalize', 'normalize_funcs',
            'show_image_batch', 'show_images', 'show_xy_images', 'transform_datasets', 'cifar_norm', 'cifar_denorm', 'imagenet_norm',
            'imagenet_denorm']
 
