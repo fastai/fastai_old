@@ -5,14 +5,14 @@ entries:
       title: Overview
       url: overview.html
     - output: web
-      title: imports
-      url: imports.html
-    - output: web
       title: core
       url: core.html
     - output: web
       title: torch_core
       url: torch_core.html
+    - output: web
+      title: imports
+      url: imports.html
     - output: web
       title: data
       url: data.html
@@ -39,17 +39,17 @@ entries:
       title: Overview
       url: training.html
     - output: web
-      title: callback
-      url: callback.html
-    - output: web
       title: basic_train
       url: basic_train.html
+    - output: web
+      title: train
+      url: train.html
     - output: web
       title: metrics
       url: metrics.html
     - output: web
-      title: train
-      url: train.html
+      title: callback
+      url: callback.html
       subfolders:
       - output: web
         subfolderitems:
@@ -57,23 +57,23 @@ entries:
           title: Overview
           url: callbacks.html
         - output: web
-          title: callbacks.rnn
-          url: callbacks.rnn.html
-        - output: web
-          title: callbacks.one_cycle
-          url: callbacks.one_cycle.html
-        - output: web
-          title: callbacks.mixup
-          url: callbacks.mixup.html
-        - output: web
-          title: callbacks.lr_finder
-          url: callbacks.lr_finder.html
-        - output: web
           title: callbacks.hooks
           url: callbacks.hooks.html
         - output: web
           title: callbacks.fp16
           url: callbacks.fp16.html
+        - output: web
+          title: callbacks.one_cycle
+          url: callbacks.one_cycle.html
+        - output: web
+          title: callbacks.lr_finder
+          url: callbacks.lr_finder.html
+        - output: web
+          title: callbacks.mixup
+          url: callbacks.mixup.html
+        - output: web
+          title: callbacks.rnn
+          url: callbacks.rnn.html
         title: callbacks
     output: web
     title: Training
@@ -85,6 +85,24 @@ entries:
       title: colab
       url: colab.html
       subfolders:
+      - output: web
+        subfolderitems:
+        - output: web
+          title: Overview
+          url: vision.html
+        - output: web
+          title: vision.learner
+          url: vision.learner.html
+        - output: web
+          title: vision.transform
+          url: vision.transform.html
+        - output: web
+          title: vision.image
+          url: vision.image.html
+        - output: web
+          title: vision.data
+          url: vision.data.html
+        title: vision
       - output: web
         subfolderitems:
         - output: web
@@ -112,24 +130,6 @@ entries:
           title: tabular.data
           url: tabular.data.html
         title: tabular
-      - output: web
-        subfolderitems:
-        - output: web
-          title: Overview
-          url: vision.html
-        - output: web
-          title: vision.learner
-          url: vision.learner.html
-        - output: web
-          title: vision.transform
-          url: vision.transform.html
-        - output: web
-          title: vision.image
-          url: vision.image.html
-        - output: web
-          title: vision.data
-          url: vision.data.html
-        title: vision
     output: web
     title: Applications
   - folderitems:
@@ -137,14 +137,14 @@ entries:
       title: Overview
       url: gen_doc.html
     - output: web
+      title: gen_doc.gen_notebooks
+      url: gen_doc.gen_notebooks.html
+    - output: web
       title: gen_doc.sgen_notebooks
       url: gen_doc.sgen_notebooks.html
     - output: web
       title: gen_doc.nbdoc
       url: gen_doc.nbdoc.html
-    - output: web
-      title: gen_doc.gen_notebooks
-      url: gen_doc.gen_notebooks.html
     - output: web
       title: gen_doc.convert2html
       url: gen_doc.convert2html.html

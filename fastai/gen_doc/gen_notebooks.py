@@ -313,13 +313,12 @@ def get_module_from_path(source_path):
     relpath = fpath.relative_to(dirpath)
     return '.'.join(relpath.with_suffix('').parts)
 
-def update_notebooks(source_path=None, dest_path=None, do_all=False, update_html=True, update_nb=False, update_nb_links=True, html_path=None, create_missing=False):
+def update_notebooks(source_path, dest_path=None, update_html=True, update_nb=False, update_nb_links=True, html_path=None, create_missing=False):
     "`source_path` can be a directory or a file. Assumes all modules reside in the fastai directory."
     fpath = Path(__file__).resolve()
     fastai_idx = list(reversed(fpath.parts)).index('fastai')
     dirpath = fpath.parents[fastai_idx] # should return 'fastai_pytorch'
-    if do_all: source_path = dirpath/'fastai'
-    else: source_path = resolve_path(source_path)
+    source_path = resolve_path(source_path)
     if dest_path is None: dest_path = dirpath/'docs_src'
     else: dest_path = resolve_path(dest_path)
     if html_path is None: html_path = dirpath/'docs'

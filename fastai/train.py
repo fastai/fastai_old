@@ -67,3 +67,4 @@ class GradientClipping(LearnerCallback):
 
     def on_backward_end(self, **kwargs):
         if self.clip:  nn.utils.clip_grad_norm_(self.learn.model.parameters(), self.clip)
+

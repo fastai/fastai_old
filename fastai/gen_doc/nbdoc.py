@@ -84,7 +84,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
         else:                        doc = get_cls_doc(elt, full_name)
     elif isinstance(elt, Callable):  doc = format_ft_def(elt, full_name)
     else: doc = f'doc definition not supported for {full_name}'
-    title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
+    title_level = ifnone(title_level, 2 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
     doc += '\n'
     if doc_string and (inspect.getdoc(elt) or arg_comments):
