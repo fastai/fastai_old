@@ -36,13 +36,17 @@ First install the nightly `pytorch` build:
 
     conda install -c pytorch pytorch-nightly
 
+then:
+
+    conda install -c fastai/label/test torchvision=0.2.1=pyhe7f20fa_0
+
+We had to build a special version of torchvision which depends on `pytorch-nightly`.
+
 Now you can install `fastai`. Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/).
 
 Currently only `linux-64`/`python3.6` conda build is available:
 
-    conda install -c fastai -c fastai/label/test fastai torchvision=0.2.1=pyhe7f20fa_0
-
-We had to build a special version of torchvision which depends on `pytorch-nightly`.
+    conda install -c fastai/label/test fastai
 
 For other setups/platforms use `pip install` at the moment (see above).
 

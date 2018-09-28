@@ -61,10 +61,10 @@ requirements:
     - traitlets
     - typing
     - pytorch-nightly
+    - torchvision >=0.2.1
 
 # removing until pytorch-1.0.0 release - conda can't handle these dependencies and tries to pull in pytorch-0.4.1 due to torchvision depending on it. yet, pytorch doesn't release torchvision nightly build... no way out
 #    - pytorch >=1.0.0
-#    - torchvision >=0.2.1
 
 test:
   imports:
@@ -81,6 +81,7 @@ about:
   license_family: APACHE
   license_file: LICENSE
   summary: {{ data['description'] }}
+  description: "{{ data['long_description']|replace('"', "'") }}"
   doc_url: {{ data.get('url') }}
   dev_url: {{ data.get('url') }}
 

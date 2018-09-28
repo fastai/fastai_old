@@ -263,17 +263,17 @@ But as shown in the previous section we also have to deal with several dependenc
 
 Adding the `--label` option tells conda to make the upload visible only to users who specify that label:
 
-    anaconda upload -u fastai /path/to/fastai-xxx.tar.bz2 --label test
+    anaconda upload /path/to/fastai-xxx.tar.bz2 -u fastai --label test
 
 Any label name can be used. `main` is the only special, implicit label if none other is used.
 
 To test, see that you can find it:
 
-    conda search --override -c fastai -c fastai/label/test fastai
+    conda search --override -c fastai/label/test fastai
 
 and then validate that the installation works correctly:
 
-    conda install -c pytorch -c fastai -c fastai/label/test fastai
+    conda install -c pytorch -c fastai/label/test fastai
 
 Once the testing is successful, copy all of the test package(s) back to the `main` label:
 
