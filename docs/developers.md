@@ -96,38 +96,42 @@ The same can be repeated for getting test requirements, just repeat the same pro
 
 ## Prep
 
-1. You need to register (free) with:
+1. You need to register (free) with:  
 
-  - PyPI (​https://pypi.org/account/register/)
-  - TestPyPI (https://test.pypi.org/account/register/)
-  - anaconda.org (​https://anaconda.org/​)
+   - PyPI (​https://pypi.org/account/register/)
+   - TestPyPI (https://test.pypi.org/account/register/)
+   - anaconda.org (​https://anaconda.org/​)
 
-After registration, to upload to fastai project, you will need to ask Jeremy to add your username to PyPI and anaconda.
+   After registration, to upload to fastai project, you will need to ask Jeremy to add your username to PyPI and anaconda.
 
 2. Create file `~/.pypirc` with the following content:
 
-    [distutils]
-    index-servers#
-        pypi
-        testpypi
+   ```
+   [distutils]
+   index-servers#
+   pypi
+   testpypi
 
-    [testpypi]
-    repository: https://test.pypi.org/legacy/
-    username: your testpypi username
-    password: your testpypi password
+   [testpypi]
+   repository: https://test.pypi.org/legacy/
+   username: your testpypi username
+   password: your testpypi password
 
-    [pypi]
-    username: your testpypi username
-    password: your testpypi password
+   [pypi]
+   username: your testpypi username
+   password: your testpypi password
+   ```
 
 3. You can also setup your client to have transparent access to anaconda tools, see https://anaconda.org/YOURUSERNAME/settings/access (adjust the url to insert your username).
 
-You don't really need it, as the anaconda client cashes your credentials so you need to login only infrequently.
+   You don't really need it, as the anaconda client cashes your credentials so you need to login only infrequently.
 
 4. Install build tools:
 
-    conda install conda-verify conda-build anaconda-client
-    pip install twine>=1.12
+   ```
+   conda install conda-verify conda-build anaconda-client
+   pip install twine>=1.12
+   ```
 
 
 ## Publish
