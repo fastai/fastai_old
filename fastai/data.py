@@ -4,24 +4,24 @@ from .torch_core import *
 __all__ = ['DataBunch', 'DatasetBase', 'DeviceDataLoader', 'LabelDataset']
 
 class DatasetBase(Dataset):
-    "Base class for all fastai datasets"
+    "Base class for all fastai datasets."
     def __len__(self): return len(self.x)
     @property
     def c(self):
-        "Number of classes expressed by dataset y variable"
+        "Number of classes expressed by dataset y variable."
         return self.y.shape[-1] if len(self.y.shape)>1 else 1
     def __repr__(self): return f'{type(self).__name__} of len {len(self)}'
 
 class LabelDataset(DatasetBase):
-    "Base class for fastai datasets that do classification"
+    "Base class for fastai datasets that do classification."
     @property
     def c(self):
-        "Number of classes expressed by dataset y variable"
+        "Number of classes expressed by dataset y variable."
         return len(self.classes)
 
 @dataclass
 class DeviceDataLoader():
-    "Binds a `DataLoader` to a `torch.device`"
+    "Bind a `DataLoader` to a `torch.device`."
     dl: DataLoader
     device: torch.device
     tfms: List[Callable]=None
@@ -37,20 +37,20 @@ class DeviceDataLoader():
     def remove_tfm(self,tfm:Callable)->None: self.tfms.remove(tfm)
 
     def proc_batch(self,b:Tensor)->Tensor:
-        "Proces batch `b` of `TensorImage`"
+        "Proces batch `b` of `TensorImage`."
         b = to_device(b, self.device)
         for f in listify(self.tfms): b = f(b)
         return b
 
     def __iter__(self):
-        "Process and returns items from `DataLoader`"
+        "Process and returns items from `DataLoader`."
         self.gen = map(self.proc_batch, self.dl)
         return iter(self.gen)
 
     @classmethod
     def create(cls, dataset:Dataset, bs:int=1, shuffle:bool=False, device:torch.device=default_device,
                tfms:Collection[Callable]=tfms, num_workers:int=default_cpus, collate_fn:Callable=data_collate, **kwargs:Any):
-        "Create DeviceDataLoader from `dataset` with `batch_size` and `shuffle`: processs using `num_workers`"
+        "Create DeviceDataLoader from `dataset` with `batch_size` and `shuffle`: processs using `num_workers`."
         return cls(DataLoader(dataset, batch_size=bs, shuffle=shuffle, num_workers=num_workers, **kwargs),
                    device=device, tfms=tfms, collate_fn=collate_fn)
 
@@ -70,7 +70,7 @@ class DataBunch():
     def create(cls, train_ds:Dataset, valid_ds:Dataset, test_ds:Dataset=None, path:PathOrStr='.', bs:int=64, 
                num_workers:int=default_cpus, tfms:Optional[Collection[Callable]]=None, device:torch.device=None, 
                collate_fn:Callable=data_collate)->'DataBunch':
-        "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`"
+        "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`."
         datasets = [train_ds,valid_ds]
         if test_ds is not None: datasets.append(test_ds)
         dls = [DataLoader(*o, num_workers=num_workers) for o in
@@ -79,7 +79,7 @@ class DataBunch():
 
     def __getattr__(self,k:int)->Any: return getattr(self.train_ds, k)
     def holdout(self, is_test:bool=False)->DeviceDataLoader:
-        "Returns correct holdout `Dataset` for test vs validation (`is_test`)"
+        "Returns correct holdout `Dataset` for test vs validation (`is_test`)."
         return self.test_dl if is_test else self.valid_dl
 
     @property
