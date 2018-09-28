@@ -168,6 +168,7 @@ def read_nb_types(cells):
     return doc_fns
 
 def link_markdown_cells(cells, mod):
+    "Creates documentation links for all cells in markdown with backticks"
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
             cell['source'] = link_docstring(mod, cell['source'])
@@ -218,6 +219,21 @@ def update_metadata(nb, data, overwrite=True):
     if overwrite: nb['metadata']['jekyll'] = data
     else: nb['metadata']['jekyll'] = nb['metadata'].get('jekyll', {}).update(data)
 
+IMPORT_RE = re.compile(r"from (fastai[\.\w_]*)")
+def get_imported_modules(cells):
+    module_names = []
+    for cell in cells:
+        if cell['cell_type'] == 'code':
+            for m in IMPORT_RE.finditer(cell['source']):
+                module_names.append(m.group(1))
+    return module_names
+
+def add_doc_links(cells):
+    for m_name in get_imported_modules(cells):
+        mod = import_mod(m_name)
+        if mod is None: continue
+        link_markdown_cells(cells, mod)
+
 def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
     doc_path = get_doc_path(mod, dest_path)
@@ -227,7 +243,7 @@ def update_module_page(mod, dest_path='.'):
     update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
 
     cells = nb['cells']
-    link_markdown_cells(cells, mod)
+    add_doc_links(cells)
 
     type_dict = read_nb_types(cells)
     gvar_map = get_global_vars(mod)
@@ -257,6 +273,17 @@ def update_module_page(mod, dest_path='.'):
     json.dump(nb, open(doc_path,'w'))
     return doc_path
     #execute_nb(doc_path)
+
+
+def link_all(path_dir):
+    "Links documentation to all the notebooks in `pkg_name`"
+    files = Path(path_dir).glob('*.ipynb')
+    for f in files:
+        nb = read_nb(f)
+        cells = nb['cells']
+        add_doc_links(cells)
+        json.dump(nb, open(f,'w'))
+        
 
 def update_all(pkg_name, dest_path='.', exclude=None, create_missing=False):
     "Updates all the notebooks in `pkg_name`"
