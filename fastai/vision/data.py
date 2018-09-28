@@ -166,7 +166,7 @@ def denormalize(x:TensorImage, mean:FloatTensor,std:FloatTensor)->TensorImage:
     "Denormalize `x` with `mean` and `std`."
     return x*std[...,None,None] + mean[...,None,None]
 
-def normalize_batch(b:Tuple[Tensor,Tensor], mean:FloatTensor, std:FloatTensor, do_y:bool=False)->Tuple[Tensor,Tensor]:
+def _normalize_batch(b:Tuple[Tensor,Tensor], mean:FloatTensor, std:FloatTensor, do_y:bool=False)->Tuple[Tensor,Tensor]:
     "`b` = `x`,`y` - normalize `x` array of imgs and `do_y` optionally `y`."
     x,y = b
     x = normalize(x,mean,std)
@@ -176,7 +176,7 @@ def normalize_batch(b:Tuple[Tensor,Tensor], mean:FloatTensor, std:FloatTensor, d
 def normalize_funcs(mean:FloatTensor, std:FloatTensor, do_y=False, device=None)->[Callable,Callable]:
     "Create normalize/denormalize func using `mean` and `std`, can specify `do_y` and `device`."
     if device is None: device=default_device
-    return (partial(normalize_batch, mean=mean.to(device),std=std.to(device)),
+    return (partial(_normalize_batch, mean=mean.to(device),std=std.to(device)),
             partial(denormalize,     mean=mean,           std=std))
 
 cifar_stats = (tensor([0.491, 0.482, 0.447]), tensor([0.247, 0.243, 0.261]))
