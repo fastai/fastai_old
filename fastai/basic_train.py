@@ -112,7 +112,7 @@ class Learner():
         if not self.layer_groups: self.layer_groups = [nn.Sequential(*flatten_model(self.model))]
         self.callbacks = listify(self.callbacks)
         self.callback_fns = [Recorder] + listify(self.callback_fns)
-    
+
     def init(self, init): apply_init(self.model, init)
 
     def lr_range(self, lr:Union[float,slice])->np.ndarray:
