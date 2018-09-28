@@ -1,9 +1,9 @@
 ---
-title: 
+title: vision.data
 keywords: 
 sidebar: home_sidebar
 tags: 
-summary: ""
+summary: "`vision.data` manages data input pipeline - folders -> transform -> batch input. Includes support for classification, segmentation and bounding boxes"
 ---
 
 <div class="container" id="notebook-container">
@@ -16,7 +16,7 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>vision.data</code> contains the classes that define datasets handling <code>Image</code> and their tranformations.</p>
+<p><code>vision.data</code> contains the classes that define datasets handling <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> and their tranformations.</p>
 
 </div>
 </div>
@@ -32,7 +32,7 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If you quickly want to get a <code>DataBunch</code> and train a model, you should process your data to have it in one of the formats the following functions handle.</p>
+<p>If you quickly want to get a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> and train a model, you should process your data to have it in one of the formats the following functions handle.</p>
 
 </div>
 </div>
@@ -142,7 +142,7 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Create <code>DataBunch</code> from <code>path</code> by splitting the data in <code>folder</code> and labelled in a file <code>csv_labels</code> between a training and valid set, putting aside <code>valid_pct</code> for the validation. An optional <code>test</code> folder contains unlabelled data and <code>suff</code> contains an optional suffix to add to the filenames in <code>csv_labels</code> (like '.jpg')</p>
+<p>Create <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> from <code>path</code> by splitting the data in <code>folder</code> and labelled in a file <code>csv_labels</code> between a training and valid set, putting aside <code>valid_pct</code> for the validation. An optional <code>test</code> folder contains unlabelled data and <code>suff</code> contains an optional suffix to add to the filenames in <code>csv_labels</code> (like '.jpg')</p>
 
 </div>
 </div>
@@ -234,7 +234,7 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The same list of kwargs as in <code>image_data_from_folder</code> applies here.</p>
+<p>The same list of kwargs as in <a href="http://docs.fast.ai/vision.data.html#image_data_from_folder"><code>image_data_from_folder</code></a> applies here.</p>
 
 </div>
 </div>
@@ -258,6 +258,18 @@ summary: ""
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -431,7 +443,7 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To show an example, we're going to create a fake batch by transforming the same <code>Image</code> several times. See the documentation of <code>apply_tfms</code> for more details abut what is happening in this code.</p>
+<p>To show an example, we're going to create a fake batch by transforming the same <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> several times. See the documentation of <a href="http://docs.fast.ai/vision.image.html#apply_tfms"><code>apply_tfms</code></a> for more details abut what is happening in this code.</p>
 
 </div>
 </div>
@@ -552,21 +564,21 @@ summary: ""
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Create <code>normalize</code> and <code>denormalize</code> functions using <code>mean</code> and <code>std</code>. <code>device</code> will store them on the device specified. <code>do_y</code> determines if the target should also be normaized or not.</p>
+<p>Create <a href="http://docs.fast.ai/vision.data.html#normalize"><code>normalize</code></a> and <a href="http://docs.fast.ai/vision.data.html#denormalize"><code>denormalize</code></a> functions using <code>mean</code> and <code>std</code>. <code>device</code> will store them on the device specified. <code>do_y</code> determines if the target should also be normaized or not.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>On MNIST the mean and std are 0.1307 and 0.3081 respectively (looked on Google). If you're using a pretrained model, you'll need to use the normalization that used to train the model. The imagenet norm and denorm functions are stored as constants inside the library named <code>imagenet_norm</code> and <code>imagenet_denorm</code>. If you're training a model on CIFAR-10, you can also use <code>cifar_norm</code> and <code>cifar_denorm</code>.</p>
+<p>On MNIST the mean and std are 0.1307 and 0.3081 respectively (looked on Google). If you're using a pretrained model, you'll need to use the normalization that used to train the model. The imagenet norm and denorm functions are stored as constants inside the library named <code>2250]))</code> and <code>2250]))</code>. If you're training a model on CIFAR-10, you can also use <code>2610]))</code> and <code>2610]))</code>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Note that if you normalize your input, you'll need to denormalize it when using functions like <code>show_images</code> or <code>show_image_batch</code>. The following throws warnings, for instance, since the normalizes data has values with a mean to 0., so some are negatives. It also doesn't look compeltely right.</p>
+<p>Note that if you normalize your input, you'll need to denormalize it when using functions like <a href="http://docs.fast.ai/vision.data.html#show_images"><code>show_images</code></a> or <a href="http://docs.fast.ai/vision.data.html#show_image_batch"><code>show_image_batch</code></a>. The following throws warnings, for instance, since the normalizes data has values with a mean to 0., so some are negatives. It also doesn't look compeltely right.</p>
 
 </div>
 </div>
@@ -722,7 +734,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To create an <code>ImageDataset</code> automatically from a <code>folder</code>. If <code>classes</code> is None, it will be set to the names of the directories in <code>folder</code>. You can split the images in this <code>folder</code> in a train/valid dataset if <code>valid_pct</code> is non-zero. <code>check_ext</code> forces the function to only keep filenems with image extensions.</p>
+<p>To create an <a href="http://docs.fast.ai/vision.data.html#ImageDataset"><code>ImageDataset</code></a> automatically from a <code>folder</code>. If <code>classes</code> is None, it will be set to the names of the directories in <code>folder</code>. You can split the images in this <code>folder</code> in a train/valid dataset if <code>valid_pct</code> is non-zero. <code>check_ext</code> forces the function to only keep filenems with image extensions.</p>
 
 </div>
 </div>
@@ -803,7 +815,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To create an <code>ImageMultiDataset</code> automatically in <code>path</code> from a <code>folder</code> and <code>fns</code>. If <code>classes</code> is None, it will be set to the names of the different <code>labels</code> seen. You can split the images in this <code>folder</code> in a train/valid dataset if <code>valid_pct</code> is non-zero. <code>check_ext</code> forces the function to only keep filenems with image extensions.</p>
+<p>To create an <a href="http://docs.fast.ai/vision.data.html#ImageMultiDataset"><code>ImageMultiDataset</code></a> automatically in <code>path</code> from a <code>folder</code> and <code>fns</code>. If <code>classes</code> is None, it will be set to the names of the different <code>labels</code> seen. You can split the images in this <code>folder</code> in a train/valid dataset if <code>valid_pct</code> is non-zero. <code>check_ext</code> forces the function to only keep filenems with image extensions.</p>
 
 </div>
 </div>
@@ -837,7 +849,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To help scan a folder for these <code>Dataset</code>, we use the following helper function:</p>
+<p>To help scan a folder for these <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset"><code>Dataset</code></a>, we use the following helper function:</p>
 
 </div>
 </div>
@@ -925,7 +937,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Finally, to apply transformations to <code>Image</code> in a <code>Dataset</code>, we use this last class.</p>
+<p>Finally, to apply transformations to <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> in a <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset"><code>Dataset</code></a>, we use this last class.</p>
 
 </div>
 </div>
@@ -952,14 +964,14 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Dataset that applies the list of transforms <code>tfms</code> to every item drawn. If <code>tfms</code> should be applied to the targets as well, <code>tfm_y</code> should be True. <code>kwargs</code> will be passed to <code>apply_tfms</code> internally.</p>
+<p>Dataset that applies the list of transforms <code>tfms</code> to every item drawn. If <code>tfms</code> should be applied to the targets as well, <code>tfm_y</code> should be True. <code>kwargs</code> will be passed to <a href="http://docs.fast.ai/vision.image.html#apply_tfms"><code>apply_tfms</code></a> internally.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Then this last function automatizes the process of creating <code>DatasetTfm</code>:</p>
+<p>Then this last function automatizes the process of creating <a href="http://docs.fast.ai/vision.data.html#DatasetTfm"><code>DatasetTfm</code></a>:</p>
 
 </div>
 </div>

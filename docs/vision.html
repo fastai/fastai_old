@@ -19,13 +19,13 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The <code>vision</code> module of the fastai library contains all the necessary functions to define a Dataset for all the Computer Vision tasks. It contains three different submodules to reach that goal:</p>
+<p>The <a href="http://docs.fast.ai/vision.html#fastai.vision"><code>fastai.vision</code></a> module of the fastai library contains all the necessary functions to define a Dataset for all the Computer Vision tasks. It contains three different submodules to reach that goal:</p>
 <ul>
-<li><a href="vision.image.html">vision.image</a> contains the basic definition of an <code>Image</code> object and all the functions that are used behind the scenes to apply transformations to such an object,</li>
+<li><a href="vision.image.html">vision.image</a> contains the basic definition of an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> object and all the functions that are used behind the scenes to apply transformations to such an object,</li>
 <li><a href="vision.transform.html">vision.transform</a> contains all the transforms we can use for data augmentation,</li>
-<li><a href="vision.data.html">vision.data</a> contains the definition of <code>ImageDataset</code> as well as the utility function to easily build a <code>DataBunch</code> for Computer Vision problems.</li>
+<li><a href="vision.data.html">vision.data</a> contains the definition of <a href="http://docs.fast.ai/vision.data.html#ImageDataset"><code>ImageDataset</code></a> as well as the utility function to easily build a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> for Computer Vision problems.</li>
 </ul>
-<p>It also contains a last module <a href="vision.learner.html">vision.learner</a> to help you build models with a pretrained CNN backbone and quickly get an associated <code>Learner</code> object.</p>
+<p>It also contains a last module <a href="vision.learner.html">vision.learner</a> to help you build models with a pretrained CNN backbone and quickly get an associated <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> object.</p>
 
 </div>
 </div>
@@ -38,8 +38,8 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The fastai library is built such that the pictures loaded are wrapped in an <code>Image</code>. This <code>Image</code> contains the array of pixels associated to the picture, but also has a lot of built-in functions that will help the fastai library to process transformations applied to the corresponding image.</p>
-<p>Opening an image and converting to an <code>Image</code> object is easily done by using the <code>open_image</code> function:</p>
+<p>The fastai library is built such that the pictures loaded are wrapped in an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>. This <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> contains the array of pixels associated to the picture, but also has a lot of built-in functions that will help the fastai library to process transformations applied to the corresponding image.</p>
+<p>Opening an image and converting to an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> object is easily done by using the <a href="http://docs.fast.ai/vision.image.html#open_image"><code>open_image</code></a> function:</p>
 
 </div>
 </div>
@@ -78,7 +78,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To look at the picture that this <code>Image</code> contains, you can also use its <code>show</code> method. It will show a resized version and has more options to customize the display.</p>
+<p>To look at the picture that this <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> contains, you can also use its <code>show</code> method. It will show a resized version and has more options to customize the display.</p>
 
 </div>
 </div>
@@ -116,7 +116,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This <code>show</code> method can take a few arguments (see the documentation of <code>show_image</code> for details) but the two we will use the most in this documentation are:</p>
+<p>This <code>show</code> method can take a few arguments (see the documentation of <a href="http://docs.fast.ai/vision.image.html#show_image"><code>show_image</code></a> for details) but the two we will use the most in this documentation are:</p>
 <ul>
 <li><code>ax</code> which is the <a href="https://matplotlib.org/api/_as_gen/matplotlib.pyplot.axes.html">matplolib.pyplot axes</a> on which we want to show the image</li>
 <li><code>title</code> which is an optional title we can give to the image.</li>
@@ -159,7 +159,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If you're interested in the tensor of pixels, it's stored in the <code>data</code> attribute of an <code>Image</code>.</p>
+<p>If you're interested in the tensor of pixels, it's stored in the <a href="http://docs.fast.ai/vision.data.html#fastai.vision.data"><code>fastai.vision.data</code></a> attribute of an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>.</p>
 
 </div>
 </div>
@@ -230,7 +230,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To get a set of transforms with default values that work pretty well in a wide range of tasks, we advise to use the <code>get_transforms</code> function. Depending on the nature of the images in your data, you may want to adjust a few arguments, the most important being:</p>
+<p>To get a set of transforms with default values that work pretty well in a wide range of tasks, we advise to use the <a href="http://docs.fast.ai/vision.transform.html#get_transforms"><code>get_transforms</code></a> function. Depending on the nature of the images in your data, you may want to adjust a few arguments, the most important being:</p>
 <ul>
 <li><code>do_flip</code>: if True the image is randomly flipped (default bheavior)</li>
 <li><code>flip_vert</code>: if <code>do_flip</code> is True, decides if we limit the flips to horizontal flips (when False) or to horizontal and vertical flips as well as 90-degrees rotations (when True)</li>
@@ -271,8 +271,8 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>get_transforms</code> returns a tuple of two list of transforms: one for the training set and one for the validation set (we don't want to modify the pictures in the validation set, so the second list of transforms is limited to resizing the pictures). This can be then passed directly to define a <code>DataBunch</code> object (see below) which is then associated with a model to begin training.</p>
-<p>If we want to have a look at what this transforms actually do, we need to use the <code>apply_tfms</code> function. It will be in charge of picking the values of the random parameters and doing the transformation to the <code>Image</code> object. This function has multiple arguments you can customize (see its documentation for details), we will highlight here the most useful. The first one we'll need to set, especially if our images are of different shapes, is the target <code>size</code>. It will ensure all the images are cropped or padded to the same size so we can then collate them into batches.</p>
+<p><a href="http://docs.fast.ai/vision.transform.html#get_transforms"><code>get_transforms</code></a> returns a tuple of two list of transforms: one for the training set and one for the validation set (we don't want to modify the pictures in the validation set, so the second list of transforms is limited to resizing the pictures). This can be then passed directly to define a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> object (see below) which is then associated with a model to begin training.</p>
+<p>If we want to have a look at what this transforms actually do, we need to use the <a href="http://docs.fast.ai/vision.image.html#apply_tfms"><code>apply_tfms</code></a> function. It will be in charge of picking the values of the random parameters and doing the transformation to the <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> object. This function has multiple arguments you can customize (see its documentation for details), we will highlight here the most useful. The first one we'll need to set, especially if our images are of different shapes, is the target <code>size</code>. It will ensure all the images are cropped or padded to the same size so we can then collate them into batches.</p>
 
 </div>
 </div>
@@ -495,7 +495,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To get you started as easily as possible, the fastai provides two helper functions to create a <code>DataBunch</code> object that you can directly use for training a classifier. To demonstrate them you'll first need to untar the file by executing the following cell (uncomment as needed). This will create a data folder containing a MNIST subset in 'data/mnist_sample'.</p>
+<p>To get you started as easily as possible, the fastai provides two helper functions to create a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> object that you can directly use for training a classifier. To demonstrate them you'll first need to untar the file by executing the following cell (uncomment as needed). This will create a data folder containing a MNIST subset in 'data/mnist_sample'.</p>
 
 </div>
 </div>
@@ -516,7 +516,7 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The first way to define a <code>DataBunch</code> object requires you to put your data in folders this way (test being optional):</p>
+<p>The first way to define a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> object requires you to put your data in folders this way (test being optional):</p>
 
 <pre><code>path\
   train\
@@ -530,7 +530,7 @@ summary:
     ...
     clasn\
   test\</code></pre>
-<p>You can then use <code>image_data_from_folder</code>:</p>
+<p>You can then use <a href="http://docs.fast.ai/vision.data.html#image_data_from_folder"><code>image_data_from_folder</code></a>:</p>
 
 </div>
 </div>
@@ -555,7 +555,7 @@ summary:
 <li>the transforms to apply to the images in <code>ds_tfms</code> (here with <code>do_flip</code>=False because we don't want to flip numbers),</li>
 <li>the target <code>size</code> of our pictures (here 28).</li>
 </ul>
-<p>As all <code>DataBunch</code>, data then as a <code>train_dl</code> and a <code>valid_dl</code> that are <code>DataLoader</code>. If you want to have a look at a few images in a batch inside a batch, you can use <code>show_image_batch</code>, the <code>rows</code> argument being the number of rows and columns in the array.</p>
+<p>As all <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a>, data then as a <code>train_dl</code> and a <code>valid_dl</code> that are <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"><code>DataLoader</code></a>. If you want to have a look at a few images in a batch inside a batch, you can use <a href="http://docs.fast.ai/vision.data.html#show_image_batch"><code>show_image_batch</code></a>, the <code>rows</code> argument being the number of rows and columns in the array.</p>
 
 </div>
 </div>
@@ -599,7 +599,7 @@ summary:
   train\
   test\
   labels.csv</code></pre>
-<p>where the labels.csv file precise what the label(s) of each image in the training set. You can then use <code>image_data_from_csv</code>:</p>
+<p>where the labels.csv file precise what the label(s) of each image in the training set. You can then use <a href="http://docs.fast.ai/vision.data.html#image_data_from_csv"><code>image_data_from_csv</code></a>:</p>
 
 </div>
 </div>

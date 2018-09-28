@@ -26,24 +26,6 @@ summary: "Script to generate notebooks and update html"
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=update_notebooks></a><code>update_notebooks</code></h4>
-<p>(<code>source_path</code>=<code>None</code>, <code>dest_path</code>=<code>None</code>, <code>update_html</code>=<code>False</code>, <code>update_nb</code>=<code>True</code>, <code>html_path</code>=<code>None</code>, <code>create_missing</code>=<code>False</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/gen_doc/sgen_notebooks.py#L24">[source]</a></div></p>
-<p><code>source_path</code> can be a directory or a file. Assumes all modules reside in the fastai directory.</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -83,8 +65,14 @@ summary: "Script to generate notebooks and update html"
 <p>Default updates all notebooks in the fastai folder:</p>
 <div class="highlight"><pre><span></span>python fastai/gen_doc/sgen_notebooks.py
 </pre></div>
-<p>To update specific python file only + html also:</p>
+<p>Or from the tools folder</p>
+<div class="highlight"><pre><span></span>python tools/sgen_notebooks.py
+</pre></div>
+<p>To update specific python file only and html:</p>
 <div class="highlight"><pre><span></span>python fastai/gen_doc/sgen_notebooks.py fastai/vision/transform.py --update_html<span class="o">=</span>True --create-missing<span class="o">=</span>True
+</pre></div>
+<p>To link docs with no accompanying modules:</p>
+<div class="highlight"><pre><span></span>python tools/sgen_notebooks.py docs_src/index.ipynb --update_html<span class="o">=</span>True --update_nb_links<span class="o">=</span>True
 </pre></div>
 
 </div>

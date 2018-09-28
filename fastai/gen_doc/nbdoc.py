@@ -87,7 +87,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     else: doc = f'doc definition not supported for {full_name}'
     title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
-    if is_fastai_class(elt): doc += get_function_source(elt)
+    if is_fastai_class(elt): doc += '\n' + get_function_source(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
@@ -113,7 +113,7 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
 
 # Finds all places with a backtick or <code> but only if it hasn't already been linked
 BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
-def link_docstring(elt, docstring:str) -> str:
+def link_docstring(elt, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mod = inspect.getmodule(elt)
     modvars = mod.__dict__
@@ -229,19 +229,24 @@ def fn_name(ft)->str:
 
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
-    strip_name = strip_fastai(ft.__module__)
+    strip_name = strip_fastai(get_module_name(ft))
     return f'{DOCS_URL}{strip_name}.html#{fn_name(ft)}'
+
+def get_module_name(ft) -> str: return ft.__name__ if inspect.ismodule(ft) else ft.__module__
 
 def get_pytorch_link(ft) -> str:
     "returns link to pytorch docs"
     name = ft.__name__
-    paths = str(ft.__module__).split('.')
+    if name.startswith('torch.nn') and inspect.ismodule(ft): # nn.functional is special case
+        nn_link = name.replace('.', '-')
+        return f'{PYTORCH_DOCS}nn.html#{nn_link}'
+    paths = get_module_name(ft).split('.')
     if len(paths) == 1: return f'{PYTORCH_DOCS}{paths[0]}.html#{paths[0]}.{name}'
 
     offset = 1 if paths[1] == 'utils' else 0 # utils is a pytorch special case
     doc_path = paths[1+offset]
-    plink = '.'.join(paths[:(2+offset)])
-    return f'{PYTORCH_DOCS}{doc_path}.html#{plink}.{name}'
+    fnlink = '.'.join(paths[:(2+offset)]+[name])
+    return f'{PYTORCH_DOCS}{doc_path}.html#{fnlink}'
 
 
 def get_source_link(mod, lineno) -> str:
