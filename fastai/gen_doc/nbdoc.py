@@ -11,7 +11,6 @@ __all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
 MODULE_NAME = 'fastai'
 SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
 PYTORCH_DOCS = 'https://pytorch.org/docs/stable/'
-DOCS_URL = 'http://docs.fast.ai/'
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
@@ -113,7 +112,7 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
 
 # Finds all places with a backtick or <code> but only if it hasn't already been linked
 BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
-def link_docstring(modules, docstring:str, overwrite:bool=False, fuzzy_match_modules=False) -> str:
+def link_docstring(modules, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mods = listify(modules)
     modvars = {}
@@ -123,9 +122,6 @@ def link_docstring(modules, docstring:str, overwrite:bool=False, fuzzy_match_mod
         if keyword in modvars:
             link = link_type(modvars[keyword], arg_name=keyword)
             docstring = docstring.replace(m.group(0), link) # group(0) = replace whole link with new one
-        elif fuzzy_match_modules and (f'fastai.{keyword}' in modvars):
-            link = link_type(modvars[f'fastai.{keyword}'], arg_name=keyword)
-            docstring = docstring.replace(m.group(0), link)
     return docstring
 
 
@@ -234,7 +230,7 @@ def fn_name(ft)->str:
 def get_fn_link(ft) -> str:
     "returns function link to notebook documentation"
     strip_name = strip_fastai(get_module_name(ft))
-    return f'{DOCS_URL}{strip_name}.html#{fn_name(ft)}'
+    return f'/{strip_name}.html#{fn_name(ft)}'
 
 def get_module_name(ft) -> str: return ft.__name__ if inspect.ismodule(ft) else ft.__module__
 

@@ -173,7 +173,7 @@ def link_markdown_cells(cells, modules):
     "Creates documentation links for all cells in markdown with backticks"
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            cell['source'] = link_docstring(modules, cell['source'], fuzzy_match_modules=False)
+            cell['source'] = link_docstring(modules, cell['source'])
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
