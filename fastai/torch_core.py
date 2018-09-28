@@ -94,11 +94,14 @@ def split_model_idx(model:nn.Module, idxs:Collection[int])->ModuleList:
     if idxs[-1] != len(layers): idxs.append(len(layers))
     return [nn.Sequential(*layers[i:j]) for i,j in zip(idxs[:-1],idxs[1:])]
 
-def split_model(model:nn.Module, splits:Collection[ModuleList], want_idxs:bool=False):
+def split_model(model:nn.Module, splits:Collection[Union[Model,ModuleList]], want_idxs:bool=False):
     "Split the model according to the layers in [splits]"
     layers = flatten_model(model)
-    idxs = [layers.index(first_layer(s)) for s in listify(splits)]
-    res = split_model_idx(model, idxs)
+    splits = listify(splits)
+    if isinstance(splits[0], nn.Module):
+        idxs = [layers.index(first_layer(s)) for s in splits]
+        res = split_model_idx(model, idxs)
+    else: res = [nn.Sequential(*s) for s in splits]
     return (res,idxs) if want_idxs else res
 
 #TODO: add the test to put bias with bn layers
