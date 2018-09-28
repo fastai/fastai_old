@@ -15,12 +15,12 @@ DOCS_URL = 'http://docs.fast.ai/'
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
-def link_type(argtype, include_bt:bool=True):
+def link_type(arg_type, arg_name=None, include_bt:bool=True):
     "creates link to documentation"
-    arg_name = fn_name(argtype)
+    arg_name = arg_name or fn_name(arg_type)
     if include_bt: arg_name = code_esc(arg_name)
-    if is_fastai_class(argtype): return f'[{arg_name}]({get_fn_link(argtype)})'
-    if belongs_to_module(argtype, 'torch') and ('Tensor' not in arg_name): return f'[{arg_name}]({get_pytorch_link(argtype)})'
+    if is_fastai_class(arg_type): return f'[{arg_name}]({get_fn_link(arg_type)})'
+    if belongs_to_module(arg_type, 'torch') and ('Tensor' not in arg_name): return f'[{arg_name}]({get_pytorch_link(arg_type)})'
     return arg_name
 
 def is_fastai_class(t): return belongs_to_module(t, MODULE_NAME)
@@ -98,7 +98,7 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
     parsed = ""
     doc = parse_docstring(inspect.getdoc(elt))
     description = alt_doc_string or doc['long_description'] or doc['short_description']
-    if description: parsed += f'\n\n{link_docstring(elt, description)}'
+    if description: parsed += f'\n\n{link_docstring(inspect.getmodule(elt), description)}'
 
     resolved_comments = {**doc.get('comments', {}), **arg_comments} # arg_comments takes priority
     args = inspect.getfullargspec(elt).args if not is_enum(elt.__class__) else elt.__members__.keys()
@@ -113,14 +113,18 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
 
 # Finds all places with a backtick or <code> but only if it hasn't already been linked
 BT_REGEX = re.compile("\[?(?:<code>|`)([^`<]*)(?:`|</code>)\]?(?:\([^)]*\))?") # TODO: handle <a href> tags
-def link_docstring(elt, docstring:str, overwrite:bool=False) -> str:
+def link_docstring(modules, docstring:str, overwrite:bool=False, fuzzy_match_modules=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
-    mod = inspect.getmodule(elt)
-    modvars = mod.__dict__
+    mods = listify(modules)
+    modvars = {}
+    for mod in mods: modvars.update(mod.__dict__)
     for m in BT_REGEX.finditer(docstring):
-        if m.group(1) in modvars:
-            link_elt = modvars[m.group(1)]
-            link = link_type(link_elt)
+        keyword = m.group(1)
+        if keyword in modvars:
+            link = link_type(modvars[keyword], arg_name=keyword)
+            docstring = docstring.replace(m.group(0), link) # group(0) = replace whole link with new one
+        elif fuzzy_match_modules and (f'fastai.{keyword}' in modvars):
+            link = link_type(modvars[f'fastai.{keyword}'], arg_name=keyword)
             docstring = docstring.replace(m.group(0), link)
     return docstring
 

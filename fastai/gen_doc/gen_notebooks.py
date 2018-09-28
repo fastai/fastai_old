@@ -169,11 +169,11 @@ def read_nb_types(cells):
             if match is not None: doc_fns[match.group(1)] = i
     return doc_fns
 
-def link_markdown_cells(cells, mod):
+def link_markdown_cells(cells, modules):
     "Creates documentation links for all cells in markdown with backticks"
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'markdown':
-            cell['source'] = link_docstring(mod, cell['source'])
+            cell['source'] = link_docstring(modules, cell['source'], fuzzy_match_modules=False)
 
 def get_insert_idx(pos_dict, name):
     "Return the position to insert a given function doc in a notebook"
@@ -223,18 +223,13 @@ def update_metadata(nb, data, overwrite=True):
 
 IMPORT_RE = re.compile(r"from (fastai[\.\w_]*)")
 def get_imported_modules(cells):
-    module_names = []
+    module_names = ['fastai']
     for cell in cells:
         if cell['cell_type'] == 'code':
             for m in IMPORT_RE.finditer(cell['source']):
-                module_names.append(m.group(1))
-    return module_names
-
-def add_doc_links(cells):
-    for m_name in get_imported_modules(cells):
-        mod = import_mod(m_name)
-        if mod is None: continue
-        link_markdown_cells(cells, mod)
+                if m.group(1) not in module_names: module_names.append(m.group(1))
+    mods = [import_mod(m) for m in module_names]
+    return [m for m in mods if m is not None]
 
 def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
@@ -245,7 +240,7 @@ def update_module_page(mod, dest_path='.'):
     update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
 
     cells = nb['cells']
-    add_doc_links(cells)
+    link_markdown_cells(cells, get_imported_modules(cells))
 
     type_dict = read_nb_types(cells)
     gvar_map = get_global_vars(mod)
@@ -279,7 +274,7 @@ def update_module_page(mod, dest_path='.'):
 def link_nb(nb_path):
     nb = read_nb(nb_path)
     cells = nb['cells']
-    add_doc_links(cells)
+    link_markdown_cells(cells, get_imported_modules(cells))
     json.dump(nb, open(nb_path,'w'))
 
 def link_all(path_dir):
