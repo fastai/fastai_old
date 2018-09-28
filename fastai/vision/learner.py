@@ -7,18 +7,18 @@ from ..layers import *
 __all__ = ['ConvLearner', 'create_body', 'create_head', 'num_features']
 
 def create_body(model:Model, cut:Optional[int]=None, body_fn:Callable[[Model],Model]=None):
-    "Cut off the body of a typically pretrained model at `cut` or as specified by `body_fn`"
+    "Cut off the body of a typically pretrained `model` at `cut` or as specified by `body_fn`."
     return (nn.Sequential(*list(model.children())[:cut]) if cut
             else body_fn(model) if body_fn else model)
 
 def num_features(m:Model)->int:
-    "Return the number of output features for a model"
+    "Return the number of output features for a `model`."
     for l in reversed(flatten_model(m)):
         if hasattr(l, 'num_features'): return l.num_features
 
 def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5):
     """Model head that takes `nf` features, runs through `lin_ftrs`, and about `nc` classes.
-    :param ps: dropout, can be a single float or a list for each layer"""
+    :param ps: dropout, can be a single float or a list for each layer."""
     lin_ftrs = [nf, 512, nc] if lin_ftrs is None else [nf] + lin_ftrs + [nc]
     ps = listify(ps)
     if len(ps)==1: ps = [ps[0]/2] * (len(lin_ftrs)-2) + ps
@@ -29,11 +29,11 @@ def create_head(nf:int, nc:int, lin_ftrs:Optional[Collection[int]]=None, ps:Floa
     return nn.Sequential(*layers)
 
 def _default_split(m:Model):
-    "By default split models between first and second layer"
+    "By default split models between first and second layer."
     return split_model(m, m[1])
 
 def _resnet_split(m:Model):
-    "Split a resnet style model"
+    "Split a resnet style model."
     return split_model(m, (m[0][6],m[1]))
 
 _default_meta = {'cut':-1, 'split':_default_split}
@@ -45,8 +45,8 @@ model_meta = {
     tvm.resnet152:{**_resnet_meta}}
 
 class ConvLearner(Learner):
-    "Builds convnet style learners"
-    def __init__(self, data:DataBunch, arch:Callable, cut=None, pretrained:bool=True,
+    "Build convnet style learners."
+    def __init__(self, data:DataBunch, arch:Callable, cut:Union[int,Callable]=None, pretrained:bool=True,
                  lin_ftrs:Optional[Collection[int]]=None, ps:Floats=0.5,
                  custom_head:Optional[nn.Module]=None, split_on:Optional[SplitFuncOrIdxList]=None, **kwargs:Any)->None:
         meta = model_meta.get(arch, _default_meta)
