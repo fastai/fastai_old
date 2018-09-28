@@ -34,7 +34,7 @@ def code_esc(s): return f'<code>{s}</code>'
 
 def type_repr(t):
     if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
-    elif hasattr(t, '__args__'):
+    elif getattr(t, '__args__', None):
         args = t.__args__
         if len(args)==2 and args[1] == type(None):
             return f'`Optional`[{type_repr(args[0])}]'

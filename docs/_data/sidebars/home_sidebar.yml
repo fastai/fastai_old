@@ -50,9 +50,6 @@ entries:
     - output: web
       title: train
       url: train.html
-    - output: web
-      title: tta
-      url: tta.html
       subfolders:
       - output: web
         subfolderitems:
