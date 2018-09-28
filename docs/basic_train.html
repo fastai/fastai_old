@@ -14,6 +14,20 @@ summary: "Provides basic training and validation with `Learner`"
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.basic_train</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><a href="http://docs.fast.ai/basic_train.html#fastai.basic_train"><code>fastai.basic_train</code></a> wraps together the data (in a <a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a> object) with a pytorch model to define a <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> object. This is where the basic training loop is defined for the <a href="http://docs.fast.ai/basic_train.html#fit"><code>fit</code></a> function. The <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> object is the entry point of most of the <a href="http://docs.fast.ai/callback.html#Callback"><code>Callback</code></a> functions that will customize this training loop in different ways (and made available through the <a href="http://docs.fast.ai/train.html#fastai.train"><code>fastai.train</code></a> module), notably:</p>
@@ -129,10 +143,10 @@ summary: "Provides basic training and validation with `Learner`"
 
  
  
-<div id="4a47111b-1008-4df9-9b62-26e69752a70c"></div>
+<div id="7ae34c6f-6af5-4109-932a-61fe71c15bb3"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#4a47111b-1008-4df9-9b62-26e69752a70c');
+var element = $('#7ae34c6f-6af5-4109-932a-61fe71c15bb3');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -144,9 +158,9 @@ var element = $('#4a47111b-1008-4df9-9b62-26e69752a70c');
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Total time: 00:02
+<pre>Total time: 00:01
 epoch  train loss  valid loss
-0      0.147979    0.117889    (00:02)
+0      0.150462    0.122648    (00:01)
 
 </pre>
 </div>
@@ -158,7 +172,7 @@ epoch  train loss  valid loss
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Viewing-metrics">Viewing metrics<a class="anchor-link" href="#Viewing-metrics">&#182;</a></h4>
+<h3 id="Viewing-metrics">Viewing metrics<a class="anchor-link" href="#Viewing-metrics">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -192,10 +206,10 @@ epoch  train loss  valid loss
 
  
  
-<div id="b63ddc57-24b9-4d24-8ee4-86cee452fcaa"></div>
+<div id="57d15204-a297-4e37-938a-14b77436e0f5"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b63ddc57-24b9-4d24-8ee4-86cee452fcaa');
+var element = $('#57d15204-a297-4e37-938a-14b77436e0f5');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -207,9 +221,9 @@ var element = $('#b63ddc57-24b9-4d24-8ee4-86cee452fcaa');
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Total time: 00:02
+<pre>Total time: 00:01
 epoch  train loss  valid loss  accuracy
-0      0.096970    0.096102    0.967615  (00:02)
+0      0.088807    0.074429    0.973994  (00:01)
 
 </pre>
 </div>
@@ -255,10 +269,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="15d88f2c-bd3c-4dcf-81d5-2985329d07a6"></div>
+<div id="b1d1c4d5-7a39-4b2f-a1cf-3708fe4d6561"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#15d88f2c-bd3c-4dcf-81d5-2985329d07a6');
+var element = $('#b1d1c4d5-7a39-4b2f-a1cf-3708fe4d6561');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -270,9 +284,9 @@ var element = $('#15d88f2c-bd3c-4dcf-81d5-2985329d07a6');
 <div class="output_area">
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Total time: 00:02
+<pre>Total time: 00:01
 epoch  train loss  valid loss  accuracy
-0      0.073455    0.062231    0.978901  (00:02)
+0      0.058238    0.045113    0.983808  (00:01)
 
 </pre>
 </div>
@@ -340,332 +354,831 @@ epoch  train loss  valid loss  accuracy
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
 
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
-    </div>
-</div>
-</div>
+<div class="output_area">
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=Learner></a><em>class</em> <code>Learner</code></h2>
+<p>(<code>data</code>:<a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a>, <code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>opt_fn</code>:<code>Callable</code>=<code>functools.partial(&lt;class 'torch.optim.adam.Adam'&gt;, betas=(0.9, 0.99))</code>, <code>loss_fn</code>:<code>Callable</code>=<code>&lt;function cross_entropy at 0x7f9ef8dda488&gt;</code>, <code>metrics</code>:<code>Collection</code>[<code>Callable</code>]=<code>None</code>, <code>true_wd</code>:<code>bool</code>=<code>True</code>, <code>bn_wd</code>:<code>bool</code>=<code>True</code>, <code>wd</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.01</code>, <code>train_bn</code>:<code>bool</code>=<code>True</code>, <code>path</code>:<code>str</code>=<code>None</code>, <code>model_dir</code>:<code>str</code>=<code>'models'</code>, <code>callback_fns</code>:<code>Collection</code>[<code>Callable</code>]=<code>None</code>, <code>callbacks</code>:<code>Collection</code>[<a href="http://docs.fast.ai/callback.html#Callback"><code>Callback</code></a>]=<code>&lt;factory&gt;</code>, <code>layer_groups</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L90">[source]</a></div><p>Object that wraps together some data, a model, a loss function and an optimizer</p>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
+
+</div>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>The main purpose of <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> is to train <code>model</code> using <code>Learner.fit</code>. After every epoch, all <a href="http://docs.fast.ai/metrics.html#fastai.metrics"><code>fastai.metrics</code></a> will be printed, and will also be available to callbacks.</p>
+<p>The default weight decay will be <code>wd</code>, which will be handled using the method from <a href="https://arxiv.org/abs/1711.05101">Fixing Weight Decay Regularization in Adam</a> if <code>true_wd</code> is set (otherwise it's L2 regularization). If <code>bn_wd</code> is False then weight decay will be removed from batchnorm layers, as recommended in <a href="https://arxiv.org/abs/1706.02677">Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour</a>. You can also turn off batchnorm layer training entirely (i.e. freeze all batchnorm learnable parameters) by disabling <code>train_bn</code>.</p>
+<p>To use <a href="#discriminative">discriminative layer training</a> pass an <code>nn.Module</code> for each layer group to be optimized with different settings.</p>
+<p>Any model files created will be saved in <code>path</code>/<code>model_dir</code>.</p>
+<p>You can pass a list of <a href="http://docs.fast.ai/callbacks.html#fastai.callbacks"><code>fastai.callbacks</code></a> that you have already created, or (more commonly) simply pass a list of callback functions to <code>callback_fns</code> and each function will be called (passing <code>self</code>) on object initialization, with the results stored as callback objects.</p>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
+<h3 id="Model-fitting-methods">Model fitting methods<a class="anchor-link" href="#Model-fitting-methods">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=fit></a><code>fit</code></h4>
+<p>(<code>epochs</code>:<code>int</code>, <code>lr</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>], <code>slice</code>]=<code>slice(None, 0.003, None)</code>, <code>wd</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>None</code>, <code>callbacks</code>:<code>Collection</code>[<a href="http://docs.fast.ai/callback.html#Callback"><code>Callback</code></a>]=<code>None</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L125">[source]</a></div><p>fit the model on this learner with <code>lr</code> learning rate, <code>wd</code> weight decay for <code>epochs</code> with <code>callbacks</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
+<p>Uses <a href="#discriminative">discriminative layer training</a> if multiple learning rates or weight decay values are passed. To control training behaviour, use the <a href="http://docs.fast.ai/callback.html#fastai.callback"><code>fastai.callback</code></a> system or one or more of the pre-defined <a href="http://docs.fast.ai/callbacks.html#fastai.callbacks"><code>fastai.callbacks</code></a>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=fit_one_cycle></a><code>fit_one_cycle</code></h4>
+<p>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>, <code>cyc_len</code>:<code>int</code>, <code>max_lr</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>], <code>slice</code>]=<code>slice(None, 0.003, None)</code>, <code>moms</code>:<code>Tuple</code>[<code>float</code>, <code>float</code>]=<code>(0.95, 0.85)</code>, <code>div_factor</code>:<code>float</code>=<code>25.0</code>, <code>pct_start</code>:<code>float</code>=<code>0.3</code>, <code>wd</code>:<code>float</code>=<code>None</code>, <code>kwargs</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/train.py#L11">[source]</a></div><p>Fits a model following the 1cycle policy</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Uses the <a href="http://docs.fast.ai/callbacks.one_cycle.html#OneCycleScheduler"><code>OneCycleScheduler</code></a> callback.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=lr_find></a><code>lr_find</code></h4>
+<p>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>, <code>start_lr</code>:<code>float</code>=<code>1e-05</code>, <code>end_lr</code>:<code>float</code>=<code>10</code>, <code>num_it</code>:<code>int</code>=<code>100</code>, <code>kwargs</code>:<code>Any</code>)</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/train.py#L20">[source]</a></div><p>Explore lr from <code>start_lr</code> to <code>end_lr</code> over <code>num_it</code> iterations of <code>learn</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Runs the learning rate finder defined in <a href="http://docs.fast.ai/callbacks.lr_finder.html#LRFinder"><code>LRFinder</code></a>, as discussed in <a href="https://arxiv.org/abs/1506.01186">Cyclical Learning Rates for Training Neural Networks</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Mixed-precision-training">Mixed precision training<a class="anchor-link" href="#Mixed-precision-training">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=to_fp16></a><code>to_fp16</code></h4>
+<p>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>, <code>loss_scale</code>:<code>float</code>=<code>512.0</code>, <code>flat_master</code>:<code>bool</code>=<code>False</code>) -&gt; <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/train.py#L26">[source]</a></div><p>Transforms the learner in FP16 precision</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Uses the <a href="http://docs.fast.ai/callbacks.fp16.html#MixedPrecision"><code>MixedPrecision</code></a> callback to train in mixed precision (i.e. forward and backward passes using fp16, with weight updates using fp32), using all <a href="https://docs.nvidia.com/deeplearning/sdk/mixed-precision-training/index.html">NVIDIA recommendations</a> for ensuring speed and accuracy.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Discriminative-layer-training">Discriminative layer training<a class="anchor-link" href="#Discriminative-layer-training">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>When fitting a model you can pass a list of learning rates (and/or weight decay amounts), which will apply a different rate to each <em>layer group</em> (i.e. the parameters of each module in <code>self.layer_groups</code>). See the <a href="https://arxiv.org/abs/1801.06146">Universal Language Model Fine-tuning for Text Classification</a> paper for details and experimental results in NLP (we also frequently use them successfully in computer vision, but have not published a paper on this topic yet).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=unfreeze></a><code>unfreeze</code>()</h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L156">[source]</a></div><p>unfreeze entire model</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Sets every layer group to <em>trainable</em> (i.e. <code>requires_grad=True</code>).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=freeze></a><code>freeze</code>() -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L151">[source]</a></div><p>freeze up to last layer</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Sets every layer group except the last to <em>untrainable</em> (i.e. <code>requires_grad=False</code>).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=freeze_to></a><code>freeze_to</code>(<code>n</code>:<code>int</code>) -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L144">[source]</a></div><p>freeze layers up to layer <code>n</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=split></a><code>split</code></h4>
+<p>(<code>split_on</code>:<code>Union</code>[<code>Callable</code>, <code>Collection</code>[<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]]]) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L139">[source]</a></div><p>split the model at <code>split_on</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>A convenience method that sets <code>layer_groups</code> based on the result of calling a function you provide, or alternatively by collating a list of lists of modules.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=lr_range></a><code>lr_range</code>(<code>lr</code>:<code>Union</code>[<code>float</code>, <code>slice</code>]) -&gt; <code>ndarray</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L118">[source]</a></div><p>Build learning rate schedule</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>A convenience method that returns one learning rate for each layer group. If you pass <code>slice(start,end)</code> then the first group's learning rate is <code>start</code>, the last is <code>end</code>, and the remaining are evenly geometrically spaced.</p>
+<p>If you pass just <code>slice(end)</code> then the last group's learning rate is <code>end</code>, and all the other groups are <code>end/3</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Saving-and-loading-models">Saving and loading models<a class="anchor-link" href="#Saving-and-loading-models">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Simply call <code>Learner.save</code> and <code>Learner.load</code> to save and load models. Only the parameters are saved, not the actual architecture (so you'll need to create your model in the same way before loading weights back in). Models are saved to the <code>path</code>/<code>model_dir</code> directory.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=load></a><code>load</code>(<code>name</code>:<code>Union</code>[<code>Path</code>, <code>str</code>])</h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L166">[source]</a></div><p>load model <code>name</code> from `self.model_dir</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=save></a><code>save</code>(<code>name</code>:<code>Union</code>[<code>Path</code>, <code>str</code>])</h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L162">[source]</a></div><p>save model with <code>name</code> to <code>self.model_dir</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Other-methods">Other methods<a class="anchor-link" href="#Other-methods">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=init></a><code>init</code>(<code>init</code>)</h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L116">[source]</a></div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Initializes all weights (except batchnorm) using function <code>init</code>, which will often be from PyTorch's <code>nn.init</code> module.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=mixup></a><code>mixup</code></h4>
+<p>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>, <code>alpha</code>:<code>float</code>=<code>0.4</code>, <code>stack_x</code>:<code>bool</code>=<code>False</code>, <code>stack_y</code>:<code>bool</code>=<code>True</code>) -&gt; <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/train.py#L33">[source]</a></div><p>Adds mixup <a href="https://arxiv.org/abs/1710.09412">https://arxiv.org/abs/1710.09412</a> to the learner</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Adds <a href="http://docs.fast.ai/callbacks.mixup.html#MixUpCallback"><code>MixUpCallback</code></a> to the callbacks.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=pred_batch></a><code>pred_batch</code></h4>
+<p>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>, <code>is_valid</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Tuple</code>[<code>Union</code>[<code>Tensor</code>, <code>Collection</code>[<code>Tensors</code>]], <code>Union</code>[<code>Tensor</code>, <code>Collection</code>[<code>Tensors</code>]], <code>Union</code>[<code>Tensor</code>, <code>Collection</code>[<code>Tensors</code>]]]</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/tta.py#L8">[source]</a></div><p>Returns input, target and output of the model on a batch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Get the first batch of predictions. Mainly useful for debugging and quick tests.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=create_opt></a><code>create_opt</code></h4>
+<p>(<code>lr</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]], <code>wd</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.0</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L135">[source]</a></div><p>create optimizer with <code>lr</code> learning rate and <code>wd</code> weight decay</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>You generally won't need to call this yourself - it's used to create the <code>nn.optim</code> optimizer before fitting the model.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=Recorder></a><em>class</em> <code>Recorder</code>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>) :: <a href="http://docs.fast.ai/basic_train.html#LearnerCallback"><code>LearnerCallback</code></a></h2>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L180">[source]</a></div><p>A <a href="http://docs.fast.ai/basic_train.html#LearnerCallback"><code>LearnerCallback</code></a> that records epoch,loss,opt and metric data during training</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>A <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> creates a <a href="http://docs.fast.ai/basic_train.html#Recorder"><code>Recorder</code></a> object automatically - you do not need to explicitly pass to <code>callback_fns</code> - because other callbacks rely on it being available. It stores the smoothed loss, hyperparameter values, and metrics each batch, and provides plotting methods for each.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Plotting-methods">Plotting methods<a class="anchor-link" href="#Plotting-methods">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot></a><code>plot</code>(<code>skip_start</code>:<code>int</code>=<code>10</code>, <code>skip_end</code>:<code>int</code>=<code>5</code>) -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L233">[source]</a></div><p>Plot learning rate and losses, trimmed between <code>skip_start</code> and <code>skip_end</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot_losses></a><code>plot_losses</code>() -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L241">[source]</a></div><p>Plot training and validation losses</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot_lr></a><code>plot_lr</code>(<code>show_moms</code>=<code>False</code>) -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L224">[source]</a></div><p>Plot learning rate, <code>show_moms</code> to include momentum</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=plot_metrics></a><code>plot_metrics</code>() -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L250">[source]</a></div><p>Plot metrics collected during training</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Callback-methods">Callback methods<a class="anchor-link" href="#Callback-methods">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You don't call these yourself - they're called by fastai's <a href="http://docs.fast.ai/callback.html#fastai.callback"><code>fastai.callback</code></a> system automatically to enable the class's functionality.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_begin></a><code>on_backward_begin</code>(<code>smooth_loss</code>:<code>Tensor</code>, <code>kwargs</code>:<code>Any</code>) -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L199">[source]</a></div><p>Record the loss before any other callback has a chance to modify it.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_begin></a><code>on_batch_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>None</code></h4>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L194">[source]</a></div><p>Record learning rate and momentum at beginning of batch</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_end></a><code>on_epoch_end</code></h4>
+<p>(<code>epoch</code>:<code>int</code>, <code>num_batch</code>:<code>int</code>, <code>smooth_loss</code>:<code>Tensor</code>, <code>last_metrics</code>=<code>typing.Collection[typing.Union[torch.Tensor, numbers.Number]]</code>, <code>kwargs</code>:<code>Any</code>) -&gt; <code>bool</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L205">[source]</a></div><p>Save epoch info: num_batch, smooth_loss, metrics</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_begin></a><code>on_train_begin</code></h4>
+<p>(<code>pbar</code>:<code>Union</code>[<code>MasterBar</code>, <code>ProgressBar</code>], <code>metrics</code>:<code>Collection</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>Union</code>[<code>Tensor</code>, <code>Number</code>]]], <code>kwargs</code>:<code>Any</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L187">[source]</a></div><p>Initialize recording status at beginning of training</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Module-functions">Module functions<a class="anchor-link" href="#Module-functions">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Generally you'll want to use a <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> to train your model, since they provide a lot of functionality and make things easier. However, for ultimate flexibility, you can call the same underlying functions that <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a> calls behind the scenes.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=fit></a><code>fit</code></h4>
+<p>(<code>epochs</code>:<code>int</code>, <code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>loss_fn</code>:<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>OneEltTensor</code>], <code>opt</code>:<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>, <code>data</code>:<a href="http://docs.fast.ai/data.html#DataBunch"><code>DataBunch</code></a>, <code>callbacks</code>:<code>Optional</code>[<code>Collection</code>[<a href="http://docs.fast.ai/callback.html#Callback"><code>Callback</code></a>]]=<code>None</code>, <code>metrics</code>:<code>Optional</code>[<code>Collection</code>[<code>Union</code>[<code>Tensor</code>, <code>Number</code>]]]=<code>None</code>) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L57">[source]</a></div><p>Fit the <code>model</code> on <code>data</code> and learn using <code>loss</code> and <code>opt</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>Note that you have to create the <code>Optimizer</code> yourself if you call this function, whereas <code>Learn.fit</code> creates it for you automatically.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=train_epoch></a><code>train_epoch</code></h4>
+<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>dl</code>:<a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"><code>DataLoader</code></a>, <code>opt</code>:<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>, <code>loss_func</code>:<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>OneEltTensor</code>]) -&gt; <code>None</code></p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L48">[source]</a></div><p>Simple training of <code>model</code> for 1 epoch of <code>dl</code> using optim <code>opt</code> and loss function <code>loss_func</code></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>You won't generally need to call this yourself - it's what <a href="http://docs.fast.ai/basic_train.html#fit"><code>fit</code></a> calls for each epoch.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=validate></a><code>validate</code></h4>
+<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>dl</code>:<a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"><code>DataLoader</code></a>, <code>loss_fn</code>:<code>Optional</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>OneEltTensor</code>]]=<code>None</code>, <code>metrics</code>:<code>Optional</code>[<code>Collection</code>[<code>Union</code>[<code>Tensor</code>, <code>Number</code>]]]=<code>None</code>, <code>cb_handler</code>:<code>Optional</code>[<a href="http://docs.fast.ai/callback.html#CallbackHandler"><code>CallbackHandler</code></a>]=<code>None</code>, <code>pbar</code>:<code>Union</code>[<code>MasterBar</code>, <code>ProgressBar</code>, <code>NoneType</code>]=<code>None</code>) -&gt; <code>Iterator</code>[<code>Tuple</code>[<code>Union</code>[<code>Tensor</code>, <code>int</code>], <code>Ellipsis</code>]]</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L39">[source]</a></div><p>Calculate loss and metrics for the validation set</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>This is what <a href="http://docs.fast.ai/basic_train.html#fit"><code>fit</code></a> calls after each epoch. You can call it if you want to run inference on a <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"><code>DataLoader</code></a> manually.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=loss_batch></a><code>loss_batch</code></h4>
+<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>xb</code>:<code>Tensor</code>, <code>yb</code>:<code>Tensor</code>, <code>loss_fn</code>:<code>Optional</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>OneEltTensor</code>]]=<code>None</code>, <code>opt</code>:<code>Optional</code>[<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>]=<code>None</code>, <code>cb_handler</code>:<code>Optional</code>[<a href="http://docs.fast.ai/callback.html#CallbackHandler"><code>CallbackHandler</code></a>]=<code>None</code>, <code>metrics</code>:<code>Optional</code>[<code>Collection</code>[<code>Union</code>[<code>Tensor</code>, <code>Number</code>]]]=<code>None</code>) -&gt; <code>Tuple</code>[<code>Union</code>[<code>Tensor</code>, <code>int</code>, <code>float</code>, <code>str</code>]]</p>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L15">[source]</a></div><p>Calculate loss for a batch, calculate metrics, call out to callbacks as necessary</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>You won't generally need to call this yourself - it's what <a href="http://docs.fast.ai/basic_train.html#fit"><code>fit</code></a> and <a href="http://docs.fast.ai/basic_train.html#validate"><code>validate</code></a> call for each batch. It only does a backward pass if you set <code>opt</code>.</p>
 
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Other-classes">Other classes<a class="anchor-link" href="#Other-classes">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h3><a id=LearnerCallback></a><em>class</em> <code>LearnerCallback</code>(<code>learn</code>:<a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a>) -&gt; <code>None</code> :: <a href="http://docs.fast.ai/callback.html#Callback"><code>Callback</code></a></h3>
+<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/basic_train.py#L171">[source]</a></div><p>Base class for creating callbacks for the <a href="http://docs.fast.ai/basic_train.html#Learner"><code>Learner</code></a></p>
+
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
+
+</div>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
 </div>
 </div>
  
