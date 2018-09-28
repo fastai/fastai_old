@@ -10,9 +10,13 @@ from pathlib import Path
 cur_dir = Path(".").resolve().name
 if (cur_dir == "tools"): os.chdir("..")
 
+print("Attention! Changing all notebooks under docs_src to be *trusted*", end="\r")
+
 path = Path('docs_src')
 for fname in path.glob("*.ipynb"):
     with open(fname) as f:
         nb = nbformat.read(f, as_version=4)
         nbformat.sign.NotebookNotary().sign(nb)
 
+# clear the output
+sys.stdout.write("\033[K")
