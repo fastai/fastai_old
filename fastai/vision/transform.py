@@ -21,7 +21,7 @@ def contrast(x, scale:log_uniform):
 
 @TfmAffine
 def rotate(degrees:uniform):
-    "Rotate image by `degree`."
+    "Rotate image by `degrees`."
     angle = degrees * math.pi / 180
     return [[cos(angle), -sin(angle), 0.],
             [sin(angle),  cos(angle), 0.],

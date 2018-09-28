@@ -2,7 +2,7 @@
 import pkgutil, inspect, sys,os, importlib,json,enum,warnings,nbformat,re
 from IPython.core.display import display, Markdown
 from nbconvert.preprocessors import ExecutePreprocessor
-import nbformat.sign
+from nbformat.sign import NotebookNotary
 from pathlib import Path
 from .core import *
 from .nbdoc import *
@@ -89,7 +89,7 @@ def execute_nb(fname):
     ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
     ep.preprocess(nb, {})
     with open(fname, 'wt') as f: nbformat.write(nb, f)
-    nbformat.sign.NotebookNotary().sign(nb)
+    NotebookNotary().sign(nb)
 
 def _symbol_skeleton(name): return [get_doc_cell(name), get_md_cell(f"`{name}`")]
 
@@ -276,6 +276,7 @@ def link_nb(nb_path):
     cells = nb['cells']
     link_markdown_cells(cells, get_imported_modules(cells))
     json.dump(nb, open(nb_path,'w'))
+    NotebookNotary().sign(read_nb(nb_path))
 
 def link_all(path_dir):
     "Links documentation to all the notebooks in `pkg_name`"
@@ -312,12 +313,12 @@ def get_module_from_path(source_path):
     relpath = fpath.relative_to(dirpath)
     return '.'.join(relpath.with_suffix('').parts)
 
-def update_notebooks(source_path=None, dest_path=None, update_html=True, update_nb=False, update_nb_links=True, html_path=None, create_missing=False):
+def update_notebooks(source_path=None, dest_path=None, do_all=False, update_html=True, update_nb=False, update_nb_links=True, html_path=None, create_missing=False):
     "`source_path` can be a directory or a file. Assumes all modules reside in the fastai directory."
     fpath = Path(__file__).resolve()
     fastai_idx = list(reversed(fpath.parts)).index('fastai')
     dirpath = fpath.parents[fastai_idx] # should return 'fastai_pytorch'
-    if source_path is None: source_path = dirpath/'fastai'
+    if do_all: source_path = dirpath/'fastai'
     else: source_path = resolve_path(source_path)
     if dest_path is None: dest_path = dirpath/'docs_src'
     else: dest_path = resolve_path(dest_path)
