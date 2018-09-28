@@ -19,13 +19,13 @@ summary:
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The <a href="http://docs.fast.ai/vision.html#fastai.vision"><code>fastai.vision</code></a> module of the fastai library contains all the necessary functions to define a Dataset for all the Computer Vision tasks. It contains three different submodules to reach that goal:</p>
+<p>The <a href="/vision.html#vision"><code>vision</code></a> module of the fastai library contains all the necessary functions to define a Dataset for all the Computer Vision tasks. It contains three different submodules to reach that goal:</p>
 <ul>
-<li><a href="vision.image.html">vision.image</a> contains the basic definition of an <a href="/vision.image.html#Image"><code>Image</code></a> object and all the functions that are used behind the scenes to apply transformations to such an object,</li>
-<li><a href="vision.transform.html">vision.transform</a> contains all the transforms we can use for data augmentation,</li>
-<li><a href="vision.data.html">vision.data</a> contains the definition of <a href="/vision.data.html#ImageDataset"><code>ImageDataset</code></a> as well as the utility function to easily build a <a href="/data.html#DataBunch"><code>DataBunch</code></a> for Computer Vision problems.</li>
+<li><code>vision.image</code> contains the basic definition of an <a href="/vision.image.html#Image"><code>Image</code></a> object and all the functions that are used behind the scenes to apply transformations to such an object,</li>
+<li><code>vision.transform</code> contains all the transforms we can use for data augmentation,</li>
+<li><code>vision.data</code> contains the definition of <a href="/vision.data.html#ImageDataset"><code>ImageDataset</code></a> as well as the utility function to easily build a <a href="/data.html#DataBunch"><code>DataBunch</code></a> for Computer Vision problems.</li>
 </ul>
-<p>It also contains a last module <a href="vision.learner.html">vision.learner</a> to help you build models with a pretrained CNN backbone and quickly get an associated <a href="/basic_train.html#Learner"><code>Learner</code></a> object.</p>
+<p>It also contains a last module <code>vision.learner</code> to help you build models with a pretrained CNN backbone and quickly get an associated <a href="/basic_train.html#Learner"><code>Learner</code></a> object.</p>
 
 </div>
 </div>
@@ -53,7 +53,7 @@ summary:
 <span class="n">img</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -91,7 +91,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -134,7 +134,7 @@ summary:
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axs</span><span class="p">):</span> <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;Copy {i+1}&#39;</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -172,7 +172,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">img</span><span class="o">.</span><span class="n">data</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -248,7 +248,7 @@ summary:
 <span class="nb">len</span><span class="p">(</span><span class="n">tfms</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -285,7 +285,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_ex</span><span class="p">():</span> <span class="k">return</span> <span class="n">open_image</span><span class="p">(</span><span class="s1">&#39;imgs/cat_example.jpg&#39;</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -301,7 +301,7 @@ summary:
     <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -342,7 +342,7 @@ summary:
     <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -389,7 +389,7 @@ summary:
     <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -423,7 +423,7 @@ summary:
     <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -464,7 +464,7 @@ summary:
     <span class="n">img</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -505,11 +505,10 @@ summary:
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#import tarfile</span>
-<span class="c1">#tarfile.open(&#39;../data/mnist_sample.tgz&#39;, &#39;r:gz&#39;).extractall(&#39;../data/&#39;)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#untar_mnist()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -543,7 +542,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -568,7 +567,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_image_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -612,7 +611,7 @@ summary:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_csv</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
