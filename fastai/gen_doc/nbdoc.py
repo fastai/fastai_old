@@ -6,7 +6,7 @@ from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, 
 from .docstrings import *
 from .core import *
 __all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
-           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod']
+           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod', 'get_source_link']
 
 MODULE_NAME = 'fastai'
 SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
@@ -87,7 +87,7 @@ def show_doc(elt, doc_string:bool=True, full_name:str=None, arg_comments:dict=No
     else: doc = f'doc definition not supported for {full_name}'
     title_level = ifnone(title_level, 3 if inspect.isclass(elt) else 4)
     link = f'<a id={full_name}></a>'
-    if is_fastai_class(elt): doc += get_source_link(elt)
+    if is_fastai_class(elt): doc += get_function_source(elt)
     if doc_string and (inspect.getdoc(elt) or arg_comments):
         doc += '\n' + format_docstring(elt, arg_comments, alt_doc_string, ignore_warn)
     #return link+doc
@@ -243,12 +243,17 @@ def get_pytorch_link(ft) -> str:
     plink = '.'.join(paths[:(2+offset)])
     return f'{PYTORCH_DOCS}{doc_path}.html#{plink}.{name}'
 
-def get_source_link(ft) -> str:
+
+def get_source_link(mod, lineno) -> str:
     "returns link to  line in source code"
-    lineno = inspect.getsourcelines(ft)[1]
-    github_path = inspect.getmodule(ft).__name__.replace('.', '/')
+    github_path = mod.__name__.replace('.', '/')
     link = f"{SOURCE_URL}{github_path}.py#L{lineno}"
     return f'<div style="text-align: right"><a href="{link}">[source]</a></div>'
+
+def get_function_source(ft) -> str:
+    "returns link to  line in source code"
+    lineno = inspect.getsourcelines(ft)[1]
+    return get_source_link(inspect.getmodule(ft), lineno)
 
 def title_md(s:str, title_level:int, markdown=True):
     res = '#' * title_level
