@@ -246,6 +246,8 @@ Once the extra packages have been built you can install them from the build dire
 
 Or upload them first and then install normally via `conda install`.
 
+See `fastai_pytorch/builds/custom-conda-builds` for recipes we created already.
+
 #### The Problem Of Supporting Different Architectures
 
 Every package we release on conda needs to be either `noarch` or we need to build a whole slew of packages for each platform we choose to support, `linux-64`, `win-64`, etc.
