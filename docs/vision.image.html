@@ -16,7 +16,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>vision.image</code> defines the basic <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> object and its variants that are used in Computer Vision, as well as how to transform for them. This page mostly explains the fastai library pipeline for data augmentation and can be skipped at a first read.</p>
+<p><code>vision.image</code> defines the basic <a href="/vision.image.html#Image"><code>Image</code></a> object and its variants that are used in Computer Vision, as well as how to transform for them. This page mostly explains the fastai library pipeline for data augmentation and can be skipped at a first read.</p>
 
 </div>
 </div>
@@ -32,7 +32,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> is the class that wraps every picture in the fastai library. It is subclassed to create <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a> and <a href="http://docs.fast.ai/vision.image.html#ImageBBox"><code>ImageBBox</code></a> when dealing with segmentation and object detection tasks.</p>
+<p><a href="/vision.image.html#Image"><code>Image</code></a> is the class that wraps every picture in the fastai library. It is subclassed to create <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a> and <a href="/vision.image.html#ImageBBox"><code>ImageBBox</code></a> when dealing with segmentation and object detection tasks.</p>
 
 </div>
 </div>
@@ -63,7 +63,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Most of the functions of the <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> class deal with the internal pipeline of transforms, so they are only shown at the end of this page. The easiest way to create one is through the function <a href="http://docs.fast.ai/vision.image.html#open_image"><code>open_image</code></a>.</p>
+<p>Most of the functions of the <a href="/vision.image.html#Image"><code>Image</code></a> class deal with the internal pipeline of transforms, so they are only shown at the end of this page. The easiest way to create one is through the function <a href="/vision.image.html#open_image"><code>open_image</code></a>.</p>
 
 </div>
 </div>
@@ -217,7 +217,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In a Jupyter Notebook, the representation of an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> is its underlying picture (shown to its full size). On top of containing the tensor of pixels of the Image (and automatically doing the conversion after decoding the image), this class contains various methods for the implementation of transforms. The <code>Image.show</code> method also allows to pass more arguments, under the hood, it just calls:</p>
+<p>In a Jupyter Notebook, the representation of an <a href="/vision.image.html#Image"><code>Image</code></a> is its underlying picture (shown to its full size). On top of containing the tensor of pixels of the Image (and automatically doing the conversion after decoding the image), this class contains various methods for the implementation of transforms. The <code>Image.show</code> method also allows to pass more arguments, under the hood, it just calls:</p>
 
 </div>
 </div>
@@ -255,7 +255,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This allows us to completely customize the display of an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>. We'll see examples of the <code>y</code> functionality below with segmentation and bounding boxes tasks, for now here is an example using the other features. Note that the beahvior of <a href="http://docs.fast.ai/vision.image.html#show_image"><code>show_image</code></a> and <code>Image.show</code> are the same.</p>
+<p>This allows us to completely customize the display of an <a href="/vision.image.html#Image"><code>Image</code></a>. We'll see examples of the <code>y</code> functionality below with segmentation and bounding boxes tasks, for now here is an example using the other features. Note that the beahvior of <a href="/vision.image.html#show_image"><code>show_image</code></a> and <code>Image.show</code> are the same.</p>
 
 </div>
 </div>
@@ -324,7 +324,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>An <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> object also has a few attributes that can be useful:</p>
+<p>An <a href="/vision.image.html#Image"><code>Image</code></a> object also has a few attributes that can be useful:</p>
 <ul>
 <li><code>Image.data</code> gives you the underlying tensor of pixel</li>
 <li><code>Image.shape</code> gives you the size of that tensor (channels x height x width)</li>
@@ -389,7 +389,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>For a segmentation task, the target is usually a mask. The fastai library represents it as an <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a> object.</p>
+<p>For a segmentation task, the target is usually a mask. The fastai library represents it as an <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a> object.</p>
 
 </div>
 </div>
@@ -420,7 +420,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To easily open a mask, the function <a href="http://docs.fast.ai/vision.image.html#open_mask"><code>open_mask</code></a> plays the same role as <a href="http://docs.fast.ai/vision.image.html#open_image"><code>open_image</code></a>:</p>
+<p>To easily open a mask, the function <a href="/vision.image.html#open_mask"><code>open_mask</code></a> plays the same role as <a href="/vision.image.html#open_image"><code>open_image</code></a>:</p>
 
 </div>
 </div>
@@ -489,7 +489,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>An <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a> object has the same properties as an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>. The only difference is that when applying the transformations to an <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a>, it will ignore the functions that deal with lighting and keep values of 0 and 1. As explained earlier, it's easy to show the segmentation mask over the associated <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> by using the <code>y</code> argument of <a href="http://docs.fast.ai/vision.image.html#show_image"><code>show_image</code></a>.</p>
+<p>An <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a> object has the same properties as an <a href="/vision.image.html#Image"><code>Image</code></a>. The only difference is that when applying the transformations to an <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a>, it will ignore the functions that deal with lighting and keep values of 0 and 1. As explained earlier, it's easy to show the segmentation mask over the associated <a href="/vision.image.html#Image"><code>Image</code></a> by using the <code>y</code> argument of <a href="/vision.image.html#show_image"><code>show_image</code></a>.</p>
 
 </div>
 </div>
@@ -563,7 +563,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Internally, the <a href="http://docs.fast.ai/vision.image.html#ImageBBox"><code>ImageBBox</code></a> is just an <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a> with a square mask representing the bounding box (or bonding boxes in several channels). This is to deal with data augmentation and might be removed in future developments. To create an <a href="http://docs.fast.ai/vision.image.html#ImageBBox"><code>ImageBBox</code></a>, we have this helper function that will take a list of bounding boxes, each representing by a list of four numbers representing the coordinates of two corners of the box with the following convention: top, left, bottom, right.</p>
+<p>Internally, the <a href="/vision.image.html#ImageBBox"><code>ImageBBox</code></a> is just an <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a> with a square mask representing the bounding box (or bonding boxes in several channels). This is to deal with data augmentation and might be removed in future developments. To create an <a href="/vision.image.html#ImageBBox"><code>ImageBBox</code></a>, we have this helper function that will take a list of bounding boxes, each representing by a list of four numbers representing the coordinates of two corners of the box with the following convention: top, left, bottom, right.</p>
 
 </div>
 </div>
@@ -596,7 +596,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We need to pass the dimensions of the input image so that <a href="http://docs.fast.ai/vision.image.html#ImageBBox"><code>ImageBBox</code></a> can internally create an <a href="http://docs.fast.ai/vision.image.html#ImageMask"><code>ImageMask</code></a> of the size of the <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>. Again, the <code>Image.show</code> method will display the bouding box on the same image if it's passed as a <code>y</code> argument.</p>
+<p>We need to pass the dimensions of the input image so that <a href="/vision.image.html#ImageBBox"><code>ImageBBox</code></a> can internally create an <a href="/vision.image.html#ImageMask"><code>ImageMask</code></a> of the size of the <a href="/vision.image.html#Image"><code>Image</code></a>. Again, the <code>Image.show</code> method will display the bouding box on the same image if it's passed as a <code>y</code> argument.</p>
 
 </div>
 </div>
@@ -724,7 +724,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>All the transforms available for data augmentation in computer vision are defined in the <a href="vision.transform.html">vision.transform</a> module. When we want to apply them to an <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a>, we use this function:</p>
+<p>All the transforms available for data augmentation in computer vision are defined in the <a href="vision.transform.html">vision.transform</a> module. When we want to apply them to an <a href="/vision.image.html#Image"><code>Image</code></a>, we use this function:</p>
 
 </div>
 </div>
@@ -839,7 +839,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's check what it gives for a segmentation task. Note that, as instructed by the documentation of <a href="http://docs.fast.ai/vision.image.html#apply_tfms"><code>apply_tfms</code></a> we first apply the transforms to the input, then apply them to the target while adding <code>do_resolve</code>=False.</p>
+<p>Now let's check what it gives for a segmentation task. Note that, as instructed by the documentation of <a href="/vision.image.html#apply_tfms"><code>apply_tfms</code></a> we first apply the transforms to the input, then apply them to the target while adding <code>do_resolve</code>=False.</p>
 
 </div>
 </div>
@@ -919,7 +919,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now for the bounding box, the <a href="http://docs.fast.ai/vision.image.html#ImageBBox"><code>ImageBBox</code></a> object will automatically update the coordinates of the two opposite corners in its data attribute.</p>
+<p>Now for the bounding box, the <a href="/vision.image.html#ImageBBox"><code>ImageBBox</code></a> object will automatically update the coordinates of the two opposite corners in its data attribute.</p>
 
 </div>
 </div>
@@ -969,7 +969,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As explained in the <a href="http://docs.fast.ai/vision.transform.html#Randomness">transform module</a>, to indicate to a <a href="http://docs.fast.ai/vision.image.html#Transform"><code>Transform</code></a> how to randomize an argument, we use a type annotation by a random function. Here is the list of the available functions.</p>
+<p>As explained in the <a href="http://docs.fast.ai/vision.transform.html#Randomness">transform module</a>, to indicate to a <a href="/vision.image.html#Transform"><code>Transform</code></a> how to randomize an argument, we use a type annotation by a random function. Here is the list of the available functions.</p>
 
 </div>
 </div>
@@ -1276,7 +1276,7 @@ summary: "`Image` provides support to convert, transform and show images"
 <li>first the transforms that deal with lighting properties are applied to the logits of the pixels. To only do once the conversion pixels -&gt; logits -&gt; pixels, we group the together,</li>
 <li>then we apply the transforms that modify the pixel.</li>
 </ul>
-<p>This is why all transforms have an attribute (like <a href="http://docs.fast.ai/vision.image.html#TfmAffine"><code>TfmAffine</code></a>, <a href="http://docs.fast.ai/vision.image.html#TfmCoord"><code>TfmCoord</code></a>, <a href="http://docs.fast.ai/vision.image.html#TfmCrop"><code>TfmCrop</code></a> or <a href="http://docs.fast.ai/vision.image.html#TfmPixel"><code>TfmPixel</code></a>) so that the fastai library can regroup them and apply them all together at the right step. In terms of implementation:</p>
+<p>This is why all transforms have an attribute (like <a href="/vision.image.html#TfmAffine"><code>TfmAffine</code></a>, <a href="/vision.image.html#TfmCoord"><code>TfmCoord</code></a>, <a href="/vision.image.html#TfmCrop"><code>TfmCrop</code></a> or <a href="/vision.image.html#TfmPixel"><code>TfmPixel</code></a>) so that the fastai library can regroup them and apply them all together at the right step. In terms of implementation:</p>
 <ul>
 <li><a href="http://docs.fast.ai/vision.image.html#_affine_grid"><code>_affine_grid</code></a> is reponsible for creating the grid of coordinates</li>
 <li><a href="http://docs.fast.ai/vision.image.html#_affine_mult"><code>_affine_mult</code></a> is in charge of doing the affine multiplication on that grid</li>
@@ -1313,7 +1313,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The basic class that defines transformation in the fastai library is <a href="http://docs.fast.ai/vision.image.html#Transform"><code>Transform</code></a>.</p>
+<p>The basic class that defines transformation in the fastai library is <a href="/vision.image.html#Transform"><code>Transform</code></a>.</p>
 
 </div>
 </div>
@@ -1361,7 +1361,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Create a <a href="http://docs.fast.ai/vision.image.html#Transform"><code>Transform</code></a> from func that can be randomized. Each argument of <code>func</code> in kwargs is analyzed and if it has a type annotaiton that is a random function, this function will be called to pick a value for it. This value will be stored in the <code>resolved</code> dictionary. Following the same idea, <code>p</code> is the probability for func to be called and <code>do_run</code> will be set to True if it was the cause, False otherwise. Lastly, setting <code>is_random</code> to False allows to send specific values for each parameter.</p>
+<p>Create a <a href="/vision.image.html#Transform"><code>Transform</code></a> from func that can be randomized. Each argument of <code>func</code> in kwargs is analyzed and if it has a type annotaiton that is a random function, this function will be called to pick a value for it. This value will be stored in the <code>resolved</code> dictionary. Following the same idea, <code>p</code> is the probability for func to be called and <code>do_run</code> will be set to True if it was the cause, False otherwise. Lastly, setting <code>is_random</code> to False allows to send specific values for each parameter.</p>
 
 </div>
 </div>
@@ -1388,7 +1388,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To handle internally the data augmentation as explained earlier, each <a href="http://docs.fast.ai/vision.image.html#Transform"><code>Transform</code></a> as a type, so that the fastai library can regoup them together efficiently. There are five types of <a href="http://docs.fast.ai/vision.image.html#Transform"><code>Transform</code></a> which all work as decorators for a deterministic function.</p>
+<p>To handle internally the data augmentation as explained earlier, each <a href="/vision.image.html#Transform"><code>Transform</code></a> as a type, so that the fastai library can regoup them together efficiently. There are five types of <a href="/vision.image.html#Transform"><code>Transform</code></a> which all work as decorators for a deterministic function.</p>
 
 </div>
 </div>
@@ -1523,14 +1523,14 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Decorate <code>func</code> to make it a crop transform; This is a special case of <a href="http://docs.fast.ai/vision.image.html#TfmPixel"><code>TfmPixel</code></a> with <code>order</code> set to 99.</p>
+<p>Decorate <code>func</code> to make it a crop transform; This is a special case of <a href="/vision.image.html#TfmPixel"><code>TfmPixel</code></a> with <code>order</code> set to 99.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To help with the conversion to logits for the <a href="http://docs.fast.ai/vision.image.html#TfmLighting"><code>TfmLighting</code></a>, we use these helper functions:</p>
+<p>To help with the conversion to logits for the <a href="/vision.image.html#TfmLighting"><code>TfmLighting</code></a>, we use these helper functions:</p>
 
 </div>
 </div>
@@ -1594,7 +1594,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In-place version of <a href="http://docs.fast.ai/vision.image.html#logit"><code>logit</code></a>.</p>
+<p>In-place version of <a href="/vision.image.html#logit"><code>logit</code></a>.</p>
 
 </div>
 </div>
@@ -1782,7 +1782,7 @@ summary: "`Image` provides support to convert, transform and show images"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Send the <a href="http://docs.fast.ai/vision.image.html#Image"><code>Image</code></a> to <a href="http://docs.fast.ai/vision.image.html#show_image"><code>show_image</code></a> with <code>ax</code>, <code>y</code> and the <code>kwargs</code>.</p>
+<p>Send the <a href="/vision.image.html#Image"><code>Image</code></a> to <a href="/vision.image.html#show_image"><code>show_image</code></a> with <code>ax</code>, <code>y</code> and the <code>kwargs</code>.</p>
 
 </div>
 </div>
