@@ -66,10 +66,10 @@ summary: "`Learner` support for computer vision"
 <ul>
 <li>an <code>AdaptiveConcatPool2d</code> layer,</li>
 <li>a <code>Flatten</code> layer,</li>
-<li>blocks of [<code>BatchNorm1d</code>, <code>Dropout</code>, <code>Linear</code>, <code>Relu</code>] layers.</li>
+<li>blocks of [<code>nn.BatchNorm1d</code>, <code>nn.Dropout</code>, <code>nn.Linear</code>, <code>nn.Relu</code>] layers.</li>
 </ul>
 <p>The blocks are defined by the <code>lin_ftrs</code> and <code>ps</code> arguments. Specifically, the first block will have a number of inputs inferred from the backbone <code>arch</code> and the last one will have a number of outputs equal to <code>data.c</code> (which contains the number of classes of the data) and the intermediate blocks have a number of inputs/outputs determined by <code>lin_frs</code> (of course a block has a number of inputs equal to the number of outputs of the previous block). The dropouts all have a the same value <code>ps</code> if you pass a float, or the corresponding values if you pass a list. Default is to have an intermediate hidden size of 512 (which makes two blocks model_activation -&gt; 512 -&gt; n_classes).</p>
-<p>Note that the very last block doesn't have a <code>ReLU</code> activation, to allow you to use any final activation you want (generally included in the loss function in pytorch). Also, the backbone will be frozen if you choose <code>pretrained</code>=True (so only the head will train if you call <code>fit</code>) so that you can immediately start phase one of training as described above.</p>
+<p>Note that the very last block doesn't have a <code>nn.ReLU</code> activation, to allow you to use any final activation you want (generally included in the loss function in pytorch). Also, the backbone will be frozen if you choose <code>pretrained</code>=True (so only the head will train if you call <code>fit</code>) so that you can immediately start phase one of training as described above.</p>
 <p>Alternatively, you can define your own <code>custom_head</code> to put on top of the backbone. If you want to specify where to split <code>arch</code> you should so in the argument <code>cut</code> which can either be the index of a specific layer (the result will not include that layer) or a function that, when passed the model, will return the backbone you want.</p>
 <p>The final model obtained by stacking the backbone and the head (custom or defined as we saw) is then separated in groups for gradual unfreezeing or differential learning rates. You can specify of to split the backbone in groups with the optional argument <code>split_on</code> (should be a function that returns those groups when given the backbone).</p>
 <p>The <code>kwargs</code> will be passed on to <code>Learner</code>, so you can put here anything that <code>Learner</code> will accept (<code>metrics</code>, <code>loss_fn</code>, <code>opt_fn</code>...)</p>
@@ -128,10 +128,10 @@ summary: "`Learner` support for computer vision"
 
  
  
-<div id="0d2c5d39-61bb-4c68-9333-61103b4882f8"></div>
+<div id="6c9818ed-9ad9-46bd-80f9-94a8c15cc65c"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#0d2c5d39-61bb-4c68-9333-61103b4882f8');
+var element = $('#6c9818ed-9ad9-46bd-80f9-94a8c15cc65c');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
