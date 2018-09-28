@@ -172,7 +172,7 @@ def get_inner_fts(elt) -> List[str]:
     "return methods belonging to class"
     fts = []
     for ft_name in elt.__dict__.keys():
-        if ft_name[:2] == '__': continue
+        if ft_name.startswith('_'): continue
         ft = getattr(elt, ft_name)
         if inspect.isfunction(ft): fts.append(f'{elt.__name__}.{ft_name}')
         if inspect.isclass(ft): fts += [f'{elt.__name__}.{n}' for n in get_inner_fts(ft)]
