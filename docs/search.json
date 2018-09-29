@@ -7,8 +7,8 @@ search: exclude
 [
 {% for page in site.pages %}
 {%- assign newurl = page.url | remove: "/" -%}
-{% unless forloop.first or newurl == 'assetscssstyle.css' %},{% endunless %}
-{% if newurl == 'assetscssstyle.css' %}
+{% unless forloop.first or forloop.index == 2 or newurl == 'assetscssstyle.css' or page.search == 'exclude' %},{% endunless %}
+{% if newurl == 'assetscssstyle.css' or page.search == 'exclude' %}
 {% continue %}
 {% else %}
 {
