@@ -57,23 +57,26 @@ entries:
           title: Overview
           url: callbacks.html
         - output: web
-          title: callbacks.hooks
+          title: HookCallback
           url: callbacks.hooks.html
         - output: web
-          title: callbacks.fp16
+          title: MixedPrecision
           url: callbacks.fp16.html
         - output: web
-          title: callbacks.one_cycle
+          title: OneCycleScheduler
           url: callbacks.one_cycle.html
         - output: web
-          title: callbacks.lr_finder
+          title: LRFinder
           url: callbacks.lr_finder.html
         - output: web
-          title: callbacks.mixup
+          title: MixUpCallback
           url: callbacks.mixup.html
         - output: web
-          title: callbacks.rnn
+          title: RNNTrainer
           url: callbacks.rnn.html
+        - output: web
+          title: GeneralScheduler
+          url: callbacks.general_sched.html
         title: callbacks
     output: web
     title: Training
