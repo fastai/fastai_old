@@ -259,6 +259,13 @@ Yet `pip` can't uninstall it:
 
 so just removing the relevant path from this file will fix the problem. (or removing the whole file if you need to).
 
+Similarly, this is another place where it can hide:
+
+   ```
+   path/to/lib/python3.6/site-packages/fastai.egg-link
+   ```
+
+
 Now running:
 
    ```
@@ -280,7 +287,7 @@ shows nothing.
 2. Build the fastai package (include the `pytorch` channel, for `torch/` dependencies, and fastai test channel for `torchvision/fastai`):
 
    ```
-   conda-build ./conda/ -c pytorch
+   conda-build ./conda/ -c pytorch -c fastai/label/test
    ```
 
    If `conda-build` fails with:
