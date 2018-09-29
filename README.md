@@ -32,7 +32,7 @@ Now you can install `fastai`. Note, that this is a beta test version at the mome
 
 To install fastai with CUDA 9.2 simply run (read the paragraph after this for other GPU and CPU options):
 
-    conda install -c pytorch -c fastai/label/test torchvision=0.2.1=pyhe7f20fa_0 fastai cuda92
+    conda install -c pytorch -c fastai/label/test fastai cuda92
 
 If your setup doesn't have CUDA support remove the `cuda92` above. For different versions of the CUDA toolkit, you'll need to install the appropriate CUDA conda package based on what you've got installed on your system (i.e. instead of `cuda92` in the above, pick the appropriate option for whichever toolkit version you have installed; to see a list of options type: `conda search "cuda*" -c pytorch`).
 
@@ -48,4 +48,3 @@ First, follow the instructions above for either `PyPi` or `Conda`. Then remove t
     tools/run-after-git-clone
 
 Please refer to [CONTRIBUTING.md](https://github.com/fastai/fastai_pytorch/blob/master/CONTRIBUTING.md) and [the developers guide](http://docs.fast.ai/developers.html) for more details.
-
