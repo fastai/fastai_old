@@ -30,35 +30,38 @@ summary:
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <ul>
-<li><code>AnnealFunc</code> = <code>Callable</code>[`Number<code>,</code>Number<code>,</code>float<code>\],</code>Number`]</li>
-<li><code>ArgStar</code> = <code>Collection</code>`Any`]</li>
-<li><code>BatchSamples</code> = <code>Collection</code>`Tuple<code>\</code>Collection<code>\[</code>int<code>\],</code>int`]]</li>
-<li><code>Classes</code> = <code>Collection</code>`Any`]</li>
-<li><code>FilePathList</code> = <code>Collection</code>`Path`]</li>
+<li><code>AnnealFunc</code> = <code>Callable</code>[[<code>Number</code>,<code>Number</code>,<code>float</code>], <code>Number</code>]</li>
+<li><code>ArgStar</code> = <code>Collection</code>[<code>Any</code>]</li>
+<li><code>BatchSamples</code> = <code>Collection</code>[<code>Tuple</code>[<code>Collection</code>[<code>int</code>], <code>int</code>]]</li>
+<li><code>Classes</code> = <code>Collection</code>[<code>Any</code>]</li>
+<li><code>FilePathList</code> = <code>Collection</code>[<code>Path</code>]</li>
 <li><code>Floats</code> = <code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]</li>
-<li><code>ImgLabels</code> = <code>Collection</code>`ImgLabel`]</li>
+<li><code>ImgLabel</code> = <code>str</code></li>
+<li><code>ImgLabels</code> = <code>Collection</code>[<code>ImgLabel</code>]</li>
 <li><code>KeyFunc</code> = <code>Callable</code>[[<code>int</code>], <code>int</code>]</li>
 <li><code>KWArgs</code> = <code>Dict</code>[<code>str</code>,<code>Any</code>]</li>
-<li><code>ListOrItem</code> = <code>Union</code>`Collection<code>\</code>Any<code>\],</code>int<code>,</code>float<code>,</code>str`]</li>
-<li><code>ListRules</code> = <code>Collection</code>`Callable<code>\[\[</code>str<code>\],</code>str`]]</li>
-<li><code>ListSizes</code> = <code>Collection</code>`Tuple<code>\[</code>int<code>,</code>int`]]</li>
-<li><code>NPArrayableList</code> = <code>Collection</code>`Union<code>\</code>np<code>.</code>ndarray<code>,</code>list`]]</li>
-<li><code>NPArrayList</code> = <code>Collection</code>`np<code>.</code>ndarray`]</li>
-<li><code>OptDataFrame</code> = <code>Optional</code>`DataFrame`]</li>
-<li><code>OptListOrItem</code> = <code>Optional</code>`ListOrItem`]</li>
-<li><code>OptRange</code> = <code>Optional</code>`Tuple<code>\[</code>float<code>,</code>float`]]</li>
-<li><code>OptStrTuple</code> = <code>Optional</code>`Tuple<code>\[</code>str<code>,</code>str`]]</li>
-<li><code>OptStats</code> = <code>Optional</code>`Tuple<code>\</code>np<code>.</code>ndarray<code>,</code>np<code>.</code>ndarray`]]</li>
-<li><code>PathOrStr</code> = <code>Union</code>`Path<code>,</code>str`]</li>
-<li><code>PBar</code> = <code>Union</code>`MasterBar<code>,</code>ProgressBar`]</li>
+<li><code>ListOrItem</code> = <code>Union</code>[<code>Collection</code>[<code>Any</code>],<code>int</code>,<code>float</code>,<code>str</code>]</li>
+<li><code>ListRules</code> = <code>Collection</code>[<code>Callable</code>[[<code>str</code>],<code>str</code>]]</li>
+<li><code>ListSizes</code> = <code>Collection</code>[<code>Tuple</code>[<code>int</code>,<code>int</code>]]</li>
+<li><code>NPArrayableList</code> = <code>Collection</code>[<code>Union</code>[<code>np</code>.<code>ndarray</code>, <code>list</code>]]</li>
+<li><code>NPArrayList</code> = <code>Collection</code>[<code>np</code>.<code>ndarray</code>]</li>
+<li><code>NPArrayMask</code> = <code>np</code>.<code>ndarray</code></li>
+<li><code>NPImage</code> = <code>np</code>.<code>ndarray</code></li>
+<li><code>OptDataFrame</code> = <code>Optional</code>[<code>DataFrame</code>]</li>
+<li><code>OptListOrItem</code> = <code>Optional</code>[<code>ListOrItem</code>]</li>
+<li><code>OptRange</code> = <code>Optional</code>[<code>Tuple</code>[<code>float</code>,<code>float</code>]]</li>
+<li><code>OptStrTuple</code> = <code>Optional</code>[<code>Tuple</code>[<code>str</code>,<code>str</code>]]</li>
+<li><code>OptStats</code> = <code>Optional</code>[<code>Tuple</code>[<code>np</code>.<code>ndarray</code>, <code>np</code>.<code>ndarray</code>]]</li>
+<li><code>PathOrStr</code> = <code>Union</code>[<code>Path</code>,<code>str</code>]</li>
+<li><code>PBar</code> = <code>Union</code>[<code>MasterBar</code>, <code>ProgressBar</code>]</li>
 <li><code>Point</code>=<code>Tuple</code>[<code>float</code>,<code>float</code>]</li>
-<li><code>Points</code>=<code>Collection</code>`Point`]</li>
-<li><code>Sizes</code> = <code>List</code>`List<code>\[</code>int`]]</li>
-<li><code>SplitArrayList</code> = <code>List</code>`Tuple<code>\</code>np<code>.</code>ndarray<code>,</code>np<code>.</code>ndarray`]]</li>
+<li><code>Points</code>=<code>Collection</code>[<code>Point</code>]</li>
+<li><code>Sizes</code> = <code>List</code>[<code>List</code>[<code>int</code>]]</li>
+<li><code>SplitArrayList</code> = <code>List</code>[<code>Tuple</code>[<code>np</code>.<code>ndarray</code>,<code>np</code>.<code>ndarray</code>]]</li>
 <li><code>StartOptEnd</code>=<code>Union</code>[<code>float</code>,<code>Tuple</code>[<code>float</code>,<code>float</code>]]</li>
 <li><code>StrList</code> = <code>Collection</code>[<code>str</code>]</li>
-<li><code>Tokens</code> = <code>Collection</code>`Collection<code>\[</code>str`]]</li>
-<li><code>OptStrList</code> = <code>Optional</code>`StrList`]</li>
+<li><code>Tokens</code> = <code>Collection</code>[<code>Collection</code>[<code>str</code>]]</li>
+<li><code>OptStrList</code> = <code>Optional</code>[<code>StrList</code>]</li>
 </ul>
 
 </div>
@@ -76,36 +79,51 @@ summary:
 <li><code>BoolOrTensor</code> = <code>Union</code>[<code>bool</code>,<code>Tensor</code>]</li>
 <li><code>FloatOrTensor</code> = <code>Union</code>[<code>float</code>,<code>Tensor</code>]</li>
 <li><code>IntOrTensor</code> = <code>Union</code>[<code>int</code>,<code>Tensor</code>]</li>
-<li><code>ItemsList</code> = <code>Collection</code>`Union<code>\</code>Tensor<code>,[</code>ItemBase<code>](/core.html#ItemBase),'</code>ItemsList<code>',</code>float<code>,</code>int`]]</li>
-<li><code>LambdaFunc</code> = <code>Callable</code>[`Tensor<code>\],</code>Tensor`]</li>
-<li><code>LayerFunc</code> = <code>Callable</code>[[<code>nn</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Module`\],`None`\">https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Module`\],`None`\</a>]</li>
-<li><code>ModuleList</code> = <code>Collection</code>[<code>nn</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Module`\">https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Module`\</a>]</li>
-<li><code>OptOptimizer</code> = <code>Optional</code>[<code>optim</code>](<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.torch.optim).`Optimizer`\">https://pytorch.org/docs/stable/optim.html#torch.optim.torch.optim).`Optimizer`\</a>]</li>
-<li><code>ParamList</code> = <code>Collection</code>[<code>nn</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Parameter`\">https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn)](https://pytorch.org/docs/stable/nn.html#torch-nn).`Parameter`\</a>]</li>
-<li><code>Rank0Tensor</code> = <code>NewType</code></li>
-<li><code>SplitFunc</code> = <code>Callable</code>[[<code>Model</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)\">https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)\</a>], <code>List</code>[<code>Model</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)\]\">https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)\]\</a>]</li>
-<li><code>SplitFuncOrIdxList</code> = <code>Union</code>`Callable<code>,</code>Collection<code>\</code>ModuleList`]]</li>
-<li><code>TensorOrNumber</code> = <code>Union</code>`Tensor<code>,</code>Number`]</li>
-<li><code>TensorOrNumList</code> = <code>Collection</code>`TensorOrNumber`]</li>
+<li><code>ItemsList</code> = <code>Collection</code>[<code>Union</code>[<code>Tensor</code>,<code>ItemBase</code>,'<code>ItemsList</code>',<code>float</code>,<code>int</code>]]</li>
+<li><code>LambdaFunc</code> = <code>Callable</code>[[<code>Tensor</code>],<code>Tensor</code>]</li>
+<li><code>LayerFunc</code> = <code>Callable</code>[[<code>nn</code>.<code>Module</code>],<code>None</code>]</li>
+<li><code>Model</code> = <code>nn</code>.<code>Module</code></li>
+<li><code>ModuleList</code> = <code>Collection</code>[<code>nn</code>.<code>Module</code>]</li>
+<li><code>OptOptimizer</code> = <code>Optional</code>[<code>optim</code>.<code>Optimizer</code>]</li>
+<li><code>ParamList</code> = <code>Collection</code>[<code>nn</code>.<code>Parameter</code>]</li>
+<li><code>Rank0Tensor</code> = <code>NewType</code>('<code>OneEltTensor</code>', <code>Tensor</code>)</li>
+<li><code>SplitFunc</code> = <code>Callable</code>[[<code>Model</code>], <code>List</code>[<code>Model</code>]]</li>
+<li><code>SplitFuncOrIdxList</code> = <code>Union</code>[<code>Callable</code>, <code>Collection</code>[<code>ModuleList</code>]]</li>
+<li><code>TensorOrNumber</code> = <code>Union</code>[<code>Tensor</code>,<code>Number</code>]</li>
+<li><code>TensorOrNumList</code> = <code>Collection</code>[<code>TensorOrNumber</code>]</li>
 <li><code>TensorImageSize</code> = <code>Tuple</code>[<code>int</code>,<code>int</code>,<code>int</code>]</li>
-<li><code>Tensors</code> = <code>Union</code>`Tensor<code>,</code>Collection<code>\['</code>Tensors`']]</li>
+<li><code>Tensors</code> = <code>Union</code>[<code>Tensor</code>, <code>Collection</code>['<code>Tensors</code>']]</li>
 <li><code>Weights</code> = <code>Dict</code>[<code>str</code>,<code>Tensor</code>]</li>
-<li><code>AffineFunc</code> = <code>Callable</code>[`KWArgs<code>\], [</code>AffineMatrix`](<a href="https://pytorch.org/docs/stable/torch.html#torch.Tensor)\">https://pytorch.org/docs/stable/torch.html#torch.Tensor)\</a>]</li>
-<li><code>HookFunc</code> = <code>Callable</code>[[<code>Model</code>](<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module">https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module)](https://pytorch.org/docs/stable/nn.html#torch.nn.Module</a>), <code>Tensors</code>, <code>Tensors</code>], <code>Any</code>]</li>
-<li><code>LossFunction</code> = <code>Callable</code>[`Tensor<code>,</code>Tensor<code>\],</code>Rank0Tensor`]</li>
-<li><code>MetricFunc</code> = <code>Callable</code>[`Tensor<code>,</code>Tensor<code>\],</code>TensorOrNumber`]</li>
-<li><code>MetricFuncList</code> = <code>Collection</code>`MetricFunc`]</li>
-<li><code>MetricsList</code> = <code>Collection</code>`TensorOrNumber`]</li>
-<li><code>OptLossFunc</code> = <code>Optional</code>`LossFunction`]</li>
-<li><code>OptMetrics</code> = <code>Optional</code>`MetricsList`]</li>
-<li><code>OptSplitFunc</code> = <code>Optional</code>`SplitFunc`]</li>
-<li><code>PixelFunc</code> = <code>Callable</code>[`TensorImage<code>,</code>ArgStar<code>,</code>KWArgs<code>\],</code>TensorImage`]</li>
-<li><code>CoordFunc</code> = <code>Callable</code>[[<code>FlowField</code>](<a href="https://pytorch.org/docs/stable/torch.html#torch.Tensor">https://pytorch.org/docs/stable/torch.html#torch.Tensor</a>), <code>TensorImageSize</code>, <code>ArgStar</code>, <code>KWArgs</code>], <code>LogitTensorImage</code>]</li>
-<li><code>LightingFunc</code> = <code>Callable</code>[`LogitTensorImage<code>,</code>ArgStar<code>,</code>KWArgs<code>\],</code>LogitTensorImage`]</li>
+<li><code>AffineFunc</code> = <code>Callable</code>[[<code>KWArgs</code>], <code>AffineMatrix</code>]</li>
+<li><code>HookFunc</code> = <code>Callable</code>[[<code>Model</code>, <code>Tensors</code>, <code>Tensors</code>], <code>Any</code>]</li>
+<li><code>LogitTensorImage</code> = <code>TensorImage</code></li>
+<li><code>LossFunction</code> = <code>Callable</code>[[<code>Tensor</code>, <code>Tensor</code>], <code>Rank0Tensor</code>]</li>
+<li><code>MetricFunc</code> = <code>Callable</code>[[<code>Tensor</code>,<code>Tensor</code>],<code>TensorOrNumber</code>]</li>
+<li><code>MetricFuncList</code> = <code>Collection</code>[<code>MetricFunc</code>]</li>
+<li><code>MetricsList</code> = <code>Collection</code>[<code>TensorOrNumber</code>]</li>
+<li><code>OptLossFunc</code> = <code>Optional</code>[<code>LossFunction</code>]</li>
+<li><code>OptMetrics</code> = <code>Optional</code>[<code>MetricsList</code>]</li>
+<li><code>OptSplitFunc</code> = <code>Optional</code>[<code>SplitFunc</code>]</li>
+<li><code>PixelFunc</code> = <code>Callable</code>[[<code>TensorImage</code>, <code>ArgStar</code>, <code>KWArgs</code>], <code>TensorImage</code>]</li>
+<li><code>CoordFunc</code> = <code>Callable</code>[[<code>FlowField</code>, <code>TensorImageSize</code>, <code>ArgStar</code>, <code>KWArgs</code>], <code>LogitTensorImage</code>]</li>
+<li><code>LightingFunc</code> = <code>Callable</code>[[<code>LogitTensorImage</code>, <code>ArgStar</code>, <code>KWArgs</code>], <code>LogitTensorImage</code>]</li>
 </ul>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
 </div>
 </div>
  
