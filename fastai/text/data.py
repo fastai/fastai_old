@@ -254,13 +254,14 @@ def pad_collate(samples:BatchSamples, pad_idx:int=1, pad_first:bool=True) -> Tup
     return res, LongTensor([s[1] for s in samples]).squeeze()
 
 DataFunc = Callable[[Collection[DatasetBase], PathOrStr, KWArgs], DataBunch]
+fastai_types[DataFunc] = 'DataFunc'
 
 def standard_data(datasets:Collection[DatasetBase], path:PathOrStr, **kwargs) -> DataBunch:
     "Simply create a `DataBunch` from the `datasets`."
     return DataBunch.create(*datasets, path=path, **kwargs)
 
 def lm_data(datasets:Collection[TextDataset], path:PathOrStr, **kwargs) -> DataBunch:
-    "Create a `DataBunch` from the `datasets` for language modelling."
+    "Create a `DataBunch` in `path` from the `datasets` for language modelling."
     dataloaders = [LanguageModelLoader(ds, **kwargs) for ds in datasets]
     return DataBunch(*dataloaders, path=path)
 

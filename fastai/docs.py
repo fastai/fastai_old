@@ -1,6 +1,7 @@
 import tarfile
 from fastai import *
 from fastai.vision import *
+from fastai.text import *
 
 DATA_PATH = Path('..')/'data'
 MNIST_PATH = DATA_PATH / 'mnist_sample'
