@@ -22,7 +22,7 @@
 from shutil import copy2
 from pathlib import Path
 
-fin  = Path("tools")/"trust-doc-nbs-install-hook"
+fin  = Path("tools")/"trust-doc-nbs"
 fout = Path(".git")/"hooks"/"post-merge"
 
 print("Installing .git/hooks/post-merge to automatically trust docs_src notebooks")
