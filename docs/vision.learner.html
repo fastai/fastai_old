@@ -16,7 +16,7 @@ summary: "`Learner` support for computer vision"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>vision.learner</code> is the module that defines the <code>Conv_Learner</code> class, to easily get a model suitable for transfer learning.</p>
+<p><a href="/vision.learner.html#vision.learner"><code>vision.learner</code></a> is the module that defines the <code>Conv_Learner</code> class, to easily get a model suitable for transfer learning.</p>
 
 </div>
 </div>
@@ -62,9 +62,10 @@ summary: "`Learner` support for computer vision"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h3><a id=ConvLearner></a><em>class</em> <code>ConvLearner</code></h3>
-<p>(<code>data</code>:<a href="/data.html#DataBunch"><code>DataBunch</code></a>, <code>arch</code>:<code>Callable</code>, <code>cut</code>=<code>None</code>, <code>pretrained</code>:<code>bool</code>=<code>True</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>, <code>custom_head</code>:<code>Optional</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>split_on</code>:<code>Union</code>[<code>Callable</code>, <code>Collection</code>[<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]], <code>NoneType</code>]=<code>None</code>, <code>kwargs</code>:<code>Any</code>) -&gt; <code>None</code> :: <a href="/basic_train.html#Learner"><code>Learner</code></a></p>
-<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L47">[source]</a></div>
+<h2><a id=ConvLearner></a>class <code>ConvLearner</code></h2>
+<p><code>ConvLearner</code>(<code>data</code>:<a href="/data.html#DataBunch"><code>DataBunch</code></a>, <code>arch</code>:<code>Callable</code>, <code>cut</code>:<code>Union</code>[<code>int</code>, <code>Callable</code>]=<code>None</code>, <code>pretrained</code>:<code>bool</code>=<code>True</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>, <code>custom_head</code>:<code>Optional</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>, <code>split_on</code>:<code>Union</code>[<code>Callable</code>, <code>Collection</code>[<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]], <code>NoneType</code>]=<code>None</code>, <code>kwargs</code>:<code>Any</code>) :: <a href="/basic_train.html#Learner"><code>Learner</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L44">[source]</a></p>
+
 </div>
 
 </div>
@@ -140,10 +141,10 @@ summary: "`Learner` support for computer vision"
 
  
  
-<div id="281697c6-311b-4fd2-ac4b-cde65a441388"></div>
+<div id="283d7694-3eb8-40c1-a6e2-e0b841baca90"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#281697c6-311b-4fd2-ac4b-cde65a441388');
+var element = $('#283d7694-3eb8-40c1-a6e2-e0b841baca90');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -190,8 +191,8 @@ epoch  train loss  valid loss  accuracy
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=create_body></a><code>create_body</code></h4>
-<p>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>cut</code>:<code>Optional</code>[<code>int</code>]=<code>None</code>, <code>body_fn</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>)</p>
-<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L9">[source]</a></div><p>Cut off the body of a typically pretrained <code>model</code> at <code>cut</code> or as specified by <code>body_fn</code>.</p>
+<p><code>create_body</code>(<code>model</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <code>cut</code>:<code>Optional</code>[<code>int</code>]=<code>None</code>, <code>body_fn</code>:<code>Callable</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>, <a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>]=<code>None</code>)</p>
+<p>Cut off the body of a typically pretrained <code>model</code> at <code>cut</code> or as specified by <code>body_fn</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L9">[source]</a></p>
 
 </div>
 
@@ -211,8 +212,9 @@ epoch  train loss  valid loss  accuracy
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=create_head></a><code>create_head</code></h4>
-<p>(<code>nf</code>:<code>int</code>, <code>nc</code>:<code>int</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>)</p>
-<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L19">[source]</a></div>
+<p><code>create_head</code>(<code>nf</code>:<code>int</code>, <code>nc</code>:<code>int</code>, <code>lin_ftrs</code>:<code>Optional</code>[<code>Collection</code>[<code>int</code>]]=<code>None</code>, <code>ps</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.5</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L19">[source]</a></p>
+
 </div>
 
 </div>
@@ -237,8 +239,9 @@ epoch  train loss  valid loss  accuracy
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=num_features></a><code>num_features</code>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>) -&gt; <code>int</code></h4>
-<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L14">[source]</a></div><p>Return the number of output features for a <code>model</code>.</p>
+<h4><a id=num_features></a><code>num_features</code></h4>
+<p><code>num_features</code>(<code>m</code>:<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>) -&gt; <code>int</code></p>
+<p>Return the number of output features for a <code>model</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/vision/learner.py#L14">[source]</a></p>
 
 </div>
 

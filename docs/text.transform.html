@@ -34,7 +34,7 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This step is actually divided in two phases: first, we apply a certain list of <code>rules</code> to the raw texts as preprocessing, then we use the tokenizer to split them in lists of tokens. Combining together those <code>rules</code>, the <code>tok_func</code>and the <code>lang</code> to process the texts is the role of the <code>Tokenizer</code> class.</p>
+<p>This step is actually divided in two phases: first, we apply a certain list of <code>rules</code> to the raw texts as preprocessing, then we use the tokenizer to split them in lists of tokens. Combining together those <code>rules</code>, the <code>tok_func</code>and the <code>lang</code> to process the texts is the role of the <a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a> class.</p>
 
 </div>
 </div>
@@ -319,7 +319,7 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The fastai library uses <a href="https://spacy.io/">spacy</a> tokenizers as its default. The following class wraps it as <code>BaseTokenizer</code>.</p>
+<p>The fastai library uses <a href="https://spacy.io/">spacy</a> tokenizers as its default. The following class wraps it as <a href="/text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a>.</p>
 
 </div>
 </div>
@@ -347,7 +347,7 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If you want to use your custom tokenizer, just subclass the <code>BaseTokenizer</code> and override its <code>tokenizer</code> and <code>add_spec_cases</code> functions.</p>
+<p>If you want to use your custom tokenizer, just subclass the <a href="/text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a> and override its <code>tokenizer</code> and <code>add_spec_cases</code> functions.</p>
 <p>Rules are just functions that take a string and return the modified string. This allows you to customize the list of <code>default_rules</code> as you please. Those <code>default_rules</code> are:</p>
 
 </div>
@@ -745,7 +745,7 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Create a <code>Vocab</code> dictionary from a set of <code>tokens</code> in <code>path</code>. Only keeps <code>max_vocab</code> tokens, and only if they appear at least <code>min_freq</code> times, set the rest to <code>UNK</code>.</p>
+<p>Create a <a href="/text.transform.html#Vocab"><code>Vocab</code></a> dictionary from a set of <code>tokens</code> in <code>path</code>. Only keeps <code>max_vocab</code> tokens, and only if they appear at least <code>min_freq</code> times, set the rest to <code>UNK</code>.</p>
 
 </div>
 </div>

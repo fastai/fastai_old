@@ -15,26 +15,15 @@ summary: "Provides basic training and validation with `Learner`"
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.basic_train</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/basic_train.html#fastai.basic_train"><code>basic_train</code></a> wraps together the data (in a <a href="/data.html#DataBunch"><code>DataBunch</code></a> object) with a pytorch model to define a <a href="/basic_train.html#Learner"><code>Learner</code></a> object. This is where the basic training loop is defined for the <a href="/basic_train.html#fit"><code>fit</code></a> function. The <a href="/basic_train.html#Learner"><code>Learner</code></a> object is the entry point of most of the <a href="/callback.html#Callback"><code>Callback</code></a> functions that will customize this training loop in different ways (and made available through the <a href="/train.html#fastai.train"><code>train</code></a> module), notably:</p>
+<p><a href="/basic_train.html#basic_train"><code>basic_train</code></a> wraps together the data (in a <a href="/data.html#DataBunch"><code>DataBunch</code></a> object) with a pytorch model to define a <a href="/basic_train.html#Learner"><code>Learner</code></a> object. This is where the basic training loop is defined for the <a href="/basic_train.html#fit"><code>fit</code></a> function. The <a href="/basic_train.html#Learner"><code>Learner</code></a> object is the entry point of most of the <a href="/callback.html#Callback"><code>Callback</code></a> functions that will customize this training loop in different ways (and made available through the <a href="/train.html#train"><code>train</code></a> module), notably:</p>
 <ul>
-<li><code>Learner.lr_find</code> will launch an LR range test that will help you select a good learning rate</li>
-<li><code>Learner.fit_one_cycle</code> will launch a training using the 1cycle policy, to help you train your model fast.</li>
-<li><code>Learner.to_fp16</code> will convert your model in half precision and halp you launch a training in mixed precision.</li>
+<li><a href="/train.html#lr_find"><code>Learner.lr_find</code></a> will launch an LR range test that will help you select a good learning rate</li>
+<li><a href="/train.html#fit_one_cycle"><code>Learner.fit_one_cycle</code></a> will launch a training using the 1cycle policy, to help you train your model fast.</li>
+<li><a href="/train.html#to_fp16"><code>Learner.to_fp16</code></a> will convert your model in half precision and halp you launch a training in mixed precision.</li>
 </ul>
 
 </div>
@@ -49,7 +38,7 @@ summary: "Provides basic training and validation with `Learner`"
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>We'll do a quick overview of the key pieces of fastai's training modules. See the separate module docs (linked below) for details on each. We'll use the classic MNIST dataset for the training documentation, cut down to just 3's and 7's. The data is available in the fastai repo in the <code>docs/</code> directory.</p>
-<p>To minimize the boilerplate in our docs we've defined the basic imports and paths we need in <code>fastai.docs</code>. It also has a <a href="/docs.html#get_mnist"><code>get_mnist</code></a> function to grab a <a href="/data.html#DataBunch"><code>DataBunch</code></a> of the data for us.</p>
+<p>To minimize the boilerplate in our docs we've defined the basic imports and paths we need in <a href="/docs.html#docs"><code>fastai.docs</code></a>. It also has a <a href="/docs.html#get_mnist"><code>get_mnist</code></a> function to grab a <a href="/data.html#DataBunch"><code>DataBunch</code></a> of the data for us.</p>
 
 </div>
 </div>
@@ -63,7 +52,7 @@ summary: "Provides basic training and validation with `Learner`"
 <span class="n">data</span> <span class="o">=</span> <span class="n">get_mnist</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -76,7 +65,7 @@ summary: "Provides basic training and validation with `Learner`"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We can create minimal simple CNNs using <a href="/layers.html#simple_cnn"><code>simple_cnn</code></a> (see <a href="/models.html#fastai.models"><code>models</code></a> for details on creating models):</p>
+<p>We can create minimal simple CNNs using <a href="/layers.html#simple_cnn"><code>simple_cnn</code></a> (see <a href="/models.html#models"><code>models</code></a> for details on creating models):</p>
 
 </div>
 </div>
@@ -89,7 +78,7 @@ summary: "Provides basic training and validation with `Learner`"
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">simple_cnn</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -109,7 +98,7 @@ summary: "Provides basic training and validation with `Learner`"
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span> <span class="o">=</span> <span class="n">Learner</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -129,7 +118,7 @@ summary: "Provides basic training and validation with `Learner`"
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -143,10 +132,10 @@ summary: "Provides basic training and validation with `Learner`"
 
  
  
-<div id="4b791af8-fcd5-4c92-8c86-dcf230f53159"></div>
+<div id="cb186b5e-2b08-421e-aefd-53bc05a4868a"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#4b791af8-fcd5-4c92-8c86-dcf230f53159');
+var element = $('#cb186b5e-2b08-421e-aefd-53bc05a4868a');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -178,7 +167,7 @@ epoch  train loss  valid loss
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>To see how our training is going, we can request that it reports various <a href="/metrics.html#fastai.metrics"><code>metrics</code></a> after each epoch. You can pass it to the constructor, or set it later. Note that metrics are always calculated on the validation set.</p>
+<p>To see how our training is going, we can request that it reports various <a href="/metrics.html#metrics"><code>metrics</code></a> after each epoch. You can pass it to the constructor, or set it later. Note that metrics are always calculated on the validation set.</p>
 
 </div>
 </div>
@@ -192,7 +181,7 @@ epoch  train loss  valid loss
 <span class="n">learn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -206,10 +195,10 @@ epoch  train loss  valid loss
 
  
  
-<div id="a5ed36c9-ce5f-41df-a75e-420d073573d1"></div>
+<div id="1129c8b5-8425-4414-b8d3-0f091da40f8f"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#a5ed36c9-ce5f-41df-a75e-420d073573d1');
+var element = $('#1129c8b5-8425-4414-b8d3-0f091da40f8f');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -241,7 +230,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>You can use <a href="/callback.html#fastai.callback"><code>callback</code></a>s to modify training in almost any way you can imagine. For instance, we've provided a callback to implement Leslie Smith's 1cycle training method.</p>
+<p>You can use <a href="/callback.html#callback"><code>callback</code></a>s to modify training in almost any way you can imagine. For instance, we've provided a callback to implement Leslie Smith's 1cycle training method.</p>
 
 </div>
 </div>
@@ -255,7 +244,7 @@ epoch  train loss  valid loss  accuracy
 <span class="n">learn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="n">cb</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -269,10 +258,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="0dc6e160-e282-4345-a0a4-e5d43e660169"></div>
+<div id="4226842d-b993-409f-81ec-ccf9dffb167a"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#0dc6e160-e282-4345-a0a4-e5d43e660169');
+var element = $('#4226842d-b993-409f-81ec-ccf9dffb167a');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -311,7 +300,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_lr</span><span class="p">(</span><span class="n">show_moms</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -336,13 +325,13 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Extending-Learner-with-train">Extending <a href="/basic_train.html#Learner"><code>Learner</code></a> with <a href="/train.html#fastai.train"><code>train</code></a><a class="anchor-link" href="#Extending-Learner-with-train">&#182;</a></h3>
+<h3 id="Extending-Learner-with-train">Extending <a href="/basic_train.html#Learner"><code>Learner</code></a> with <a href="/train.html#train"><code>train</code></a><a class="anchor-link" href="#Extending-Learner-with-train">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Many of the callbacks can be used more easily by taking advantage of the <a href="/basic_train.html#Learner"><code>Learner</code></a> extensions in <a href="/train.html#fastai.train"><code>train</code></a>. For instance, instead of creating OneCycleScheduler manually as above, you can simply call <code>Learner.fit_one_cycle</code>:</p>
+<p>Many of the callbacks can be used more easily by taking advantage of the <a href="/basic_train.html#Learner"><code>Learner</code></a> extensions in <a href="/train.html#train"><code>train</code></a>. For instance, instead of creating OneCycleScheduler manually as above, you can simply call <a href="/train.html#fit_one_cycle"><code>Learner.fit_one_cycle</code></a>:</p>
 
 </div>
 </div>
@@ -355,7 +344,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -369,10 +358,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="b158d860-bb53-4c61-b9d0-7cee81885e1a"></div>
+<div id="4ecb020e-09cd-46b5-b567-de7a10b612d2"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#b158d860-bb53-4c61-b9d0-7cee81885e1a');
+var element = $('#4ecb020e-09cd-46b5-b567-de7a10b612d2');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -406,12 +395,12 @@ epoch  train loss  valid loss  accuracy
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Note that if you're training a model for one of our supported <em>applications</em>, there's a lot of help available to you in the application modules:</p>
 <ul>
-<li><a href="/vision.html#fastai.vision"><code>vision</code></a></li>
-<li><a href="/text.html#fastai.text"><code>text</code></a></li>
-<li><a href="/tabular.html#fastai.tabular"><code>tabular</code></a></li>
-<li><a href="/colab.html#fastai.colab"><code>colab</code></a></li>
+<li><a href="/vision.html#vision"><code>vision</code></a></li>
+<li><a href="/text.html#text"><code>text</code></a></li>
+<li><a href="/tabular.html#tabular"><code>tabular</code></a></li>
+<li><a href="/colab.html#colab"><code>colab</code></a></li>
 </ul>
-<p>For instance, let's use <a href="/vision.learner.html#ConvLearner"><code>ConvLearner</code></a> (from <a href="/vision.html#fastai.vision"><code>vision</code></a>) to quickly fine-tune a pre-trained Imagenet model for MNIST (not a very practical approach, of course, since MNIST is handwriting and our model is pre-trained on photos!) Note that <a href="https://pytorch.org/docs/stable/models.html#torchvision.models.torchvision.models"><code>tvm</code></a> is the namespace we use for <code>torchvision.models</code>.</p>
+<p>For instance, let's use <a href="/vision.learner.html#ConvLearner"><code>ConvLearner</code></a> (from <a href="/vision.html#vision"><code>vision</code></a>) to quickly fine-tune a pre-trained Imagenet model for MNIST (not a very practical approach, of course, since MNIST is handwriting and our model is pre-trained on photos!) Note that <a href="https://pytorch.org/docs/stable/models.html#torchvision.models.torchvision.models"><code>tvm</code></a> is the namespace we use for <a href="/models.html#models"><code>torchvision.models</code></a>.</p>
 
 </div>
 </div>
@@ -425,7 +414,7 @@ epoch  train loss  valid loss  accuracy
 <span class="n">learn</span><span class="o">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -439,10 +428,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="8b593f90-36ee-4af7-bea9-76309a9f27bf"></div>
+<div id="1f49cc56-85bd-4d2e-bcae-c4b7ebd71f18"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8b593f90-36ee-4af7-bea9-76309a9f27bf');
+var element = $('#1f49cc56-85bd-4d2e-bcae-c4b7ebd71f18');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -468,7 +457,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>That's it for our little overview. More details follow on the classes and functions in <a href="/basic_train.html#fastai.basic_train"><code>basic_train</code></a>; see the links to other training modules above for additional functionality.</p>
+<p>That's it for our little overview. More details follow on the classes and functions in <a href="/basic_train.html#basic_train"><code>basic_train</code></a>; see the links to other training modules above for additional functionality.</p>
 
 </div>
 </div>
@@ -496,11 +485,11 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The main purpose of <a href="/basic_train.html#Learner"><code>Learner</code></a> is to train <code>model</code> using <code>Learner.fit</code>. After every epoch, all <em>metrics</em> will be printed, and will also be available to callbacks.</p>
+<p>The main purpose of <a href="/basic_train.html#Learner"><code>Learner</code></a> is to train <code>model</code> using <a href="/basic_train.html#fit"><code>Learner.fit</code></a>. After every epoch, all <em>metrics</em> will be printed, and will also be available to callbacks.</p>
 <p>The default weight decay will be <code>wd</code>, which will be handled using the method from <a href="https://arxiv.org/abs/1711.05101">Fixing Weight Decay Regularization in Adam</a> if <code>true_wd</code> is set (otherwise it's L2 regularization). If <code>bn_wd</code> is False then weight decay will be removed from batchnorm layers, as recommended in <a href="https://arxiv.org/abs/1706.02677">Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour</a>. You can also turn off batchnorm layer training entirely (i.e. freeze all batchnorm learnable parameters) by disabling <code>train_bn</code>.</p>
 <p>To use <a href="#discriminative">discriminative layer training</a> pass an <code>nn.Module</code> for each layer group to be optimized with different settings.</p>
 <p>Any model files created will be saved in <code>path</code>/<code>model_dir</code>.</p>
-<p>You can pass a list of <a href="/callbacks.html#fastai.callbacks"><code>callbacks</code></a> that you have already created, or (more commonly) simply pass a list of callback functions to <code>callback_fns</code> and each function will be called (passing <code>self</code>) on object initialization, with the results stored as callback objects.</p>
+<p>You can pass a list of <a href="/callbacks.html#callbacks"><code>callbacks</code></a> that you have already created, or (more commonly) simply pass a list of callback functions to <code>callback_fns</code> and each function will be called (passing <code>self</code>) on object initialization, with the results stored as callback objects.</p>
 
 </div>
 </div>
@@ -534,7 +523,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Uses <a href="#discriminative">discriminative layer training</a> if multiple learning rates or weight decay values are passed. To control training behaviour, use the <a href="/callback.html#fastai.callback"><code>callback</code></a> system or one or more of the pre-defined <a href="/callbacks.html#fastai.callbacks"><code>callbacks</code></a>.</p>
+<p>Uses <a href="#discriminative">discriminative layer training</a> if multiple learning rates or weight decay values are passed. To control training behaviour, use the <a href="/callback.html#callback"><code>callback</code></a> system or one or more of the pre-defined <a href="/callbacks.html#callbacks"><code>callbacks</code></a>.</p>
 
 </div>
 </div>
@@ -654,7 +643,7 @@ epoch  train loss  valid loss  accuracy
 <span class="n">learn</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -667,7 +656,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -681,10 +670,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="0ce6a847-c4bd-48e6-9ed5-497e1234c2b0"></div>
+<div id="54a25fff-6000-4b67-a93b-516f271f4d17"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#0ce6a847-c4bd-48e6-9ed5-497e1234c2b0');
+var element = $('#54a25fff-6000-4b67-a93b-516f271f4d17');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -719,7 +708,7 @@ epoch  train loss  valid loss  accuracy
 <span class="n">learn</span><span class="o">.</span><span class="n">fit_one_cycle</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_lr</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">),</span> <span class="n">wd</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-4</span><span class="p">,</span><span class="mf">1e-1</span><span class="p">))</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -733,10 +722,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="65a9bc79-c914-469b-a9f2-24fab4b75333"></div>
+<div id="2f165e96-605e-450a-ac4f-45c6273cc761"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#65a9bc79-c914-469b-a9f2-24fab4b75333');
+var element = $('#2f165e96-605e-450a-ac4f-45c6273cc761');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -768,7 +757,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">Learner</span><span class="o">.</span><span class="n">lr_range</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -807,7 +796,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">lr_range</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-3</span><span class="p">)),</span> <span class="n">learn</span><span class="o">.</span><span class="n">lr_range</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mf">3e-4</span><span class="p">))</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -1101,7 +1090,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>You generally won't need to call this yourself - it's used to create the <code>nn.optim</code> optimizer before fitting the model.</p>
+<p>You generally won't need to call this yourself - it's used to create the <a href="https://pytorch.org/docs/stable/optim.html#torch.optim.torch.optim"><code>nn.optim</code></a> optimizer before fitting the model.</p>
 
 </div>
 </div>
@@ -1178,7 +1167,7 @@ epoch  train loss  valid loss  accuracy
 <span class="n">learn</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -1192,10 +1181,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="53e4acc8-a380-4294-8c1a-a16105730b26"></div>
+<div id="9e48096d-75b6-4931-aeb3-df9da51e3b37"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#53e4acc8-a380-4294-8c1a-a16105730b26');
+var element = $('#9e48096d-75b6-4931-aeb3-df9da51e3b37');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "3694b1cf8c8e4a419fcaf24acc2b5565", "version_major": 2, "version_minor": 0}
@@ -1257,7 +1246,7 @@ var element = $('#53e4acc8-a380-4294-8c1a-a16105730b26');
 <span class="n">learn</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_losses</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -1271,10 +1260,10 @@ var element = $('#53e4acc8-a380-4294-8c1a-a16105730b26');
 
  
  
-<div id="90d31e02-1813-4225-aebc-840722385ab4"></div>
+<div id="9538f830-dd34-41f5-ad42-601915a5d561"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#90d31e02-1813-4225-aebc-840722385ab4');
+var element = $('#9538f830-dd34-41f5-ad42-601915a5d561');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -1340,7 +1329,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_lr</span><span class="p">(</span><span class="n">show_moms</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -1399,7 +1388,7 @@ epoch  train loss  valid loss  accuracy
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_metrics</span><span class="p">()</span>
 </pre></div>
 
-    </div>
+</div>
 </div>
 </div>
 
@@ -1430,7 +1419,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>You don't call these yourself - they're called by fastai's <a href="/callback.html#fastai.callback"><code>callback</code></a> system automatically to enable the class's functionality.</p>
+<p>You don't call these yourself - they're called by fastai's <a href="/callback.html#callback"><code>callback</code></a> system automatically to enable the class's functionality.</p>
 
 </div>
 </div>
@@ -1555,7 +1544,7 @@ epoch  train loss  valid loss  accuracy
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Note that you have to create the <code>Optimizer</code> yourself if you call this function, whereas <code>Learn.fit</code> creates it for you automatically.</p>
+<p>Note that you have to create the <code>Optimizer</code> yourself if you call this function, whereas <a href="/basic_train.html#fit"><code>Learn.fit</code></a> creates it for you automatically.</p>
 
 </div>
 </div>
