@@ -30,9 +30,11 @@ Now you can install `fastai`. Note, that this is a beta test version at the mome
 
 ### Conda Install
 
-Currently we require a GPU with CUDA support. If your setup doesn't have CUDA-support you will most likely have to wait till pytorch.org releases 1.0.0 packages for `pytorch` and `torchvision`.
+Currently we require a GPU with CUDA support. If your setup doesn't have CUDA-support you will most likely have to wait till pytorch.org releases 1.0.0 packages for `pytorch` and `torchvision`. You'll need to install the appropriate CUDA conda package based on what you've got installed on your system, e.g.:
 
-Currently only `linux-64`/`python3.6` conda build is available:
+    conda install cuda90 -c pytorch
+
+Then install fastai. Currently only `linux-64`/`python3.6` conda build is available:
 
     conda install -c fastai/label/test torchvision=0.2.1=pyhe7f20fa_0 fastai
 
