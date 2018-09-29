@@ -186,25 +186,31 @@ XXX: travis-ci.org as well.
 
 (XXX: this is for test.pypi.org for now, will need a section for pypi.org)
 
-1. Build the source distribution:
+1. Clear out the `dist/` folder
+
+   ```
+   rm -r dist
+   ```
+
+2. Build the source distribution:
 
    ```
    python setup.py sdist
    ```
 
-2. Build the wheel:
+3. Build the wheel:
 
    ```
    python setup.py bdist_wheel
    ```
 
-3. Test the packages:
+4. Test the packages:
 
    ```
    twine check dist/*
    ```
 
-4. Publish:
+5. Publish:
 
    ```
    twine upload --repository testpypi dist/*
@@ -218,17 +224,17 @@ XXX: travis-ci.org as well.
 
    Note: PyPI won't allow re-uploading the same package filename, even if it's a minor fix. If you delete the file from pypi or test.pypi it still won't let you do it. So either a micro-level version needs to be bumped (A.B.C++) or some [post release string added](https://www.python.org/dev/peps/pep-0440/#post-releases) in `setup.py`.
 
-5. Test:
+6. Test:
 
    Test the webpage: [https://test.pypi.org/project/fastai/](https://test.pypi.org/project/fastai/)
 
    Test installation (use pypi.org for packages that aren't on test.pypi.org)
 
    ```
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b3
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b4
    ```
 
-   Hmm, it looks like it wants an explicit `fastai==1.0.0b3` argument, otherwise it tries to install `fastai-0.7`.
+   Hmm, it looks like it wants an explicit `fastai==1.0.0b5` argument, otherwise it tries to install `fastai-0.7`.
 
    May be add: `--force-reinstall` or manually remove preinstalled `fastai` first from your python installation: e.g. `python3.6/site-packages/fastai*`, run `python -m site` to find out the location.
 
