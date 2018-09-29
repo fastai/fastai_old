@@ -1257,3 +1257,7 @@ h4.panel-title {
         border: 0px;
         padding-left: 2em;
 }
+blockquote code {
+        background-color: white;
+}
+

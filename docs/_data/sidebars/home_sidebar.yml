@@ -158,6 +158,9 @@ entries:
       title: Overview
       url: developers.html
     - output: web
+      title: Typing
+      url: fastai_typing.html
+    - output: web
       title: Style guide
       url: style.html
     - output: web

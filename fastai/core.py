@@ -35,7 +35,6 @@ SplitArrayList = List[Tuple[np.ndarray,np.ndarray]]
 StartOptEnd=Union[float,Tuple[float,float]]
 StrList = Collection[str]
 Tokens = Collection[Collection[str]]
-
 OptStrList = Optional[StrList]
 
 def num_cpus()->int:
