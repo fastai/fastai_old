@@ -25,14 +25,14 @@ def convert_weights(wgts:Weights, stoi_wgts:Dict[str,int], itos_new:Collection[s
     return wgts
 
 def lm_split(model:Model) -> List[Model]:
-    "Split a RNN model in groups for differential learning rates."
+    "Split a RNN `model` in groups for differential learning rates."
     groups = [[rnn, dp] for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
     groups.append([model[0].encoder, model[0].encoder_dp, model[1]])
     return groups
 
 
 def rnn_classifier_split(model:Model) -> List[Model]:
-    "Split a RNN model in groups for differential learning rates."
+    "Split a RNN `model` in groups for differential learning rates."
     groups = [[model[0].encoder, model[0].encoder_dp]]
     groups += [[rnn, dp] for rnn, dp in zip(model[0].rnns, model[0].hidden_dps)]
     groups.append([model[1]])
@@ -50,11 +50,11 @@ class RNNLearner(Learner):
         self.metrics = [accuracy]
 
     def save_encoder(self, name:str):
-        "Save the encoder to the model directory."
+        "Save the encoder to `name` inside the model directory."
         torch.save(self.model[0].state_dict(), self.path/self.model_dir/f'{name}.pth')
 
     def load_encoder(self, name:str):
-        "Load the encoder from the model directory."
+        "Load the encoder `name` from the model directory."
         self.model[0].load_state_dict(torch.load(self.path/self.model_dir/f'{name}.pth'))
 
     def load_pretrained(self, wgts_fname:str, itos_fname:str):
@@ -82,7 +82,7 @@ class RNNLearner(Learner):
 
     @classmethod
     def classifier(cls, data:DataBunch, bptt:int=70, max_len:int=70*20, emb_sz:int=400, nh:int=1150, nl:int=3,
-                   layers:Collection[int]=None, drops:Collection[float]=None, pad_token:int=1,
+                   lin_ftrs:Collection[int]=None, drops:Collection[float]=None, pad_token:int=1,
                    drop_mult:float=1., qrnn:bool=False, **kwargs) -> 'RNNLearner':
         "Create a RNN classifier."
         dps = np.array([0.4,0.5,0.05,0.3,0.4]) * drop_mult
@@ -90,7 +90,7 @@ class RNNLearner(Learner):
         if drops is None:  drops = [0.1]
         vocab_size = len(data.train_ds.vocab.itos)
         n_class = len(data.train_ds.classes)
-        layers = [emb_sz*3] + layers + [n_class]
+        layers = [emb_sz*3] + lin_ftrs + [n_class]
         drops = [dps[4]] + drops
         model = get_rnn_classifier(bptt, max_len, n_class, vocab_size, emb_sz, nh, nl, pad_token,
                     layers, drops, input_p=dps[0], weight_p=dps[1], embed_p=dps[2], hidden_p=dps[3], qrnn=qrnn)
