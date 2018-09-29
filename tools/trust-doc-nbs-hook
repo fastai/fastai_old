@@ -16,7 +16,8 @@ path = Path('docs_src')
 for fname in path.glob("*.ipynb"):
     with open(fname) as f:
         nb = nbformat.read(f, as_version=4)
-        nbformat.sign.NotebookNotary().sign(nb)
+        if not nbformat.sign.NotebookNotary().check_signature(nb):
+            nbformat.sign.NotebookNotary().sign(nb)
 
 # clear the output
 sys.stdout.write("\033[K")
