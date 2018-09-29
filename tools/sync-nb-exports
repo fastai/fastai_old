@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# This script facilitates various repo-wild builds.
+# Convert any modified `dev_nb/*.ipynb` with #export tags to `dev_nb/nb_*.py`
 
+# usage: tools/sync-nb-exports
 
-### Convert any modified `dev_nb/*.ipynb` with #export tags to `dev_nb/nb_*.py` ###
 import sys, os, os.path
 from pathlib import Path
 from pdb import set_trace
