@@ -20,6 +20,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>fastai provides a powerful <em>callback</em> system, which is documented on the <a href="/callbacks.html#callbacks"><code>callbacks</code></a> page; look on that page if you're just looking for how to use existing callbacks. If you want to create your own, you'll need to use the classes discussed below.</p>
+<p>A key motivation is that additional functionality can be entirely implemented in a single callback, so that it's easily read. By using this trick, we will have different methods categorized in different callbacks where we will find clearly stated all the interventions the method makes in training. For instance in the <a href="/callbacks.lr_finder.html#LRFinder"><code>LRFinder</code></a> callback, on top of running the fit function with exponentially growing LRs, it needs to handle some preparation and clean-up, and all this code can be in the same callback so we know exactly what it is doing and where to look if we need to change something.</p>
+<p>In addition, it allows out <a href="/basic_train.html#fit"><code>fit</code></a> function to be very clean and simple, yet still easily extended. So far in implementing a number of recent papers, we haven't yet come across any situation where we had to modify our training loop source code - we've been able to use callbacks every time.</p>
 
 </div>
 </div>
@@ -59,45 +61,42 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You generally want your custom callback constructor to take a <a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><code>Learner</code></a></a> parameter, e.g.:</p>
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_backward_begin></a><code>on_backward_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L130">[source]</a></div></h4>
-<p>Returns the loss (which can allow us to modify it, for instance for reg functions)</p>
-
-</div>
-
-</div>
+<pre><code>@dataclass
+class MyCallback(Callback):
+    learn:Learner</code></pre>
+<p>Note that this allows the callback user to just pass your callback name to <code>callback_fns</code> when constructing their <a href="/basic_train.html#Learner"><a href="/basic_train.html#Learner"><code>Learner</code></a></a>, since that always passes <code>self</code> when constructing callbacks from <code>callback_fns</code>. In addition, by passing the learner, this callback will have access to everything: e.g all the inputs/outputs as they are calculated, the losses, and also the data loaders, the optimizer, etc. At any time:</p>
+<ul>
+<li>Changing self.learn.data.train_dl or self.data.valid_dl will change them inside the fit function (we just need to pass the <a href="/data.html#DataBunch"><code>DataBunch</code></a> object to the fit function and not data.train_dl/data.valid_dl)</li>
+<li>Changing self.learn.opt.opt (We have an <a href="/callback.html#OptimWrapper"><code>OptimWrapper</code></a> on top of the actual optimizer) will change it inside the fit function.</li>
+<li>Changing self.learn.data or self.learn.opt directly WILL NOT change the data or the optimizer inside the fit function.</li>
+</ul>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In any of the callbacks you can unpack in the kwargs:</p>
+<ul>
+<li><code>n_epochs</code>, contains the number of epochs the training will take in total</li>
+<li><code>epoch</code>, contains the number of the current</li>
+<li><code>iteration</code>, contains the number of iterations done since the beginning of training</li>
+<li><code>num_batch</code>, contains the number of the batch we're at in the dataloader</li>
+<li><code>last_input</code>, contains the last input that got through the model (eventually updated by a callback)</li>
+<li><code>last_target</code>, contains the last target that gor through the model (eventually updated by a callback)</li>
+<li><code>last_output</code>, contains the last output spitted by the model (eventually updated by a callback)</li>
+<li><code>last_loss</code>, contains the last loss computed (eventually updated by a callback)</li>
+<li><code>smooth_loss</code>, contains the smoothed version of the loss</li>
+<li><code>last_metrics</code>, contains the last validation loss and emtrics computed</li>
+<li><code>pbar</code>, the progress bar</li>
+</ul>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_backward_end></a><code>on_backward_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L134">[source]</a></div></h4>
-<p>Called after backprop but before optimizer step. Useful for true weight decay in AdamW</p>
-
 </div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -108,8 +107,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_batch_begin></a><code>on_batch_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L124">[source]</a></div></h4>
-<p>Set HP before the step is done. Returns xb, yb (which can allow us to modify the input at that step if needed)</p>
+<h4><a id=on_train_begin></a><code>on_train_begin</code></h4>
+<p><code>on_train_begin</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>To initialize constants in the callback. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L119">[source]</a></p>
 
 </div>
 
@@ -119,25 +119,18 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here we can initiliaze anything we need. 
+The optimizer has now been initialized. We can change any hyper-parameters by typing, for instance:</p>
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_batch_end></a><code>on_batch_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L140">[source]</a></div></h4>
-<p>Called at the end of the batch</p>
-
-</div>
-
-</div>
+<pre><code>self.opt.lr = new_lr
+self.opt.mom = new_mom
+self.opt.wd = new_wd
+self.opt.beta = new_beta</code></pre>
 
 </div>
 </div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -148,8 +141,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L121">[source]</a></div></h4>
-<p>At the beginning of each epoch</p>
+<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code></h4>
+<p><code>on_epoch_begin</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>At the beginning of each epoch <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L122">[source]</a></p>
 
 </div>
 
@@ -159,25 +153,13 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_epoch_end></a><code>on_epoch_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>bool</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L143">[source]</a></div></h4>
-<p>Called at the end of an epoch</p>
-
-</div>
-
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is not technically required since we have <code>on_train_begin</code> for epoch 0 and <code>on_epoch_end</code> for all the other epochs,
+yet it makes writing code that needs to be done at the beginning of every epoch easy and more readable.</p>
 
 </div>
 </div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -188,8 +170,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_loss_begin></a><code>on_loss_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L127">[source]</a></div></h4>
-<p>Called after forward pass but before loss has been computed. Returns the output (which can allow us to modify it)</p>
+<h4><a id=on_batch_begin></a><code>on_batch_begin</code></h4>
+<p><code>on_batch_begin</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Set HP before the step is done. Returns xb, yb (which can allow us to modify the input at that step if needed) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L125">[source]</a></p>
 
 </div>
 
@@ -199,25 +182,14 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_step_end></a><code>on_step_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L137">[source]</a></div></h4>
-<p>Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful)</p>
-
-</div>
-
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the perfect place to prepare everything before the model is called.
+Example: change the values of the hyperparameters (if we don't do it on_batch_end instead)</p>
+<p>If we return something, that will be the new value for <code>xb</code>,<code>yb</code>.</p>
 
 </div>
 </div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -228,8 +200,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_train_begin></a><code>on_train_begin</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L118">[source]</a></div></h4>
-<p>To initialize constants in the callback.</p>
+<h4><a id=on_loss_begin></a><code>on_loss_begin</code></h4>
+<p><code>on_loss_begin</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Called after forward pass but before loss has been computed. Returns the output (which can allow us to modify it) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L128">[source]</a></p>
 
 </div>
 
@@ -238,6 +211,16 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed after the output has been computed but before the
+loss computation.
+Example: putting the output back in FP32 when training in mixed precision.</p>
+<p>If we return something, that will be the new value for the output.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
@@ -248,8 +231,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_train_end></a><code>on_train_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L146">[source]</a></div></h4>
-<p>Useful for cleaning up things and saving files/models</p>
+<h4><a id=on_backward_begin></a><code>on_backward_begin</code></h4>
+<p><code>on_backward_begin</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Returns the loss (which can allow us to modify it, for instance for reg functions) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L131">[source]</a></p>
 
 </div>
 
@@ -258,6 +242,164 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed after the loss has been computed but before the gradient computation.
+Example: <code>reg_fn</code> in RNNs.</p>
+<p>If we return something, that will be the new value for loss. Since the recorder is always called first,
+it will have the raw loss.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_backward_end></a><code>on_backward_end</code></h4>
+<p><code>on_backward_end</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Called after backprop but before optimizer step. Useful for true weight decay in AdamW <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L135">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed after the gradients have been computed but
+before the optimizer is called.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_step_end></a><code>on_step_end</code></h4>
+<p><code>on_step_end</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Called after the step of the optimizer but before the gradients are zeroed (not sure this one is useful) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L138">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed after the optimizer step but before the gradients
+are zeroed</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_batch_end></a><code>on_batch_end</code></h4>
+<p><code>on_batch_end</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Called at the end of the batch <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L141">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed after a batch is fully done.
+Example: change the values of the hyperparameters (if we don't do it on_batch_begin instead)</p>
+<p>If we return true, the current epoch is interrupted (example: lr_finder stops the training when the loss explodes)</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_epoch_end></a><code>on_epoch_end</code></h4>
+<p><code>on_epoch_end</code>(<code>kwargs</code>:<code>Any</code>) -&gt; <code>bool</code></p>
+<p>Called at the end of an epoch <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L144">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to run some code that needs to be executed at the end of an epoch.
+Example: Save the model if we have a new best validation loss/metric.</p>
+<p>If we return true, the training stops (example: early stopping)</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=on_train_end></a><code>on_train_end</code></h4>
+<p><code>on_train_end</code>(<code>kwargs</code>:<code>Any</code>)</p>
+<p>Useful for cleaning up things and saving files/models <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L147">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the place to tidy everything. It's always executed even if there was an error during the training loop,
+and has an extra kwarg named exception to check if there was an exception or not.
+Examples: save log_files, load best model found during training</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -273,21 +415,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">annealings</span> <span class="o">=</span> <span class="s2">&quot;NO LINEAR COS EXP POLY&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-<span class="n">fns</span> <span class="o">=</span> <span class="p">[</span><span class="n">annealing_no</span><span class="p">,</span> <span class="n">annealing_linear</span><span class="p">,</span> <span class="n">annealing_cos</span><span class="p">,</span> <span class="n">annealing_exp</span><span class="p">,</span> <span class="n">annealing_poly</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)]</span>
-<span class="k">for</span> <span class="n">fn</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fns</span><span class="p">,</span> <span class="n">annealings</span><span class="p">):</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">[</span><span class="n">fn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)],</span> <span class="n">label</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">();</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -309,16 +436,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">annealing_cos</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -340,16 +457,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">annealing_exp</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -371,16 +478,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">annealing_linear</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -402,16 +499,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">annealing_no</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -433,16 +520,6 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">annealing_poly</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -499,8 +576,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_backward_begin></a><code>on_backward_begin</code>(<code>loss</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L209">[source]</a></div></h4>
-<p>Handle gradient calculation on <code>loss</code></p>
+<h4><a id=on_backward_begin></a><code>on_backward_begin</code></h4>
+<p><code>on_backward_begin</code>(<code>loss</code>:<code>Tensor</code>)</p>
+<p>Handle gradient calculation on <code>loss</code> <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L210">[source]</a></p>
 
 </div>
 
@@ -526,8 +604,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_backward_end></a><code>on_backward_end</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L218">[source]</a></div></h4>
-<p>Handle end of gradient calc</p>
+<h4><a id=on_backward_end></a><code>on_backward_end</code></h4>
+<p><code>on_backward_end</code>()</p>
+<p>Handle end of gradient calc <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L219">[source]</a></p>
 
 </div>
 
@@ -554,8 +633,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=on_batch_begin></a><code>on_batch_begin</code></h4>
-<p>(<code>xb</code>:<code>Tensor</code>, <code>yb</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L193">[source]</a></div></p>
-<p>Handle new batch <code>xb</code>,<code>yb</code></p>
+<p><code>on_batch_begin</code>(<code>xb</code>:<code>Tensor</code>, <code>yb</code>:<code>Tensor</code>)</p>
+<p>Handle new batch <code>xb</code>,<code>yb</code> <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L194">[source]</a></p>
 
 </div>
 
@@ -581,8 +660,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_batch_end></a><code>on_batch_end</code>(<code>loss</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L225">[source]</a></div></h4>
-<p>Handle end of processing one batch with <code>loss</code></p>
+<h4><a id=on_batch_end></a><code>on_batch_end</code></h4>
+<p><code>on_batch_end</code>(<code>loss</code>:<code>Tensor</code>)</p>
+<p>Handle end of processing one batch with <code>loss</code> <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L226">[source]</a></p>
 
 </div>
 
@@ -608,8 +688,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L188">[source]</a></div></h4>
-<p>Handle new epoch</p>
+<h4><a id=on_epoch_begin></a><code>on_epoch_begin</code></h4>
+<p><code>on_epoch_begin</code>()</p>
+<p>Handle new epoch <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L189">[source]</a></p>
 
 </div>
 
@@ -636,8 +717,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=on_epoch_end></a><code>on_epoch_end</code></h4>
-<p>(<code>val_metrics</code>:<code>Collection</code>[<code>None</code>[<code>Tensor</code>, <code>Number</code>]]) -&gt; <code>bool</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L233">[source]</a></div></p>
-<p>Epoch is done, process <code>val_metrics</code></p>
+<p><code>on_epoch_end</code>(<code>val_metrics</code>:<code>Collection</code>[<code>Union</code>[<code>Tensor</code>, <code>Number</code>]]) -&gt; <code>bool</code></p>
+<p>Epoch is done, process <code>val_metrics</code> <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L234">[source]</a></p>
 
 </div>
 
@@ -663,8 +744,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_loss_begin></a><code>on_loss_begin</code>(<code>out</code>:<code>Tensor</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L201">[source]</a></div></h4>
-<p>Handle start of loss calculation with model output <code>out</code></p>
+<h4><a id=on_loss_begin></a><code>on_loss_begin</code></h4>
+<p><code>on_loss_begin</code>(<code>out</code>:<code>Tensor</code>)</p>
+<p>Handle start of loss calculation with model output <code>out</code> <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L202">[source]</a></p>
 
 </div>
 
@@ -690,8 +772,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=on_step_end></a><code>on_step_end</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L221">[source]</a></div></h4>
-<p>Handle end of optimization step</p>
+<h4><a id=on_step_end></a><code>on_step_end</code></h4>
+<p><code>on_step_end</code>()</p>
+<p>Handle end of optimization step <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L222">[source]</a></p>
 
 </div>
 
@@ -718,8 +801,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=on_train_begin></a><code>on_train_begin</code></h4>
-<p>(<code>epochs</code>:<code>int</code>, <code>pbar</code>:<code>None</code>[<code>MasterBar</code>, <code>ProgressBar</code>], <code>metrics</code>:<code>Collection</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>None</code>[<code>Tensor</code>, <code>Number</code>]]]) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L182">[source]</a></div></p>
-<p>About to start learning</p>
+<p><code>on_train_begin</code>(<code>epochs</code>:<code>int</code>, <code>pbar</code>:<code>Union</code>[<code>MasterBar</code>, <code>ProgressBar</code>], <code>metrics</code>:<code>Collection</code>[<code>Callable</code>[<code>Tensor</code>, <code>Tensor</code>, <code>Union</code>[<code>Tensor</code>, <code>Number</code>]]])</p>
+<p>About to start learning <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L183">[source]</a></p>
 
 </div>
 
@@ -746,8 +829,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=on_train_end></a><code>on_train_end</code></h4>
-<p>(<code>exception</code>:<code>None</code>[<code>bool</code>, <code>Exception</code>]) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L240">[source]</a></div></p>
-<p>Handle end of training, <code>exception</code> is an <code>Exception</code> or False if no exceptions during training</p>
+<p><code>on_train_end</code>(<code>exception</code>:<code>Union</code>[<code>bool</code>, <code>Exception</code>])</p>
+<p>Handle end of training, <code>exception</code> is an <code>Exception</code> or False if no exceptions during training <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L241">[source]</a></p>
 
 </div>
 
@@ -773,9 +856,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h3><a id=OptimWrapper></a><em>class</em> <code>OptimWrapper</code></h3>
-<p>(<code>opt</code>:<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>, <code>wd</code>:<code>None</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.0</code>, <code>true_wd</code>:<code>bool</code>=<code>False</code>, <code>bn_wd</code>:<code>bool</code>=<code>True</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L7">[source]</a></div></p>
-<p>Basic wrapper around an optimizer to simplify HP changes</p>
+<h2><a id=OptimWrapper></a>class <code>OptimWrapper</code></h2>
+<p><code>OptimWrapper</code>(<code>opt</code>:<a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a>, <code>wd</code>:<code>Union</code>[<code>float</code>, <code>Collection</code>[<code>float</code>]]=<code>0.0</code>, <code>true_wd</code>:<code>bool</code>=<code>False</code>, <code>bn_wd</code>:<code>bool</code>=<code>True</code>)</p>
+<p>Basic wrapper around an optimizer to simplify HP changes <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L8">[source]</a></p>
 
 </div>
 
@@ -803,8 +886,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=create></a><code>create</code></h4>
-<p>(<code>opt_fn</code>:<code>None</code>[<code>type</code>, <code>Callable</code>[]], <code>lr</code>:<code>None</code>[<code>float</code>, <code>Tuple</code>[], <code>List</code>[<code>T</code>]], <code>layer_groups</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>], <code>kwargs</code>:<code>Any</code>) -&gt; <a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L16">[source]</a></div></p>
-<p>Create an optim.Optimizer from <code>opt_fn</code> with <code>lr</code>. Set lr on `layer_groups``</p>
+<p><code>create</code>(<code>opt_fn</code>:<code>Callable</code>, <code>lr</code>:<code>Union</code>[<code>float</code>, <code>Tuple</code>, <code>List</code>], <code>layer_groups</code>:<code>Collection</code>[<a href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module"><code>Module</code></a>], <code>kwargs</code>:<code>Any</code>) -&gt; <a href="https://pytorch.org/docs/stable/optim.html#torch.optim.Optimizer"><code>Optimizer</code></a></p>
+<p>Create an optim.Optimizer from <code>opt_fn</code> with <code>lr</code>. Set lr on `layer_groups`` <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L17">[source]</a></p>
 
 </div>
 
@@ -823,8 +906,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=read_defaults></a><code>read_defaults</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L93">[source]</a></div></h4>
-<p>Read the values inside the optimizer for the hyper-parameters</p>
+<h4><a id=read_defaults></a><code>read_defaults</code></h4>
+<p><code>read_defaults</code>()</p>
+<p>Read the values inside the optimizer for the hyper-parameters <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L94">[source]</a></p>
 
 </div>
 
@@ -844,8 +928,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=read_val></a><code>read_val</code></h4>
-<p>(<code>key</code>:<code>str</code>) -&gt; <code>None</code>[<code>List</code>[<code>float</code>], <code>Tuple</code>[<code>List</code>[<code>float</code>], <code>List</code>[<code>float</code>]]]<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L110">[source]</a></div></p>
-<p>Read a hyper-parameter key in the optimizer dictionary.</p>
+<p><code>read_val</code>(<code>key</code>:<code>str</code>) -&gt; <code>Union</code>[<code>List</code>[<code>float</code>], <code>Tuple</code>[<code>List</code>[<code>float</code>], <code>List</code>[<code>float</code>]]]</p>
+<p>Read a hyper-parameter key in the optimizer dictionary. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L111">[source]</a></p>
 
 </div>
 
@@ -865,8 +949,8 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=set_val></a><code>set_val</code></h4>
-<p>(<code>key</code>:<code>str</code>, <code>val</code>:<code>Any</code>, <code>bn_groups</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Any</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L102">[source]</a></div></p>
-<p>Set the values inside the optimizer dictionary at the key</p>
+<p><code>set_val</code>(<code>key</code>:<code>str</code>, <code>val</code>:<code>Any</code>, <code>bn_groups</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Any</code></p>
+<p>Set the values inside the optimizer dictionary at the key <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L103">[source]</a></p>
 
 </div>
 
@@ -885,8 +969,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=step></a><code>step</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L30">[source]</a></div></h4>
-<p>Set weight decay and step optimizer</p>
+<h4><a id=step></a><code>step</code></h4>
+<p><code>step</code>()</p>
+<p>Set weight decay and step optimizer <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L31">[source]</a></p>
 
 </div>
 
@@ -905,8 +990,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=zero_grad></a><code>zero_grad</code>() -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L41">[source]</a></div></h4>
-<p>Clear optimizer gradients</p>
+<h4><a id=zero_grad></a><code>zero_grad</code></h4>
+<p><code>zero_grad</code>()</p>
+<p>Clear optimizer gradients <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L42">[source]</a></p>
 
 </div>
 
@@ -925,8 +1011,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h3><a id=SmoothenValue></a><em>class</em> <code>SmoothenValue</code>(<code>beta</code>:<code>float</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L150">[source]</a></div></h3>
-<p>Creates a smooth moving average for a value (loss, etc)</p>
+<h2><a id=SmoothenValue></a>class <code>SmoothenValue</code></h2>
+<p><code>SmoothenValue</code>(<code>beta</code>:<code>float</code>)</p>
+<p>Creates a smooth moving average for a value (loss, etc) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L151">[source]</a></p>
 
 </div>
 
@@ -952,8 +1039,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=add_value></a><code>add_value</code>(<code>val</code>:<code>float</code>) -&gt; <code>NoneType</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L156">[source]</a></div></h4>
-<p>Add current value to calculate updated smoothed value</p>
+<h4><a id=add_value></a><code>add_value</code></h4>
+<p><code>add_value</code>(<code>val</code>:<code>float</code>)</p>
+<p>Add current value to calculate updated smoothed value <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L157">[source]</a></p>
 
 </div>
 
@@ -972,9 +1060,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h3><a id=Stepper></a><em>class</em> <code>Stepper</code></h3>
-<p>(<code>vals</code>:<code>None</code>[<code>float</code>, <code>Tuple</code>[<code>float</code>, <code>float</code>]], <code>n_iter</code>:<code>int</code>, <code>func</code>:<code>Optional</code>[<code>Callable</code>[<code>Number</code>, <code>Number</code>, <code>float</code>, <code>Number</code>]]=<code>None</code>)<div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L265">[source]</a></div></p>
-<p>Used to "step" from start,end (<code>vals</code>) over <code>n_iter</code> iterations on a schedule defined by <code>func</code> (defaults to linear)</p>
+<h2><a id=Stepper></a>class <code>Stepper</code></h2>
+<p><code>Stepper</code>(<code>vals</code>:<code>Union</code>[<code>float</code>, <code>Tuple</code>[<code>float</code>, <code>float</code>]], <code>n_iter</code>:<code>int</code>, <code>func</code>:<code>Optional</code>[<code>Callable</code>[<code>Number</code>, <code>Number</code>, <code>float</code>, <code>Number</code>]]=<code>None</code>)</p>
+<p>Used to "step" from start,end (<code>vals</code>) over <code>n_iter</code> iterations on a schedule defined by <code>func</code> (defaults to linear) <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L266">[source]</a></p>
 
 </div>
 
@@ -1000,8 +1088,9 @@ summary: "Callbacks provides extensibility to the `basic_train` loop. See `train
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4><a id=step></a><code>step</code>() -&gt; <code>Number</code><div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L274">[source]</a></div></h4>
-<p>Return next value along annealed schedule</p>
+<h4><a id=step></a><code>step</code></h4>
+<p><code>step</code>() -&gt; <code>Number</code></p>
+<p>Return next value along annealed schedule <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/callback.py#L275">[source]</a></p>
 
 </div>
 
