@@ -10,14 +10,7 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
     
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="text.data">text.data<a class="anchor-link" href="#text.data">&#182;</a></h1>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Type an introduction of the package here.</p>
-
+<h1 id="NLP-datasets">NLP datasets<a class="anchor-link" href="#NLP-datasets">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -26,266 +19,943 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Global-Variable-Definitions:">Global Variable Definitions:<a class="anchor-link" href="#Global-Variable-Definitions:">&#182;</a></h3>
+<p>This module contains the <code>TextDataset</code> class, which is the main dataset you should use for your NLP tasks. It automatically does the preprocessing steps described in <code>text.transform</code>. It also defines a few helper function to quickly get a <code>DataBunch</code> ready.</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextMtd = IntEnum('TextMtd', 'CSV TOK IDS')</code> <div style="text-align: right"><a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L8">[source]</a></div></p>
+<h2 id="Quickly-assemble-your-data">Quickly assemble your data<a class="anchor-link" href="#Quickly-assemble-your-data">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You should get your data in one of the following formats to make the most of the fastai library and use one of the <code>text_data</code> function:</p>
+<ul>
+<li>raw text files in folders train, valid, test in an ImageNet style,</li>
+<li>a csv (with no index or Header) where the first column(s) gives the label(s) and the folowwing one the associated text,</li>
+<li>tokens and labels arrays already saved,</li>
+<li>ids, vocabulary (correspondance id to word) and labels already saved.</li>
+</ul>
+<p>If you are assembling the data for a language model, you should define your labels as always 0 to respect those formats. The first time you create a <code>DataBunch</code> with one of those functions, your data will be preprocessed automatically and saved, so that the next time you call it is almost instantaneous.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="text_data-functions">text_data functions<a class="anchor-link" href="#text_data-functions">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>All those functions will require a <code>data_func</code> argument that explains how to assemble the datasets into a <code>DataBunch</code>. It can be one of the following:</p>
+<ul>
+<li><code>standard_data</code>: the datasets are directly used to create a <code>DataBunch</code>,</li>
+<li><code>lm_data</code>: the datasets are assembled to create a <code>DataBunch</code> suitable for a language model,</li>
+<li><code>classifier_data</code>: the datasets are assembled to create a <code>DataBunch</code> suitable for an NLP classifier.</li>
+</ul>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=text_data_from_folder></a><code>text_data_from_folder</code></h4>
+<p><code>text_data_from_folder</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L283">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#LanguageModelLoader"><code>LanguageModelLoader</code></a></p>
+<p>This function will create a <code>DataBunch</code> from texts placed in <code>path</code> in a <code>train</code>, <code>valid</code> and maybe <code>test</code> folders. Text files in the <code>train</code> and <code>valid</code> folders should be places in subdirectories according to their classes (always the same for a language model) and the ones for the <code>test</code> folder should all be placed there directly. <code>tokenizer</code> will be used to parse those texts into tokens. The <code>shuffle</code> flag will optionally shuffle the texts found.</p>
+<p>You can pass a specific <code>vocab</code> for the numericalization step (if you are building a classifier from a language model you fine-tuned for instance). kwargs will be split between the <code>TextDataset</code> function and to the <code>get_data</code> function, you can precise there parameters such as <code>max_vocab</code>, <code>chunksize</code>, <code>min_freq</code>, <code>n_labels</code> (see the <code>TextDataset</code> documentation) or <code>bs</code>, <code>bptt</code> and <code>pad_idx</code> (see the sections LM data and classifier data).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=text_data_from_csv></a><code>text_data_from_csv</code></h4>
+<p><code>text_data_from_csv</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L273">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LanguageModelLoader.batchify</code></p>
+<p>This function will create a <code>DataBunch</code> from texts placed in <code>path</code> in a <code>train</code>.csv, <code>valid</code>.csv and maybe <code>test</code>.csv files. These csv files should have no header or index, and the label(s) should be the first column(s) (be sure to adjust the parameter <code>n_labels</code> if you have more than one). <code>tokenizer</code> will be used to parse those texts into tokens.</p>
+<p>You can pass a specific <code>vocab</code> for the numericalization step (if you are building a classifier from a language model you fine-tuned for instance). kwargs will be split between the <code>TextDataset</code> function and to the <code>get_data</code> function, you can precise there parameters such as <code>max_vocab</code>, <code>chunksize</code>, <code>min_freq</code>, <code>n_labels</code> (see the <code>TextDataset</code> documentation) or <code>bs</code>, <code>bptt</code> and <code>pad_idx</code> (see the sections LM data and classifier data).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=text_data_from_tokens></a><code>text_data_from_tokens</code></h4>
+<p><code>text_data_from_tokens</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L261">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>LanguageModelLoader.get_batch</code></p>
+<p>This function will create a <code>DataBunch</code> from texts already tokenized placed in <code>path</code> in files named <code>f{train}{tok_suff}</code>.npy, <code>f{train}{lbl_suff}</code>.npy, <code>f{valid}{tok_suff}</code>.npy, <code>f{valid}{lbl_suff}</code>.npy and maybe <code>f{test}{tok_suff}</code>.npy. If no label file exists, labels will default to all zeros. <code>tok_suff</code> and <code>lbl_suff</code> are '_tok' and '_lbl' respectively.</p>
+<p>You can pass a specific <code>vocab</code> for the numericalization step (if you are building a classifier from a language model you fine-tuned for instance). kwargs will be split between the <code>TextDataset</code> function and to the <code>get_data</code> function, you can precise there parameters such as <code>max_vocab</code>, <code>chunksize</code>, <code>min_freq</code>, <code>n_labels</code>, <code>tok_suff</code> and <code>lbl_suff</code> (see the <code>TextDataset</code> documentation) or <code>bs</code>, <code>bptt</code> and <code>pad_idx</code> (see the sections LM data and classifier data).</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=text_data_from_ids></a><code>text_data_from_ids</code></h4>
+<p><code>text_data_from_ids</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L249">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#SortSampler"><code>SortSampler</code></a></p>
+<p>This function will create a <code>DataBunch</code> from texts already tokenized placed in <code>path</code> in files named <code>f{train}{id_suff}</code>.npy, <code>f{train}{lbl_suff}</code>.npy, <code>f{valid}{id_suff}</code>.npy, <code>f{valid}{lbl_suff}</code>.npy and maybe <code>f{test}{id_suff}</code>.npy. If no label file exists, labels will default to all zeros. <code>id_suff</code> and <code>lbl_suff</code> are '_ids' and '_lbl' respectively. The <code>itos</code> file should contain the correspondance from ids to words.</p>
+<p>kwargs will be split between the <code>TextDataset</code> function and to the <code>get_data</code> function, you can precise there parameters such as <code>max_vocab</code>, <code>chunksize</code>, <code>min_freq</code>, <code>n_labels</code>, <code>tok_suff</code> and <code>lbl_suff</code> (see the <code>TextDataset</code> documentation) or <code>bs</code>, <code>bptt</code> and <code>pad_idx</code> (see the sections LM data and classifier data).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Example">Example<a class="anchor-link" href="#Example">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If you haven't already, untar the IMDB sample dataset by uncommenting the following cell.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#untar_imdb()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Since it comes in the form of csv files, we will use the corresponding <code>text_data</code> method. Here is an overview of what your file you should look like:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../data/imdb_sample/train.csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>Un-bleeping-believable! Meg Ryan doesn't even ...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>This is a extremely well-made film. The acting...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>Every once in a long while a movie will come a...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>Name just says it all. I watched this movie wi...</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>This movie succeeds at being one of the most u...</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And here is a simple way of creating your <code>DataBunch</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data_lm</span> <span class="o">=</span> <span class="n">text_data_from_csv</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;../data/imdb_sample/&#39;</span><span class="p">),</span> <span class="n">tokenizer</span><span class="o">=</span><span class="n">Tokenizer</span><span class="p">(),</span> <span class="n">data_func</span><span class="o">=</span><span class="n">lm_data</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="The-TextDataset-class">The TextDataset class<a class="anchor-link" href="#The-TextDataset-class">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Behind the scenes, the previous functions will create a training, validation and maybe test <code>TextDataset</code> which is the class responsible for collecting and preprocessing the data.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=TextDataset></a>class <code>TextDataset</code></h2>
+<p><code>TextDataset</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>max_vocab</code>:<code>int</code>=<code>60000</code>, <code>chunksize</code>:<code>int</code>=<code>10000</code>, <code>name</code>:<code>str</code>=<code>'train'</code>, <code>min_freq</code>:<code>int</code>=<code>2</code>, <code>n_labels</code>:<code>int</code>=<code>1</code>, <code>create_mtd</code>:<a href="/text.data.html#TextMtd"><code>TextMtd</code></a>=<code>&lt;TextMtd.CSV: 1&gt;</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>]=<code>None</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L16">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#SortishSampler"><code>SortishSampler</code></a></p>
+<p>This class shouldn't be initialized directly as it will rely on internal files being put in an 'tmp' folder of <code>path</code>. <code>tokenizer</code> and <code>vocab</code> will be used to tokenize and numericalize the texts (if needed). <code>max_vocab</code> and <code>min_freq</code> are passed at the create of the vocabulary (if needed). <code>chunksize</code> is the size of chunks preprocessed when loading the data from csv or folders. <code>name</code> is the name of the set that will be used to name the temporary files. <code>n_labels</code> is the number of labels if creating the data from a csv file. <code>classes</code> is the correspondance between label and classe. <code>create_mtd</code> is an internal flag that tells the <code>TextDataset</code> how it was created. It can be:</p>
+<ul>
+<li><code>CSV</code> if it was created from texts or csv</li>
+<li><code>TOK</code> if it was created from tokens (which means the <code>TextDataset</code> will always skip the tokenization)</li>
+<li><code>IDS</code> if it was created from tokens (which means the <code>TextDataset</code> will always skip the tokenization and the numericalization)</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Factory-methods">Factory methods<a class="anchor-link" href="#Factory-methods">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Instead of using the <code>TextDataset</code> init method, one of the following factory functions should be used instead:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_folder></a><code>from_folder</code></h4>
+<p><code>from_folder</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>]=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L161">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#TextDataset"><code>TextDataset</code></a></p>
+<p>Creates a <code>TextDataset</code> named <code>name</code> by scanning the subfolders in <code>folder</code> and using <code>tokenizer</code>. If <code>classes</code> are passed, only the subfolders named accordingly are checked. If <code>shuffle</code> is True, the data will be shuffled. Any additional <code>kwargs</code> are passed to the init method of <code>TextDataset</code>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_one_folder></a><code>from_one_folder</code></h4>
+<p><code>from_one_folder</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>], <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L141">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.check_ids</code></p>
+<p>Creates a <code>TextDataset</code> named <code>name</code> by scanning the text files in <code>folder</code> and using <code>tokenizer</code>. All files are labelled <code>classes[0]</code> so this is typically used for the test set. If <code>shuffle</code> is True, the data will be shuffled. Any additional <code>kwargs</code> are passed to the init method of <code>TextDataset</code>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_csv></a><code>from_csv</code></h4>
+<p><code>from_csv</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L133">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.check_toks</code></p>
+<p>Creates a <code>TextDataset</code> named <code>name</code> with the texts in <code>name</code>.csv using <code>tokenizer</code>. Any additional <code>kwargs</code> are passed to the init method of <code>TextDataset</code>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_tokens></a><code>from_tokens</code></h4>
+<p><code>from_tokens</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>name</code>:<code>str</code>, <code>tok_suff</code>:<code>str</code>=<code>'_tok'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L121">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.clear</code></p>
+<p>Creates a <code>TextDataset</code> named <code>name</code> from tokens and labels saved in <code>f{name}{tok_suff}.npy</code> and <code>f{name}{lbl_suff}.npy</code> respectively. Any additional <code>kwargs</code> are passed to the init method of <code>TextDataset</code>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=from_ids></a><code>from_ids</code></h4>
+<p><code>from_ids</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>name</code>:<code>str</code>, <code>id_suff</code>:<code>str</code>=<code>'_ids'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L109">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.from_csv</code></p>
+<p>Creates a <code>TextDataset</code> named <code>name</code> from ids, labels and dictionary saved in <code>f{name}{id_suff}.npy</code>, <code>f{name}{lbl_suff}.npy</code> and <code>itos</code> respectively. Any additional <code>kwargs</code> are passed to the init method of <code>TextDataset</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Preprocessing">Preprocessing<a class="anchor-link" href="#Preprocessing">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The internal preprocessing is done by the two following methods:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=tokenize></a><code>tokenize</code></h4>
+<p><code>tokenize</code>()</p>
+<p>Tokenize the texts in the csv file. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L67">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=numericalize></a><code>numericalize</code></h4>
+<p><code>numericalize</code>()</p>
+<p>Numericalize the tokens in the token file. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L86">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.from_folder</code></p>
+<p>Internally, the <code>TextDataset</code> will create a 'tmp' folder in which he will copy or save the following files:</p>
+<ul>
+<li><code>name</code>.csv (if created from folders or csv)</li>
+<li><code>name</code>_tok.npy and <code>name</code>_lbl.npy (created by <code>TextDataset.tokenize</code> from the last step or copied if created from tokens)</li>
+<li><code>name</code>_ids.npy, <code>name</code>_lbl.npy and <code>itos</code> (created by <code>TextDataset.numericalize</code> from the last step or copied if created from ids)</li>
+</ul>
+<p>Then, when you invoke the <code>TextDataset</code> again, it will look for those temporary files and check their consistency to use them, in order to avoid doing again the numericalization or the tokenization. If you feel those files have been corrupted in any way, the following method will clear the 'tmp' subfolder of those files:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=clear></a><code>clear</code></h4>
+<p><code>clear</code>()</p>
+<p>Remove all temporary files. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L94">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.from_ids</code></p>
-
+<h3 id="Internal-methods">Internal methods<a class="anchor-link" href="#Internal-methods">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">check_ids</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=check_ids></a><code>check_ids</code></h4>
+<p><code>check_ids</code>() -&gt; <code>bool</code></p>
+<p>Check if a new numericalization is needed. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L47">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">check_toks</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=check_toks></a><code>check_toks</code></h4>
+<p><code>check_toks</code>() -&gt; <code>bool</code></p>
+<p>Check if a new tokenization is needed. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L59">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">general_check</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=general_check></a><code>general_check</code></h4>
+<p><code>general_check</code>(<code>pre_files</code>:<code>Collection</code>[<code>Union</code>[<code>Path</code>, <code>str</code>]], <code>post_files</code>:<code>Collection</code>[<code>Union</code>[<code>Path</code>, <code>str</code>]])</p>
+<p>Check that post_files exist and were modified after all the prefiles. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L40">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.from_tokens</code></p>
-
+<h2 id="Language-Model-data">Language Model data<a class="anchor-link" href="#Language-Model-data">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">lm_data</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=lm_data></a><code>lm_data</code></h4>
+<p><code>lm_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a></p>
+<p>Create a <a href="/data.html#DataBunch"><code>DataBunch</code></a> from the <code>datasets</code> for language modelling. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L262">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=LanguageModelLoader></a>class <code>LanguageModelLoader</code></h2>
+<p><code>LanguageModelLoader</code>(<code>dataset</code>:<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>, <code>bs</code>:<code>int</code>=<code>64</code>, <code>bptt</code>:<code>int</code>=<code>70</code>, <code>backwards</code>:<code>bool</code>=<code>False</code>)</p>
+<p>Create a dataloader with bptt slightly changing. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L185">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="o">.</span><span class="n">batchify</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=batchify></a><code>batchify</code></h4>
+<p><code>batchify</code>(<code>data</code>:<code>ndarray</code>) -&gt; <code>LongTensor</code></p>
+<p>Split the corpus <code>data</code> in batches. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L207">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="o">.</span><span class="n">get_batch</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=get_batch></a><code>get_batch</code></h4>
+<p><code>get_batch</code>(<code>i</code>:<code>int</code>, <code>seq_len</code>:<code>int</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]</p>
+<p>Create a batch at <code>i</code> of a given <code>seq_len</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L214">[source]</a></p>
+
+</div>
+
+</div>
+
+</div>
+</div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.general_check</code></p>
-
+<h2 id="Classifier-data">Classifier data<a class="anchor-link" href="#Classifier-data">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">classifier_data</span><span class="p">)</span>
+</pre></div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.numericalize</code></p>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=classifier_data></a><code>classifier_data</code></h4>
+<p><code>classifier_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a></p>
+<p>Function that transform the <code>datasets</code> in a <a href="/data.html#DataBunch"><code>DataBunch</code></a> for classification. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L267">[source]</a></p>
+
+</div>
+
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">SortSampler</span><span class="p">)</span>
+</pre></div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>TextDataset.tokenize</code></p>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=SortSampler></a>class <code>SortSampler</code></h2>
+<p><code>SortSampler</code>(<code>data_source</code>:<code>Collection</code>[<code>ndarray</code>], <code>key</code>:<code>Callable</code>[<code>int</code>, <code>int</code>]) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a></p>
+<p>Go through the text data by order of length. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L219">[source]</a></p>
+
+</div>
+
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">SortishSampler</span><span class="p">)</span>
+</pre></div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#TextMtd"><code>TextMtd</code></a></p>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2><a id=SortishSampler></a>class <code>SortishSampler</code></h2>
+<p><code>SortishSampler</code>(<code>data_source</code>:<code>Collection</code>[<code>ndarray</code>], <code>key</code>:<code>Callable</code>[<code>int</code>, <code>int</code>], <code>bs</code>:<code>int</code>) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a></p>
+<p>Go through the text data by order of length with a bit of randomness. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L228">[source]</a></p>
+
+</div>
+
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#classifier_data"><code>classifier_data</code></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#lm_data"><code>lm_data</code></a></p>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">pad_collate</span><span class="p">)</span>
+</pre></div>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4><a id=pad_collate></a><code>pad_collate</code></h4>
+<p><code>pad_collate</code>(<code>samples</code>:<code>Collection</code>[<code>Tuple</code>[<code>Collection</code>[<code>int</code>], <code>int</code>]], <code>pad_idx</code>:<code>int</code>=<code>1</code>, <code>pad_first</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]</p>
+<p>Function that collect samples and adds padding. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L249">[source]</a></p>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#pad_collate"><code>pad_collate</code></a></p>
 
 </div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#standard_data"><code>standard_data</code></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#text_data_from_csv"><code>text_data_from_csv</code></a></p>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#text_data_from_folder"><code>text_data_from_folder</code></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#text_data_from_ids"><code>text_data_from_ids</code></a></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/text.data.html#text_data_from_tokens"><code>text_data_from_tokens</code></a></p>
-
-</div>
-</div>
 </div>
 </div>
  

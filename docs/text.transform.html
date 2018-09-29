@@ -34,6 +34,12 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Main-class">Main class<a class="anchor-link" href="#Main-class">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>This step is actually divided in two phases: first, we apply a certain list of <code>rules</code> to the raw texts as preprocessing, then we use the tokenizer to split them in lists of tokens. Combining together those <code>rules</code>, the <code>tok_func</code>and the <code>lang</code> to process the texts is the role of the <a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a> class.</p>
 
 </div>
@@ -235,6 +241,12 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Customize-the-tokenizer">Customize the tokenizer<a class="anchor-link" href="#Customize-the-tokenizer">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>The <code>tok_func</code> must return an instance of the following class:</p>
 
 </div>
@@ -348,6 +360,18 @@ summary: "Module helps with formatting NLP data. Tokenizes text and creates voca
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>If you want to use your custom tokenizer, just subclass the <a href="/text.transform.html#BaseTokenizer"><code>BaseTokenizer</code></a> and override its <code>tokenizer</code> and <code>add_spec_cases</code> functions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Rules">Rules<a class="anchor-link" href="#Rules">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>Rules are just functions that take a string and return the modified string. This allows you to customize the list of <code>default_rules</code> as you please. Those <code>default_rules</code> are:</p>
 
 </div>

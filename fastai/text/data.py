@@ -110,6 +110,9 @@ class TextDataset():
     def from_ids(cls, folder:PathOrStr, name:str, id_suff:str='_ids', lbl_suff:str='_lbl',
                  itos:str='itos.pkl', **kwargs) -> 'TextDataset':
         "Create a dataset from an id, a dictionary and label file."
+        if not os.path.isfile(Path(folder)/f'{name}{lbl_suff}.npy'):
+            toks = np.load(Path(folder)/f'{name}{id_suff}.npy')
+            np.save(Path(folder)/f'{name}{lbl_suff}.npy', np.array([0] * len(toks)))
         orig = [Path(folder/file) for file in [f'{name}{id_suff}.npy', f'{name}{lbl_suff}.npy', itos]]
         dest = [Path(folder)/'tmp'/file for file in [f'{name}_ids.npy', f'{name}_lbl.npy', 'itos.pkl']]
         maybe_copy(orig, dest)
@@ -119,6 +122,9 @@ class TextDataset():
     def from_tokens(cls, folder:PathOrStr, name:str, tok_suff:str='_tok', lbl_suff:str='_lbl',
                     **kwargs) -> 'TextDataset':
         "Create a dataset from a token and label file."
+        if not os.path.isfile(Path(folder)/f'{name}{lbl_suff}.npy'):
+            toks = np.load(Path(folder)/f'{name}{tok_suff}.npy')
+            np.save(Path(folder)/f'{name}{lbl_suff}.npy', np.array([0] * len(toks)))
         orig = [Path(folder/file) for file in [f'{name}{tok_suff}.npy', f'{name}{lbl_suff}.npy']]
         dest = [Path(folder)/'tmp'/file for file in [f'{name}_tok.npy', f'{name}_lbl.npy']]
         maybe_copy(orig, dest)
@@ -132,6 +138,26 @@ class TextDataset():
         maybe_copy(orig, dest)
         return cls(folder, tokenizer, name=name, **kwargs)
 
+    @classmethod
+    def from_one_folder(cls, folder:PathOrStr, tokenizer:Tokenizer, name:str, classes:Classes,
+                    shuffle:bool=True, **kwargs) -> 'TextDataset':
+        "Create a dataset from one folder, labelled `classes[0]` (used for the test set)."
+        path = Path(folder)/'tmp'
+        os.makedirs(path, exist_ok=True)
+        texts = []
+        for fname in (Path(folder)/name).glob('*.*'):
+            texts.append(fname.open('r', encoding='utf8').read())
+        texts,labels = np.array(texts),np.array([classes[0]] * len(texts))
+        if shuffle:
+            idx = np.random.permutation(len(texts))
+            texts = texts[idx]
+        df = pd.DataFrame({'text':texts, 'labels':labels}, columns=['labels','text'])
+        if os.path.isfile(path/f'{name}.csv'):
+            if get_total_length(path/f'{name}.csv', 10000) != len(df):
+                df.to_csv(path/f'{name}.csv', index=False, header=False)
+        else: df.to_csv(path/f'{name}.csv', index=False, header=False)
+        return cls(folder, tokenizer, name=name, classes=classes, **kwargs)
+    
     @classmethod
     def from_folder(cls, folder:PathOrStr, tokenizer:Tokenizer, name:str, classes:Classes=None,
                     shuffle:bool=True, **kwargs) -> 'TextDataset':
@@ -288,6 +314,6 @@ def text_data_from_folder(path:PathOrStr, tokenizer:Tokenizer, train:str='train'
     train_ds = TextDataset.from_folder(path, tokenizer, train, shuffle=shuffle, vocab=vocab, **txt_kwargs)
     datasets = [train_ds, TextDataset.from_folder(path, tokenizer, valid, classes=train_ds.classes,
                                         shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs)]
-    if test: datasets.append(TextDataset.from_folder(path, tokenizer, test, classes=train_ds.classes,
+    if test: datasets.append(TextDataset.from_one_folder(path, tokenizer, test, classes=train_ds.classes,
                                         shuffle=shuffle, vocab=train_ds.vocab, **txt_kwargs))
     return data_func(datasets, path, **kwargs)
