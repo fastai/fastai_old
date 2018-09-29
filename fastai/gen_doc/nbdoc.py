@@ -6,7 +6,7 @@ from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, 
 from .docstrings import *
 from .core import *
 __all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
-           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod', 'get_source_link']
+           'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod', 'get_source_link', 'is_enum']
 
 MODULE_NAME = 'fastai'
 SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
@@ -163,7 +163,7 @@ def get_exports(mod):
     #public_names.sort(key=str.lower)
     return [o for o in public_names if not o.startswith('_')]
 
-def get_ft_names(mod)->List[str]:
+def get_ft_names(mod, include_inner=False)->List[str]:
     "Returns all the functions of module `mod`"
     # If the module has an attribute __all__, it picks those.
     # Otherwise, it returns all the functions defined inside a module.
@@ -176,9 +176,13 @@ def get_ft_names(mod)->List[str]:
         except: continue
         if mod.__file__.endswith('__init__.py'):
             if inspect.ismodule(elt): fn_names.append(elt_name)
+            else: continue
         else:
-            if (not mod.__file__.endswith('__init__.py')) and (fname != mod.__file__): continue
+            if (fname != mod.__file__): continue
             if inspect.isclass(elt) or inspect.isfunction(elt): fn_names.append(elt_name)
+            else: continue
+        if include_inner and inspect.isclass(elt) and not is_enum(elt.__class__):
+            fn_names.extend(get_inner_fts(elt))
     return fn_names
 
 def get_inner_fts(elt) -> List[str]:

@@ -6,7 +6,6 @@ from nbformat.sign import NotebookNotary
 from pathlib import Path
 from .core import *
 from .nbdoc import *
-from .convert2html import convert_all, convert_nb
 
 __all__ = ['create_module_page', 'generate_all', 'update_module_page', 'update_all', 'link_all', 'import_mod',
            'link_nb', 'update_notebooks']
@@ -49,10 +48,6 @@ def get_doc_cell(ft_name):
     "a code cell with the command to show the doc of a given function"
     code = f"show_doc({ft_name})"
     return get_code_cell(code, True)
-
-def is_enum(cls):
-    "True if cls is a enumerator class"
-    return cls == enum.Enum or cls == enum.EnumMeta
 
 def get_inner_fts(elt):
     "List the inner functions of a class"
@@ -106,18 +101,13 @@ def create_module_page(mod, dest_path, force=False):
     for name in get_exports(mod):
         if name in gvar_map: cells.append(get_md_cell(gvar_map[name]))
 
-    for ft_name in get_ft_names(mod):
+    for ft_name in get_ft_names(mod, include_inner=True):
         if not hasattr(mod, ft_name):
             warnings.warn(f"Module {strip_name} doesn't have a function named {ft_name}.")
             continue
         cells += _symbol_skeleton(ft_name)
         elt = getattr(mod, ft_name)
-        if inspect.isclass(elt) and not is_enum(elt.__class__):
-            in_ft_names = get_inner_fts(elt)
-            in_ft_names.sort(key = str.lower)
-            for name in in_ft_names:
-                cells += _symbol_skeleton(name)
-    nb['cells'] = init_cell + cells
+    nb['cells'] = init_cell + cells + [get_md_cell(UNDOC_HEADER)]
 
     doc_path = get_doc_path(mod, dest_path)
     json.dump(nb, open(doc_path, 'w' if force else 'x'))
@@ -157,8 +147,8 @@ def read_nb_content(cells, mod_name):
     doc_fns = {}
     for i, cell in enumerate(cells):
         if cell['cell_type'] == 'code':
-            match = re.match(r"(.*)show_doc\(([\w\.]*)", cell['source'])
-            if match is not None: doc_fns[match.groups()[1]] = i
+            for match in re.findall(r"show_doc\(([\w\.]*)", cell['source']):
+                doc_fns[match] = i
     return doc_fns
 
 def read_nb_types(cells):
@@ -188,10 +178,10 @@ def update_pos(pos_dict, start_key, nbr=2):
         if str.lower(key) >= str.lower(start_key): pos_dict[key] += nbr
     return pos_dict
 
-def insert_cells(cells, pos_dict, ft_name):
+def insert_cells(cells, pos_dict, ft_name, append=False):
     "Insert the function doc cells of a function in the list of cells at their correct position and updates the position dictionary"
     idx = get_insert_idx(pos_dict, ft_name)
-    if idx == -1: cells += [get_doc_cell(ft_name), get_empty_cell()]
+    if append or idx == -1: cells += [get_doc_cell(ft_name), get_empty_cell()]
     else:
         cells.insert(idx, get_doc_cell(ft_name))
         cells.insert(idx+1, get_empty_cell())
@@ -231,15 +221,33 @@ def get_imported_modules(cells):
     mods = [import_mod(m) for m in module_names]
     return [m for m in mods if m is not None]
 
+# START_HIDDEN_FT = '<div id="hidden_ft" hidden=true>'
+NEW_FT_HEADER = '## New Methods - Please document or move to the undocumented section'
+UNDOC_HEADER = '## Undocumented Methods - Methods moved below this line will intentionally be hidden'
+def parse_sections(cells):
+    old_cells, undoc_cells, new_cells = [], [], []
+    current_section = old_cells
+    for cell in cells:
+        if cell['cell_type'] == 'markdown':
+            if re.match(UNDOC_HEADER, cell['source']): current_section = undoc_cells
+            if re.match(NEW_FT_HEADER, cell['source']): current_section = new_cells
+        current_section.append(cell)
+    undoc_cells = undoc_cells or [get_md_cell(UNDOC_HEADER)]
+    new_cells = new_cells or [get_md_cell(NEW_FT_HEADER)]
+    return old_cells, undoc_cells, new_cells
+
+def remove_undoc_cells(cells):
+    old, _, _ = parse_sections(cells)
+    return old
+
 def update_module_page(mod, dest_path='.'):
     "Updates the documentation notebook of a given module"
     doc_path = get_doc_path(mod, dest_path)
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(doc_path)
-
     update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
-
     cells = nb['cells']
+    
     link_markdown_cells(cells, get_imported_modules(cells))
 
     type_dict = read_nb_types(cells)
@@ -251,21 +259,12 @@ def update_module_page(mod, dest_path='.'):
         else: cells.append(get_md_cell(code))
 
     pos_dict = read_nb_content(cells, strip_name)
-    for ft_name in get_ft_names(mod):
-        if not hasattr(mod, ft_name):
-            warnings.warn(f"Module {strip_name} doesn't have a function named {ft_name}.")
-            continue
-
-        if ft_name not in pos_dict.keys():
-            cells, pos_dict = insert_cells(cells, pos_dict, ft_name)
-        elt = getattr(mod, ft_name)
-        if inspect.isclass(elt) and not is_enum(elt.__class__):
-            in_ft_names = get_inner_fts(elt)
-            in_ft_names.sort(key = str.lower)
-            for name in in_ft_names:
-                if name not in pos_dict.keys():
-                    cells, pos_dict = insert_cells(cells, pos_dict, name)
-    nb['cells'] = cells
+    ft_names = get_ft_names(mod, include_inner=True)
+    new_fts = list(set(ft_names) - set(pos_dict.keys()))
+    if new_fts: print(f'Found new fuctions for {mod}. Please document:\n{new_fts}')
+    existing, undoc_cells, new_cells = parse_sections(cells)
+    for ft_name in new_fts: new_cells.extend([get_doc_cell(ft_name), get_empty_cell()])
+    if len(new_cells) > 1: nb['cells'] = existing + undoc_cells + new_cells
 
     json.dump(nb, open(doc_path,'w'))
     return doc_path
@@ -316,6 +315,7 @@ def get_module_from_path(source_path):
 def update_notebooks(source_path, dest_path=None, do_all=False, update_html=True, update_nb=False,
                      update_nb_links=True, html_path=None, create_missing_docs=False):
     "`source_path` can be a directory or a file. Assumes all modules reside in the fastai directory."
+    from .convert2html import convert_all, convert_nb
     fpath = Path(__file__).resolve()
     fastai_idx = list(reversed(fpath.parts)).index('fastai')
     dirpath = fpath.parents[fastai_idx] # should return 'fastai_pytorch'

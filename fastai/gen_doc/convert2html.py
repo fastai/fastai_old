@@ -31,7 +31,9 @@ def read_nb(fname):
 
 def convert_nb(fname, dest_path='.'):
     "Converts a notebook `fname` to html file in `dest_path` "
+    from .gen_notebooks import remove_undoc_cells
     nb = read_nb(fname)
+    nb['cells'] = remove_undoc_cells(nb['cells'])
     fname = Path(fname)
     dest_name = fname.with_suffix('.html').name
     meta = nb['metadata']
