@@ -30,21 +30,17 @@ Now you can install `fastai`. Note, that this is a beta test version at the mome
 
 ### Conda Install
 
-Currently we require a GPU with CUDA support. If your setup doesn't have CUDA-support you will most likely have to wait till pytorch.org releases 1.0.0 packages for `pytorch` and `torchvision`. You'll need to install the appropriate CUDA conda package based on what you've got installed on your system (i.e. instead of `cuda90` in the below, pick the appropriate option for whichever toolkit version you have installed: cuda75 cuda80  cuda90 cuda91 cuda92):
+To install fastai with CUDA 9.2 simply run (read the paragraph after this for other GPU and CPU options):
 
-    conda install cuda90 -c pytorch
+    conda install -c pytorch -c fastai fastai cuda92
 
-Then install fastai. Currently only `linux-64`/`python3.6` conda build is available:
+If your setup doesn't have CUDA support remove the `cuda92` above. For different versions of the CUDA toolkit, you'll need to install the appropriate CUDA conda package based on what you've got installed on your system (i.e. instead of `cuda92` in the above, pick the appropriate option for whichever toolkit version you have installed; to see a list of options type: `conda search "cuda*" -c pytorch`).
 
-    conda install -c fastai/label/test torchvision=0.2.1=pyhe7f20fa_0 fastai
-
-For other setups/platforms use `pip install` at the moment (see above).
-
-Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/). We are currently using a re-packaged torchvision in order to support pytorch-nightly.
+Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/). We are currently using a re-packaged torchvision in order to support pytorch-nightly, which is required for using fastai.
 
 ### Developer Install
 
-First, follow the instructions above for either `PyPi` or `Conda` to install `cudaXX`, `pytorch-nightly` and `torchvision`, but don't install the pre-packaged `fastai`. Instead in the last step do:
+First, follow the instructions above for either `PyPi` or `Conda`. Then remove the fastai package (`pip uninstall fastai` or `conda uninstall fastai`) and replace it with a [pip editable install](http://codumentary.blogspot.com/2014/11/python-tip-of-year-pip-install-editable.html):
 
     git clone https://github.com/fastai/fastai_pytorch
     cd fastai_pytorch
@@ -52,3 +48,4 @@ First, follow the instructions above for either `PyPi` or `Conda` to install `cu
     tools/run-after-git-clone
 
 Please refer to [CONTRIBUTING.md](https://github.com/fastai/fastai_pytorch/blob/master/CONTRIBUTING.md) and [the developers guide](http://docs.fast.ai/developers.html) for more details.
+

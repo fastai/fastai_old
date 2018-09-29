@@ -104,7 +104,7 @@ Now make a list for `setup.py`'s `install_requires`:
 
 and use the output to update `setup.py`.
 
-When merging make sure to not overwrite minimal version requirements, e.g. `pytorch>#0.5`.
+When merging make sure to not overwrite minimal version requirements, e.g. `pytorch>#0.5`. Also, you should manually clean these up since some will be deps only for doc authors or fastai library contributors; these don't need to be in the main requirements list.
 
 Cleanup:
 
