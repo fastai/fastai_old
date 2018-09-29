@@ -31,4 +31,4 @@ path = Path("tools")
 run_script(path/"trust-origin-git-config")
 
 # facilitate trusting notebooks under docs_src
-run_script(path/"trust-doc-nbs")
+run_script(path/"trust-doc-nbs-install-hook")

@@ -1,5 +1,5 @@
 
-# use tools/build to autogenerate all relevant files automatically
+# use tools/sync-nb-exports to autogenerate all relevant files automatically
 
 import json, fire, re, os.path
 from pathlib import Path

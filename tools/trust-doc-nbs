@@ -1,30 +1,23 @@
 #!/usr/bin/env python
 
-# This script facilitates trusting notebooks under docs_src.
-#
-# It should be run once immediately after running 'git clone'.
-#
-# It will install a post-merge hook in your .git/hooks/ directory.
-#
-# The installed hook will be executed by git automatically at the end
-# of 'git pull' only if it triggered an actual merge event and that
-# the latter was successful
-#
-# trust:
-#   tools/trust-doc-nbs
-#
-# distrust:
-#   rm .git/hooks/post-merge
-#
-# note: windows users, not using bash emulation, will need to invoke this tool as:
-#   python tools\trust-doc-nbs
+# This script signs all notebooks in the docs_src directory as trusted
+# It's is used as a git post-merge hook
 
-from shutil import copy2
+import nbformat.sign, sys, os
 from pathlib import Path
 
-fin  = Path("tools")/"trust-doc-nbs-hook"
-fout = Path(".git")/"hooks"/"post-merge"
+# make sure we are under the root of the project
+cur_dir = Path(".").resolve().name
+if (cur_dir == "tools"): os.chdir("..")
 
-print("Installing .git/hooks/post-merge to automatically trust docs_src notebooks")
-copy2(fin, fout)
-print("Success")
+print("Attention! Changing all notebooks under docs_src to be *trusted*", end="\r")
+
+path = Path('docs_src')
+for fname in path.glob("*.ipynb"):
+    with open(fname) as f:
+        nb = nbformat.read(f, as_version=4)
+        if not nbformat.sign.NotebookNotary().check_signature(nb):
+            nbformat.sign.NotebookNotary().sign(nb)
+
+# clear the output
+sys.stdout.write("\033[K")
