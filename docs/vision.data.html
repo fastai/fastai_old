@@ -14,9 +14,25 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="/vision.data.html#vision.data"><code>vision.data</code></a> contains the classes that define datasets handling <a href="/vision.image.html#Image"><code>Image</code></a> and their tranformations.</p>
+<p>This module contains the classes that define datasets handling <a href="/vision.image.html#Image"><code>Image</code></a> objects and their tranformations. As usual, we'll start with a quick overview, before we get in to the detailed API docs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Quickly-get-your-data-ready-for-training">Quickly get your data ready for training<a class="anchor-link" href="#Quickly-get-your-data-ready-for-training">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To get you started as easily as possible, the fastai provides two helper functions to create a <a href="/data.html#DataBunch"><code>DataBunch</code></a> object that you can directly use for training a classifier. To demonstrate them you'll first need to untar the file by executing the following cell. This will create a data folder containing a MNIST subset in <code>data/mnist_sample</code>.</p>
 
 </div>
 </div>
@@ -26,12 +42,185 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.gen_doc.nbdoc</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">fastai.vision</span> <span class="k">import</span> <span class="o">*</span> 
-<span class="kn">from</span> <span class="nn">fastai.docs</span> <span class="k">import</span> <span class="o">*</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">untar_mnist</span><span class="p">()</span>
 </pre></div>
 
+    </div>
 </div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The first way to define a <a href="/data.html#DataBunch"><code>DataBunch</code></a> object requires you to put your data in folders this way (the <code>test</code> folder is optional):</p>
+
+<pre><code>path\
+  train\
+    clas1\
+    clas2\
+    ...
+    clasn\
+  valid\
+    clas1\
+    clas2\
+    ...
+    clasn\
+  test\</code></pre>
+<p>You can then use <a href="/vision.data.html#image_data_from_folder"><code>image_data_from_folder</code></a>:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="n">MNIST_PATH</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here the datasets will be automatically created from the structure above, and we precise:</p>
+<ul>
+<li>the transforms to apply to the images in <code>ds_tfms</code> (here with <code>do_flip</code>=False because we don't want to flip numbers),</li>
+<li>the target <code>size</code> of our pictures (here 28).</li>
+</ul>
+<p>As all <a href="/data.html#DataBunch"><code>DataBunch</code></a>, data then as a <code>train_dl</code> and a <code>valid_dl</code> that are <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader"><code>DataLoader</code></a>. If you want to have a look at a few images in a batch inside a batch, you can use <a href="/vision.data.html#show_image_batch"><code>show_image_batch</code></a>, the <code>rows</code> argument being the number of rows and columns in the array.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_image_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The second way to define the data for a classifier requires a structure like this:</p>
+
+<pre><code>path\
+  train\
+  test\
+  labels.csv</code></pre>
+<p>where the labels.csv file defines what the label(s) of each image in the training set, like so:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">MNIST_PATH</span><span class="o">/</span><span class="s1">&#39;labels.csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>train/3/7463.png</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>train/3/21102.png</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>train/3/31559.png</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>train/3/46882.png</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>train/3/26209.png</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>You can then use <a href="/vision.data.html#image_data_from_csv"><code>image_data_from_csv</code></a>:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_csv</span><span class="p">(</span><span class="n">MNIST_PATH</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span>
+</pre></div>
+
+    </div>
 </div>
 </div>
 
@@ -98,35 +287,15 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>To demonstrate the datasets function, we'll use a subset of MNIST. If you haven't done it already, untar the mnist_sample.tgz file by executing the following cell (uncomment as needed).</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#untar_mnist()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="n">MNIST_PATH</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
 </pre></div>
 
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
-</pre></div>
-
-</div>
+    </div>
 </div>
 </div>
 
@@ -155,97 +324,6 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Create <a href="/data.html#DataBunch"><code>DataBunch</code></a> from <code>path</code> by splitting the data in <code>folder</code> and labelled in a file <code>csv_labels</code> between a training and valid set, putting aside <code>valid_pct</code> for the validation. An optional <code>test</code> folder contains unlabelled data and <code>suff</code> contains an optional suffix to add to the filenames in <code>csv_labels</code> (like '.jpg')</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Here is an example of valid <code>csv_labels</code> file. Note that since the filenames already contain the extensions '.png', <code>suffix</code> doesn't need to be used here.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/labels.csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>name</th>
-      <th>label</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>train/3/7463.png</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>train/3/21102.png</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>train/3/31559.png</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>train/3/46882.png</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>train/3/26209.png</td>
-      <td>0</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <p>The same list of kwargs as in <a href="/vision.data.html#image_data_from_folder"><code>image_data_from_folder</code></a> applies here.</p>
 
 </div>
@@ -259,7 +337,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -307,7 +385,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_image_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -375,7 +453,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <span class="n">show_images</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -406,16 +484,6 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">show_xy_images</span><span class="p">,</span> <span class="n">doc_string</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -455,8 +523,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_img_mask</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">open_image</span><span class="p">(</span><span class="s1">&#39;imgs/car_example.jpg&#39;</span><span class="p">),</span> <span class="n">open_mask</span><span class="p">(</span><span class="s1">&#39;imgs/mask_example.png&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_img_mask</span><span class="p">():</span> <span class="k">return</span> <span class="n">open_image</span><span class="p">(</span><span class="s1">&#39;imgs/car_example.jpg&#39;</span><span class="p">),</span> <span class="n">open_mask</span><span class="p">(</span><span class="s1">&#39;imgs/mask_example.png&#39;</span><span class="p">)</span>
 
 <span class="n">img</span><span class="p">,</span><span class="n">mask</span> <span class="o">=</span> <span class="n">get_img_mask</span><span class="p">()</span>
 <span class="n">bs</span><span class="p">,</span><span class="n">size</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span><span class="mi">128</span>
@@ -472,7 +539,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <span class="n">show_xy_images</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -494,6 +561,12 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Data-normalization">Data normalization<a class="anchor-link" href="#Data-normalization">&#182;</a></h3>
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -575,69 +648,7 @@ summary: "`vision.data` manages data input pipeline - folders -> transform -> ba
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>On MNIST the mean and std are 0.1307 and 0.3081 respectively (looked on Google). If you're using a pretrained model, you'll need to use the normalization that used to train the model. The imagenet norm and denorm functions are stored as constants inside the library named <code>2250]))</code> and <code>2250]))</code>. If you're training a model on CIFAR-10, you can also use <code>2610]))</code> and <code>2610]))</code>.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Note that if you normalize your input, you'll need to denormalize it when using functions like <a href="/vision.data.html#show_images"><code>show_images</code></a> or <a href="/vision.data.html#show_image_batch"><code>show_image_batch</code></a>. The following throws warnings, for instance, since the normalizes data has values with a mean to 0., so some are negatives. It also doesn't look compeltely right.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">image_data_from_folder</span><span class="p">(</span><span class="s1">&#39;../data/mnist_sample/&#39;</span><span class="p">,</span> <span class="n">ds_tfms</span><span class="o">=</span><span class="n">get_transforms</span><span class="p">(</span><span class="n">do_flip</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> 
-                              <span class="n">tfms</span><span class="o">=</span><span class="n">imagenet_norm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
-<span class="n">show_image_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-
-
-<div class="output_png output_subarea ">
-<img src="data:image/png;base64,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
-"
->
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The correct way to look at those pictures is to denormalize them first:</p>
+<p>Note that if you normalize your input, you'll need to denormalize it when using functions like <a href="/vision.data.html#show_images"><code>show_images</code></a> or <a href="/vision.data.html#show_image_batch"><code>show_image_batch</code></a>. The correct way to look at those pictures is to denormalize them first:</p>
 
 </div>
 </div>
@@ -652,7 +663,7 @@ Clipping input data to the valid range for imshow with RGB data ([0..1] for floa
 <span class="n">show_image_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">denorm</span><span class="o">=</span><span class="n">imagenet_denorm</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 

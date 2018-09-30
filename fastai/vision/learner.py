@@ -66,6 +66,11 @@ class ClassificationInterpretation():
         self.probs = y_pred.sigmoid() if sigmoid else y_pred
         self.pred_class = self.probs.argmax(dim=1)
 
+    @classmethod
+    def from_learner(cls, learn:Learner, loss_class:type=nn.CrossEntropyLoss, sigmoid:bool=True):
+        "Factory method to create from a Learner"
+        return cls(learn.data, *learn.get_preds(), loss_class=loss_class, sigmoid=sigmoid)
+
     def top_losses(self, k, largest=True):
         "`k` largest(/smallest) losses"
         return self.losses.topk(k, largest=largest)
