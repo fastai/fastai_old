@@ -146,7 +146,7 @@ class ItemBase():
 
 def download_url(url:str, dest:str, overwrite:bool=False)->None:
     # Download `url` to `dest` unless is exists and not `overwrite`
-    if os.path.exists(dest): return
+    if os.path.exists(dest) and not overwrite: return
     u = requests.get(url, stream=True)
     file_size = int(u.headers["Content-Length"])
     u = u.raw
