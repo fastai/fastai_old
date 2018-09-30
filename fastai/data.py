@@ -69,13 +69,13 @@ class DataBunch():
     @classmethod
     def create(cls, train_ds:Dataset, valid_ds:Dataset, test_ds:Dataset=None, path:PathOrStr='.', bs:int=64, 
                num_workers:int=default_cpus, tfms:Optional[Collection[Callable]]=None, device:torch.device=None, 
-               collate_fn:Callable=data_collate, **kwargs)->'DataBunch':
+               collate_fn:Callable=data_collate)->'DataBunch':
         "`DataBunch` factory. `bs` batch size, `ds_tfms` for `Dataset`, `tfms` for `DataLoader`."
         datasets = [train_ds,valid_ds]
         if test_ds is not None: datasets.append(test_ds)
         dls = [DataLoader(*o, num_workers=num_workers) for o in
                zip(datasets, (bs,bs*2,bs*2), (True,False,False))]
-        return cls(*dls, path=path, device=device, tfms=tfms, **kwargs)
+        return cls(*dls, path=path, device=device, tfms=tfms, collare_fn=collate_fn)
 
     def __getattr__(self,k:int)->Any: return getattr(self.train_ds, k)
     def holdout(self, is_test:bool=False)->DeviceDataLoader:
