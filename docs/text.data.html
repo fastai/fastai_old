@@ -72,8 +72,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=text_data_from_folder></a><code>text_data_from_folder</code></h4>
-<p><code>text_data_from_folder</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>)
-<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L283">[source]</a></p>
+<blockquote><p><code>text_data_from_folder</code>(<code>path</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>PathOrStr</code>, <code>KWArgs</code>, <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>'standard_data'</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L310">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -101,8 +102,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=text_data_from_csv></a><code>text_data_from_csv</code></h4>
-<p><code>text_data_from_csv</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
-<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L273">[source]</a></p>
+<blockquote><p><code>text_data_from_csv</code>(<code>path</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>PathOrStr</code>, <code>KWArgs</code>, <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>'standard_data'</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L300">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -130,8 +132,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=text_data_from_tokens></a><code>text_data_from_tokens</code></h4>
-<p><code>text_data_from_tokens</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
-<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L261">[source]</a></p>
+<blockquote><p><code>text_data_from_tokens</code>(<code>path</code>:<code>PathOrStr</code>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>PathOrStr</code>, <code>KWArgs</code>, <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>'standard_data'</code>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L290">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -159,8 +162,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=text_data_from_ids></a><code>text_data_from_ids</code></h4>
-<p><code>text_data_from_ids</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>Union</code>[<code>Path</code>, <code>str</code>], <code>Dict</code>[<code>str</code>, <code>Any</code>], <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>&lt;function standard_data at 0x7f434baae510&gt;</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
-<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L249">[source]</a></p>
+<blockquote><p><code>text_data_from_ids</code>(<code>path</code>:<code>PathOrStr</code>, <code>train</code>:<code>str</code>=<code>'train'</code>, <code>valid</code>:<code>str</code>=<code>'valid'</code>, <code>test</code>:<code>Optional</code>[<code>str</code>]=<code>None</code>, <code>data_func</code>:<code>Callable</code>[<code>Collection</code>[<a href="/data.html#DatasetBase"><code>DatasetBase</code></a>], <code>PathOrStr</code>, <code>KWArgs</code>, <a href="/data.html#DataBunch"><code>DataBunch</code></a>]=<code>'standard_data'</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L280">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -332,9 +336,10 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2><a id=TextDataset></a>class <code>TextDataset</code></h2>
-<p><code>TextDataset</code>(<code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>max_vocab</code>:<code>int</code>=<code>60000</code>, <code>chunksize</code>:<code>int</code>=<code>10000</code>, <code>name</code>:<code>str</code>=<code>'train'</code>, <code>min_freq</code>:<code>int</code>=<code>2</code>, <code>n_labels</code>:<code>int</code>=<code>1</code>, <code>create_mtd</code>:<a href="/text.data.html#TextMtd"><code>TextMtd</code></a>=<code>&lt;TextMtd.CSV: 1&gt;</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>]=<code>None</code>)
+<h2><a id=TextDataset></a><code>class</code> <code>TextDataset</code></h2>
+<blockquote><p><code>TextDataset</code>(<code>path</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>vocab</code>:<a href="/text.transform.html#Vocab"><code>Vocab</code></a>=<code>None</code>, <code>max_vocab</code>:<code>int</code>=<code>60000</code>, <code>chunksize</code>:<code>int</code>=<code>10000</code>, <code>name</code>:<code>str</code>=<code>'train'</code>, <code>min_freq</code>:<code>int</code>=<code>2</code>, <code>n_labels</code>:<code>int</code>=<code>1</code>, <code>create_mtd</code>:<a href="/text.data.html#TextMtd"><code>TextMtd</code></a>=<code>&lt;TextMtd.CSV: 1&gt;</code>, <code>classes</code>:<code>Classes</code>=<code>None</code>)
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L16">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -379,8 +384,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=from_folder></a><code>from_folder</code></h4>
-<p><code>from_folder</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>]=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<blockquote><p><code>from_folder</code>(<code>folder</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Classes</code>=<code>None</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L161">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -407,8 +413,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=from_one_folder></a><code>from_one_folder</code></h4>
-<p><code>from_one_folder</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Collection</code>[<code>Any</code>], <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<blockquote><p><code>from_one_folder</code>(<code>folder</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>classes</code>:<code>Classes</code>, <code>shuffle</code>:<code>bool</code>=<code>True</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L141">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -435,8 +442,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=from_csv></a><code>from_csv</code></h4>
-<p><code>from_csv</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<blockquote><p><code>from_csv</code>(<code>folder</code>:<code>PathOrStr</code>, <code>tokenizer</code>:<a href="/text.transform.html#Tokenizer"><code>Tokenizer</code></a>, <code>name</code>:<code>str</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L133">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -463,8 +471,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=from_tokens></a><code>from_tokens</code></h4>
-<p><code>from_tokens</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>name</code>:<code>str</code>, <code>tok_suff</code>:<code>str</code>=<code>'_tok'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<blockquote><p><code>from_tokens</code>(<code>folder</code>:<code>PathOrStr</code>, <code>name</code>:<code>str</code>, <code>tok_suff</code>:<code>str</code>=<code>'_tok'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L121">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -491,8 +500,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=from_ids></a><code>from_ids</code></h4>
-<p><code>from_ids</code>(<code>folder</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>name</code>:<code>str</code>, <code>id_suff</code>:<code>str</code>=<code>'_ids'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
+<blockquote><p><code>from_ids</code>(<code>folder</code>:<code>PathOrStr</code>, <code>name</code>:<code>str</code>, <code>id_suff</code>:<code>str</code>=<code>'_ids'</code>, <code>lbl_suff</code>:<code>str</code>=<code>'_lbl'</code>, <code>itos</code>:<code>str</code>=<code>'itos.pkl'</code>, <code>kwargs</code>) -&gt; <code>TextDataset</code>
 <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L109">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -532,7 +542,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=tokenize></a><code>tokenize</code></h4>
-<p><code>tokenize</code>()</p>
+<blockquote><p><code>tokenize</code>()</p>
+</blockquote>
 <p>Tokenize the texts in the csv file. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L67">[source]</a></p>
 
 </div>
@@ -553,7 +564,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=numericalize></a><code>numericalize</code></h4>
-<p><code>numericalize</code>()</p>
+<blockquote><p><code>numericalize</code>()</p>
+</blockquote>
 <p>Numericalize the tokens in the token file. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L86">[source]</a></p>
 
 </div>
@@ -587,7 +599,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=clear></a><code>clear</code></h4>
-<p><code>clear</code>()</p>
+<blockquote><p><code>clear</code>()</p>
+</blockquote>
 <p>Remove all temporary files. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L94">[source]</a></p>
 
 </div>
@@ -605,16 +618,6 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">check_ids</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -624,7 +627,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=check_ids></a><code>check_ids</code></h4>
-<p><code>check_ids</code>() -&gt; <code>bool</code></p>
+<blockquote><p><code>check_ids</code>() -&gt; <code>bool</code></p>
+</blockquote>
 <p>Check if a new numericalization is needed. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L47">[source]</a></p>
 
 </div>
@@ -636,16 +640,6 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">check_toks</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -655,7 +649,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=check_toks></a><code>check_toks</code></h4>
-<p><code>check_toks</code>() -&gt; <code>bool</code></p>
+<blockquote><p><code>check_toks</code>() -&gt; <code>bool</code></p>
+</blockquote>
 <p>Check if a new tokenization is needed. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L59">[source]</a></p>
 
 </div>
@@ -667,16 +662,6 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">TextDataset</span><span class="o">.</span><span class="n">general_check</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -686,7 +671,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=general_check></a><code>general_check</code></h4>
-<p><code>general_check</code>(<code>pre_files</code>:<code>Collection</code>[<code>Union</code>[<code>Path</code>, <code>str</code>]], <code>post_files</code>:<code>Collection</code>[<code>Union</code>[<code>Path</code>, <code>str</code>]])</p>
+<blockquote><p><code>general_check</code>(<code>pre_files</code>:<code>Collection</code>[<code>PathOrStr</code>], <code>post_files</code>:<code>Collection</code>[<code>PathOrStr</code>])</p>
+</blockquote>
 <p>Check that post_files exist and were modified after all the prefiles. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L40">[source]</a></p>
 
 </div>
@@ -703,17 +689,387 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>A language model is trained to guess what the next word is inside a flow of words. We don't feed it the different texts separately but concatenate them all together in a big array. To create the batches, we split this array into <code>bs</code> chuncks of continuous texts. Note that in all NLP tasks, we use the pytoch convention of sequence length being the first dimension (and batch size being the second one) so we transpose that array so that we can read the chunks of texts in columns. Here is an example of batch from our imdb sample dataset.</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">lm_data</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">get_imdb</span><span class="p">()</span>
+<span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">))</span>
+<span class="n">example</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="mi">20</span><span class="p">,:</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">data</span><span class="o">.</span><span class="n">train_ds</span><span class="o">.</span><span class="n">vocab</span><span class="o">.</span><span class="n">textify</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">example</span><span class="p">])</span>
+<span class="n">texts</span>
 </pre></div>
 
 </div>
 </div>
 </div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>\n</td>
+      <td>for</td>
+      <td>the</td>
+      <td>could</td>
+      <td>wells</td>
+      <td>are</td>
+      <td>big</td>
+      <td>.</td>
+      <td>for</td>
+      <td>my</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>xxbos</td>
+      <td>all</td>
+      <td>xxunk</td>
+      <td>have</td>
+      <td>'</td>
+      <td>:</td>
+      <td>an</td>
+      <td>after</td>
+      <td>him</td>
+      <td>xxunk</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>xxfld</td>
+      <td>of</td>
+      <td>beer</td>
+      <td>ran</td>
+      <td>original</td>
+      <td>stop</td>
+      <td>incompetent</td>
+      <td>shooting</td>
+      <td>in</td>
+      <td>shot</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>five</td>
+      <td>xxunk</td>
+      <td>away</td>
+      <td>narrative</td>
+      <td>and</td>
+      <td>as</td>
+      <td>carradine</td>
+      <td>future</td>
+      <td>so</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>un</td>
+      <td>minutes</td>
+      <td>could</td>
+      <td>from</td>
+      <td></td>
+      <td>xxunk</td>
+      <td>he</td>
+      <td>she</td>
+      <td>.</td>
+      <td>far</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>-</td>
+      <td>while</td>
+      <td>have</td>
+      <td>that</td>
+      <td>as</td>
+      <td>what</td>
+      <td>seemed</td>
+      <td>beats</td>
+      <td>\n</td>
+      <td>up</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>xxunk</td>
+      <td>the</td>
+      <td>been</td>
+      <td>thing</td>
+      <td>has</td>
+      <td>you</td>
+      <td>in</td>
+      <td>a</td>
+      <td>xxbos</td>
+      <td>my</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>-</td>
+      <td>protagonist</td>
+      <td>the</td>
+      <td>,</td>
+      <td>been</td>
+      <td>want</td>
+      <td>the</td>
+      <td>xxunk</td>
+      <td>xxfld</td>
+      <td>xxunk</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>believable</td>
+      <td>is</td>
+      <td>xxunk</td>
+      <td>but</td>
+      <td>noted</td>
+      <td>.</td>
+      <td>dream</td>
+      <td>xxunk</td>
+      <td>1</td>
+      <td>,</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>!</td>
+      <td>xxunk</td>
+      <td>for</td>
+      <td>anyway</td>
+      <td>.</td>
+      <td>use</td>
+      <td>.</td>
+      <td>before</td>
+      <td>after</td>
+      <td>i</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>meg</td>
+      <td>her</td>
+      <td>a</td>
+      <td>.</td>
+      <td>viewers</td>
+      <td>your</td>
+      <td>\n\n</td>
+      <td>johnny</td>
+      <td>the</td>
+      <td>thought</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>ryan</td>
+      <td>early</td>
+      <td>massive</td>
+      <td>i</td>
+      <td>may</td>
+      <td>time</td>
+      <td>a</td>
+      <td>can</td>
+      <td>failure</td>
+      <td>it</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>does</td>
+      <td>life</td>
+      <td>series</td>
+      <td>actually</td>
+      <td>find</td>
+      <td>to</td>
+      <td>lack</td>
+      <td>get</td>
+      <td>of</td>
+      <td>would</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>n't</td>
+      <td>as</td>
+      <td>of</td>
+      <td>was</td>
+      <td>it</td>
+      <td>start</td>
+      <td>of</td>
+      <td>his</td>
+      <td>"</td>
+      <td>xxunk</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>even</td>
+      <td>a</td>
+      <td>gags</td>
+      <td>getting</td>
+      <td>informative</td>
+      <td>planning</td>
+      <td>humor</td>
+      <td>revenge</td>
+      <td>the</td>
+      <td>in</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>look</td>
+      <td>butcher</td>
+      <td>built</td>
+      <td>into</td>
+      <td>to</td>
+      <td>and</td>
+      <td>is</td>
+      <td>.</td>
+      <td>xxunk</td>
+      <td>my</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>her</td>
+      <td>.</td>
+      <td>upon</td>
+      <td>this</td>
+      <td>note</td>
+      <td>not</td>
+      <td>the</td>
+      <td>still</td>
+      <td>"</td>
+      <td>xxunk</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>usual</td>
+      <td>weird</td>
+      <td>gags</td>
+      <td>film</td>
+      <td>plot</td>
+      <td>filming</td>
+      <td>biggest</td>
+      <td>alive</td>
+      <td>at</td>
+      <td>.</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>xxunk</td>
+      <td>stuff</td>
+      <td>,</td>
+      <td>,</td>
+      <td>details</td>
+      <td>until</td>
+      <td>problem</td>
+      <td>,</td>
+      <td>the</td>
+      <td>first</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>lovable</td>
+      <td>.</td>
+      <td>but</td>
+      <td>although</td>
+      <td>that</td>
+      <td>everything</td>
+      <td>with</td>
+      <td>it</td>
+      <td>box</td>
+      <td>,</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Then, as suggested in <a href="https://arxiv.org/abs/1708.02182">this article</a> from Stephen Merity et al., we don't use a fixed <code>bptt</code> through the different batches but slightly change it from batch to batch.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">iter_dl</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iter_dl</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>torch.Size([71, 64])
+torch.Size([73, 64])
+torch.Size([74, 64])
+torch.Size([73, 64])
+torch.Size([66, 64])
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is all done internally when we use the following inside of the <code>text_data</code> functions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
 
 <div class="output_wrapper">
 <div class="output">
@@ -723,8 +1079,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=lm_data></a><code>lm_data</code></h4>
-<p><code>lm_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a></p>
-<p>Create a <a href="/data.html#DataBunch"><code>DataBunch</code></a> from the <code>datasets</code> for language modelling. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L262">[source]</a></p>
+<blockquote><p><code>lm_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>PathOrStr</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L263">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -733,18 +1090,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Create a <code>DataBunch</code> from the <code>datasets</code> for language modelling. Internally calls the next class, that takes the kwargs to define the dataloaders.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -753,9 +1107,10 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2><a id=LanguageModelLoader></a>class <code>LanguageModelLoader</code></h2>
-<p><code>LanguageModelLoader</code>(<code>dataset</code>:<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>, <code>bs</code>:<code>int</code>=<code>64</code>, <code>bptt</code>:<code>int</code>=<code>70</code>, <code>backwards</code>:<code>bool</code>=<code>False</code>)</p>
-<p>Create a dataloader with bptt slightly changing. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L185">[source]</a></p>
+<h2><a id=LanguageModelLoader></a><code>class</code> <code>LanguageModelLoader</code></h2>
+<blockquote><p><code>LanguageModelLoader</code>(<code>dataset</code>:<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>, <code>bs</code>:<code>int</code>=<code>64</code>, <code>bptt</code>:<code>int</code>=<code>70</code>, <code>backwards</code>:<code>bool</code>=<code>False</code>)
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L185">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -764,18 +1119,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Takes the texts from <code>dataset</code> and concatenate them all, then create a big array with <code>bs</code> columns (transposed from the data source so that we read the texts in the columns). Spits batches with a size approximately equal to <code>bptt</code> but changing at every batch. If <code>backwards</code> is True, reverses the original text.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="o">.</span><span class="n">batchify</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -785,8 +1137,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=batchify></a><code>batchify</code></h4>
-<p><code>batchify</code>(<code>data</code>:<code>ndarray</code>) -&gt; <code>LongTensor</code></p>
-<p>Split the corpus <code>data</code> in batches. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L207">[source]</a></p>
+<blockquote><p><code>batchify</code>(<code>data</code>:<code>ndarray</code>) -&gt; <code>LongTensor</code>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L207">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -795,18 +1148,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Called at the inialization to create the big array of text ids from the <code>data</code> array.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">LanguageModelLoader</span><span class="o">.</span><span class="n">get_batch</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -816,7 +1166,8 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=get_batch></a><code>get_batch</code></h4>
-<p><code>get_batch</code>(<code>i</code>:<code>int</code>, <code>seq_len</code>:<code>int</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]</p>
+<blockquote><p><code>get_batch</code>(<code>i</code>:<code>int</code>, <code>seq_len</code>:<code>int</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]</p>
+</blockquote>
 <p>Create a batch at <code>i</code> of a given <code>seq_len</code>. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L214">[source]</a></p>
 
 </div>
@@ -833,17 +1184,79 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>When preparing the data for a classifier, we keep the different texts separate, which poses another challenge for the creation of batches: since they don't all have the same length, we can't easily collate them together in batches. To help with this we use two different techniques:</p>
+<ul>
+<li>padding: each text is padded with the <code>PAD</code> token to get all the ones we picked to the same size</li>
+<li>sorting the texts (ish): to avoid having together a very long text with a very short one (which would then have a lot of <code>PAD</code> tokens), we regroup the texts by order of length. For the training set, we still add some randomness to avoid showing the same batches at every step of the training.</li>
+</ul>
+<p>Here is an example of batch with padding (the padding index is 1, and the padding is applied before the sentences start).</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">classifier_data</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">get_imdb</span><span class="p">(</span><span class="n">classifier</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">iter_dl</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iter_dl</span><span class="p">)</span>
+<span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iter_dl</span><span class="p">)</span>
+<span class="n">x</span><span class="p">[:</span><span class="mi">20</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">:]</span>
 </pre></div>
 
 </div>
 </div>
 </div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [   1,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [  42,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [  43,    1,    1,    1,    1,    1,    1,    1,    1,    1],
+        [  44,   42,   42,    1,    1,    1,    1,    1,    1,    1],
+        [  39,   43,   43,   42,   42,   42,   42,    1,    1,    1],
+        [  21,   44,   44,   43,   43,   43,   43,   42,    1,    1],
+        [  22,   39,   39,   44,   44,   44,   44,   43,   42,   42],
+        [ 467, 5486,   74,   39,   39,   39,   39,   44,   43,   43],
+        [  52, 3662,   66,    2,   12,  364,   14,   39,   44,   44],
+        [  36,    5,  221,  129,   17,   92,   25,   12,   39,   39],
+        [ 123, 3908,  530,    4,  179,   72,    9,   74,   20,    2],
+        [ 506,    0, 2027,  134,  635,   37,    6,   49,    6,  103],
+        [   7,   13,    8, 1002,   23, 4193,  637,   14,  826,  544],
+        [   2,   45,    7,    4,   14,  132,    0,   25,  310,   59]],
+       device=&#39;cuda:0&#39;)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>All of this is done behind the scenes when calling the following in a <code>text_data</code> function</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
 
 <div class="output_wrapper">
 <div class="output">
@@ -853,8 +1266,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=classifier_data></a><code>classifier_data</code></h4>
-<p><code>classifier_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>Union</code>[<code>Path</code>, <code>str</code>], <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a></p>
-<p>Function that transform the <code>datasets</code> in a <a href="/data.html#DataBunch"><code>DataBunch</code></a> for classification. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L267">[source]</a></p>
+<blockquote><p><code>classifier_data</code>(<code>datasets</code>:<code>Collection</code>[<a href="/text.data.html#TextDataset"><code>TextDataset</code></a>], <code>path</code>:<code>PathOrStr</code>, <code>kwargs</code>) -&gt; <a href="/data.html#DataBunch"><code>DataBunch</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L268">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -863,18 +1277,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Create a <code>DataBunch</code> in <code>path</code> from the <code>datasets</code> for language modelling. The kwargs are passed to the next classes and can contain: the batchsize <code>bs</code>, the <code>bptt</code>, the padding index <code>pad_idx</code> and wether or not to apply the <code>pad_first</code>.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">SortSampler</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -883,9 +1294,10 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2><a id=SortSampler></a>class <code>SortSampler</code></h2>
-<p><code>SortSampler</code>(<code>data_source</code>:<code>Collection</code>[<code>ndarray</code>], <code>key</code>:<code>Callable</code>[<code>int</code>, <code>int</code>]) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a></p>
-<p>Go through the text data by order of length. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L219">[source]</a></p>
+<h2><a id=SortSampler></a><code>class</code> <code>SortSampler</code></h2>
+<blockquote><p><code>SortSampler</code>(<code>data_source</code>:<code>NPArrayList</code>, <code>key</code>:<code>KeyFunc</code>) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L219">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -894,18 +1306,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>pytorch <code>Sampler</code> to batchify the <code>data_source</code> by order of length of the texts. Used for the validation and (if applicable) the test set.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">SortishSampler</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -914,9 +1323,10 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2><a id=SortishSampler></a>class <code>SortishSampler</code></h2>
-<p><code>SortishSampler</code>(<code>data_source</code>:<code>Collection</code>[<code>ndarray</code>], <code>key</code>:<code>Callable</code>[<code>int</code>, <code>int</code>], <code>bs</code>:<code>int</code>) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a></p>
-<p>Go through the text data by order of length with a bit of randomness. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L228">[source]</a></p>
+<h2><a id=SortishSampler></a><code>class</code> <code>SortishSampler</code></h2>
+<blockquote><p><code>SortishSampler</code>(<code>data_source</code>:<code>NPArrayList</code>, <code>key</code>:<code>KeyFunc</code>, <code>bs</code>:<code>int</code>) :: <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler"><code>Sampler</code></a>
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L228">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -925,18 +1335,15 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>pytorch <code>Sampler</code> to batchify with size <code>bs</code> the <code>data_source</code> by order of length of the texts with a bit of randomness. Used for the training set.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">show_doc</span><span class="p">(</span><span class="n">pad_collate</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
 
 <div class="output_wrapper">
 <div class="output">
@@ -946,8 +1353,9 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 
 <div class="output_markdown rendered_html output_subarea ">
 <h4><a id=pad_collate></a><code>pad_collate</code></h4>
-<p><code>pad_collate</code>(<code>samples</code>:<code>Collection</code>[<code>Tuple</code>[<code>Collection</code>[<code>int</code>], <code>int</code>]], <code>pad_idx</code>:<code>int</code>=<code>1</code>, <code>pad_first</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]</p>
-<p>Function that collect samples and adds padding. <a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L249">[source]</a></p>
+<blockquote><p><code>pad_collate</code>(<code>samples</code>:<code>BatchSamples</code>, <code>pad_idx</code>:<code>int</code>=<code>1</code>, <code>pad_first</code>:<code>bool</code>=<code>True</code>) -&gt; <code>Tuple</code>[<code>LongTensor</code>, <code>LongTensor</code>]
+<a href="https://github.com/fastai/fastai_pytorch/blob/master/fastai/text/data.py#L249">[source]</a></p>
+</blockquote>
 
 </div>
 
@@ -956,6 +1364,13 @@ summary: "NLP data loading pipeline. Supports csv, folders, and preprocessed dat
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Function used by the pytorch <code>DataLoader</code> to collate the <code>samples</code> in batches while adding padding with <code>pad_idx</code>. If <code>pad_first</code> is True, padding is applied at the beginning (before the sentence starts) otherwise it's applied at the end.</p>
+
+</div>
+</div>
 </div>
 </div>
  

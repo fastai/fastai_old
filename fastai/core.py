@@ -143,3 +143,20 @@ class ItemBase():
     @property
     @abstractmethod
     def data(self): pass
+
+def download_url(url:str, dest:str, overwrite:bool=False)->None:
+    # Download `url` to `dest` unless is exists and not `overwrite`
+    if os.path.exists(dest): return
+    u = requests.get(url, stream=True)
+    file_size = int(u.headers["Content-Length"])
+    u = u.raw
+
+    with open(dest,'wb') as f:
+        pbar = progress_bar(range(file_size), auto_update=False)
+        nbytes,buffer = 0,[1]
+        while len(buffer):
+            buffer = u.read(8192)
+            nbytes += len(buffer)
+            pbar.update(nbytes)
+            f.write(buffer)
+
