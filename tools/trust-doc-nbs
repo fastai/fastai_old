@@ -16,7 +16,7 @@ if (cur_dir == "tools"): os.chdir("..")
 # We know we run under git when this script is invoked as
 # .git/hooks/post-merge. When it is invoked as tools/trust-doc-nbs we
 # can be more verbose.
-stealth = True if "post-merge" in __file__ else None
+stealth = True if "post-merge" in __file__ else False
 end = "\r" if stealth else "\n"
 
 print("Attention! Signing notebooks under docs_src as *trusted*", end=end)
