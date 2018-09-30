@@ -33,6 +33,7 @@ matplotlib
 numpy>=1.12
 pandas
 Pillow
+requests
 scipy
 spacy
 torchvision>=0.2.1
