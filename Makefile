@@ -54,7 +54,7 @@ lint: ## check style with flake8
 	flake8 fastai tests
 
 test: ## run tests quickly with the default Python
-	py.test
+	python setup.py test
 
 test-all: ## run tests on every Python version with tox
 	tox
@@ -65,8 +65,9 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
+# XXX: remove --repository testpypi for release
 release: dist ## package and upload a release
-	twine upload dist/*
+	twine upload  --repository testpypi dist/*
 
 dist: clean ## builds source and wheel package
 	python setup.py sdist

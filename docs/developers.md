@@ -161,6 +161,14 @@ The same can be repeated for getting test requirements, just repeat the same pro
 
 Before building the packages make sure the test suite runs successfully:
 
+
+   ```
+   make test
+   ```
+
+or
+
+
    ```
    python setup.py test
    ```
@@ -186,45 +194,21 @@ XXX: travis-ci.org as well.
 
 (XXX: this is for test.pypi.org for now, will need a section for pypi.org)
 
-1. Clear out the `dist/` folder
+1. Build the package (source and wheel)
 
    ```
-   rm -r dist
+   make dist
    ```
 
-2. Build the source distribution:
+2. Publish:
 
    ```
-   python setup.py sdist
-   ```
-
-3. Build the wheel:
-
-   ```
-   python setup.py bdist_wheel
-   ```
-
-4. Test the packages:
-
-   ```
-   twine check dist/*
-   ```
-
-5. Publish:
-
-   ```
-   twine upload --repository testpypi dist/*
-   ```
-
-   If you haven't created `~/.pypirc` as explained earlier, use this instead:
-
-   ```
-   twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+   make release
    ```
 
    Note: PyPI won't allow re-uploading the same package filename, even if it's a minor fix. If you delete the file from pypi or test.pypi it still won't let you do it. So either a micro-level version needs to be bumped (A.B.C++) or some [post release string added](https://www.python.org/dev/peps/pep-0440/#post-releases) in `setup.py`.
 
-6. Test:
+3. Test that the uploaded package is found and gets installed:
 
    Test the webpage: [https://test.pypi.org/project/fastai/](https://test.pypi.org/project/fastai/)
 
@@ -236,7 +220,7 @@ XXX: travis-ci.org as well.
 
    Hmm, it looks like it wants an explicit `fastai==1.0.0b5` argument, otherwise it tries to install `fastai-0.7`.
 
-   May be add: `--force-reinstall` or manually remove preinstalled `fastai` first from your python installation: e.g. `python3.6/site-packages/fastai*`, run `python -m site` to find out the location.
+   XXX: May be add: `--force-reinstall` or manually remove preinstalled `fastai` first from your python installation: e.g. `python3.6/site-packages/fastai*`, run `python -m site` to find out the location.
 
 #### Various Helper Tools
 
