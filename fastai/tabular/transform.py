@@ -5,24 +5,24 @@ __all__ = ['Categorify', 'FillMissing', 'FillStrategy', 'TabularTransform']
 
 @dataclass
 class TabularTransform():
-    "A transform for tabular dataframe"
+    "A transform for tabular dataframes."
     cat_names:StrList
     cont_names:StrList
 
     def __call__(self, df:DataFrame, test:bool=False):
-        "Applies the correct function to `df` depending if it's the training dataframe or not"
+        "Apply the correct function to `df` depending on `test`."
         func = self.apply_test if test else self.apply_train
         func(df)
 
     def apply_train(self, df:DataFrame):
-        "Function applied to `df` if it's the train set"
+        "Function applied to `df` if it's the train set."
         raise NotImplementedError
     def apply_test(self, df:DataFrame):
-        "Function applied to `df` if it's the test set"
+        "Function applied to `df` if it's the test set."
         self.apply_train(df)
 
 class Categorify(TabularTransform):
-    "Transforms the categorical variables to that type."
+    "Transform the categorical variables to that type."
 
     def apply_train(self, df:DataFrame):
         self.categories = {}
@@ -38,7 +38,7 @@ FillStrategy = IntEnum('FillStrategy', 'MEDIAN COMMON CONSTANT')
 
 @dataclass
 class FillMissing(TabularTransform):
-    "Fill the missing values in continuous columns"
+    "Fill the missing values in continuous columns."
     fill_strategy:FillStrategy=FillStrategy.MEDIAN
     add_col:bool=True
     fill_val:float=0.

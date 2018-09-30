@@ -63,8 +63,13 @@ class ClassificationInterpretation():
                  loss_class:type=nn.CrossEntropyLoss, sigmoid:bool=True):
         self.data,self.y_pred,self.y_true,self.loss_class = data,y_pred,y_true,loss_class
         self.losses = calc_loss(y_pred, y_true, loss_class=loss_class)
-        self.probs = preds.sigmoid() if sigmoid else preds
+        self.probs = y_pred.sigmoid() if sigmoid else y_pred
         self.pred_class = self.probs.argmax(dim=1)
+
+    @classmethod
+    def from_learner(cls, learn:Learner, loss_class:type=nn.CrossEntropyLoss, sigmoid:bool=True):
+        "Factory method to create from a Learner"
+        return cls(learn.data, *learn.get_preds(), loss_class=loss_class, sigmoid=sigmoid)
 
     def top_losses(self, k, largest=True):
         "`k` largest(/smallest) losses"
@@ -77,13 +82,13 @@ class ClassificationInterpretation():
         rows = math.ceil(math.sqrt(k))
         fig,axes = plt.subplots(rows,rows,figsize=figsize)
         for i,idx in enumerate(self.top_losses(k, largest=largest)[1]):
-            t=data.valid_ds[idx]
+            t=self.data.valid_ds[idx]
             t[0].show(ax=axes.flat[i], title=
-                f'{classes[self.pred_class[idx]]}/{classes[t[1]]} / {self.losses[idx]:.2f} / {self.probs[idx][0]:.2f}')
+                f'{classes[self.pred_class[idx]]}/{classes[t[1]]} / {self.losses[idx]:.2f} / {self.probs[idx][t[1]]:.2f}')
 
     def confusion_matrix(self):
         "Confusion matrix as an `np.ndarray`"
-        x=torch.arange(0,data.c)
+        x=torch.arange(0,self.data.c)
         cm = ((self.pred_class==x[:,None]) & (self.y_true==x[:,None,None])).sum(2)
         return cm.cpu().numpy()
 
@@ -95,7 +100,7 @@ class ClassificationInterpretation():
         plt.imshow(cm, interpolation='nearest', cmap=cmap)
         plt.title(title)
         plt.colorbar()
-        tick_marks = np.arange(len(classes))
+        tick_marks = np.arange(len(self.data.classes))
         plt.xticks(tick_marks, self.data.classes, rotation=45)
         plt.yticks(tick_marks, self.data.classes)
 

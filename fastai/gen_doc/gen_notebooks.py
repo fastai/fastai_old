@@ -94,6 +94,7 @@ def create_module_page(mod, dest_path, force=False):
     mod_name = mod.__name__
     strip_name = strip_fastai(mod_name)
     init_cell = [get_md_cell(f'# {strip_name}'), get_md_cell('Type an introduction of the package here.')]
+    add_module_metadata(mod, init_cell)
     cells = [get_code_cell(f'from fastai.gen_doc.nbdoc import *\nfrom {mod_name} import * ', True)]
 
     gvar_map = get_global_vars(mod)
@@ -192,16 +193,45 @@ def get_doc_path(mod, dest_path):
     strip_name = strip_fastai(mod.__name__)
     return os.path.join(dest_path,f'{strip_name}.ipynb')
 
+def add_module_metadata(mod, cells):
+    if has_metadata_cell(cells): return
+    mcode = (f'from fastai.gen_doc.gen_notebooks import update_module_metadata\n'
+             f'import {mod.__name__}\n'
+             f'# For updating jekyll metadata. You MUST reload notebook immediately after executing this cell for changes to save\n'
+             f'# Leave blank to autopopulate from mod.__doc__\n'
+             f'update_module_metadata({mod.__name__})')
+    cells.insert(0, get_code_cell(mcode, hidden=True))
+
 def update_module_metadata(mod, dest_path='.', title=None, summary=None, keywords=None, overwrite=True):
-    "Creates jekyll metadata for given module"
+    "Creates jekyll metadata for given module. Title and summary are autopoulated (if None) from module.__name__ and module.__doc__."
+    title = title or strip_fastai(mod.__name__)
+    summary = summary or inspect.getdoc(mod)
     update_nb_metadata(get_doc_path(mod, dest_path), title, summary, keywords, overwrite)
 
-def update_nb_metadata(nb_path, title=None, summary=None, keywords=None, overwrite=True):
+def update_nb_metadata(nb_path=None, title=None, summary=None, keywords=None, overwrite=True):
     "Creates jekyll metadata for given notebook path"
     nb = read_nb(nb_path)
     jm = {'title': title, 'summary': summary, 'keywords': keywords}
-    update_nb_metadata(nb, jm, overwrite)
+    update_metadata(nb, jm, overwrite)
     json.dump(nb, open(nb_path, 'w'))
+
+METADATA_RE = re.compile(r"update_\w+_metadata")
+def has_metadata_cell(cells):
+    for c in cells: 
+        if c['cell_type'] == 'code' and METADATA_RE.search(c['source']): return c
+
+def add_nb_metadata(nb, nb_path):
+    cells = nb['cells']
+    if has_metadata_cell(cells): return
+    jmb = nb['metadata'].get('jekyll', {})
+    title, summary = stringify(jmb.get('title')), stringify(jmb.get('summary'))
+    mcode = (f"from fastai.gen_doc.gen_notebooks import update_nb_metadata\n"
+             f"# For updating jekyll metadata. You MUST reload notebook immediately after executing this cell for changes to save\n"
+             f"update_nb_metadata('{Path(nb_path).name}', title={title}, summary={summary})")
+    metadata_cell = get_code_cell(mcode, hidden=True)
+    cells.insert(0, metadata_cell)
+
+def stringify(s): return f'\'{s}\'' if isinstance(s, str) else s
 
 def update_metadata(nb, data, overwrite=True):
     "Creates jekyll metadata. Always overwrites existing"
@@ -221,7 +251,6 @@ def get_imported_modules(cells):
     mods = [import_mod(m) for m in module_names]
     return [m for m in mods if m is not None]
 
-# START_HIDDEN_FT = '<div id="hidden_ft" hidden=true>'
 NEW_FT_HEADER = '## New Methods - Please document or move to the undocumented section'
 UNDOC_HEADER = '## Undocumented Methods - Methods moved below this line will intentionally be hidden'
 def parse_sections(cells):
@@ -245,9 +274,9 @@ def update_module_page(mod, dest_path='.'):
     doc_path = get_doc_path(mod, dest_path)
     strip_name = strip_fastai(mod.__name__)
     nb = read_nb(doc_path)
-    update_metadata(nb, {'title':strip_name, 'summary':inspect.getdoc(mod)})
     cells = nb['cells']
     
+    add_module_metadata(mod, cells)
     link_markdown_cells(cells, get_imported_modules(cells))
 
     type_dict = read_nb_types(cells)
@@ -274,6 +303,7 @@ def link_nb(nb_path):
     nb = read_nb(nb_path)
     cells = nb['cells']
     link_markdown_cells(cells, get_imported_modules(cells))
+    add_nb_metadata(nb, nb_path)
     json.dump(nb, open(nb_path,'w'))
     NotebookNotary().sign(read_nb(nb_path))
 

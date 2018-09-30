@@ -43,7 +43,7 @@ def validate(model:Model, dl:DataLoader, loss_fn:OptLossFunc=None,
     model.eval()
     with torch.no_grad():
         return zip(*[loss_batch(model, xb, yb, loss_fn, cb_handler=cb_handler, metrics=metrics)
-                       for xb,yb in progress_bar(dl, parent=pbar)])
+                       for xb,yb in progress_bar(dl, parent=pbar, leave=(pbar is not None))])
 
 def train_epoch(model:Model, dl:DataLoader, opt:optim.Optimizer, loss_func:LossFunction)->None:
     "Simple training of `model` for 1 epoch of `dl` using optim `opt` and loss function `loss_func`"

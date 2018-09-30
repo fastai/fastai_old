@@ -45,7 +45,7 @@ summary:
 <li>easily create a language model with pretrained weights that you can fine-tune to your dataset,</li>
 <li>easily create other models such as classifiers on top of the encoder of the language model.</li>
 </ul>
-<p>To show examples, we have created a small sample of the <a href="https://www.imdb.com/interfaces/">IMDB dataset</a> which contains 1,000 reviews of movies with labels (positive or negative). You can uncomment the following lines to uncompress it.</p>
+<p>To show examples, we have created a small sample of the <a href="https://www.imdb.com/interfaces/">IMDB dataset</a> which contains 1,000 reviews of movies with labels (positive or negative).</p>
 
 </div>
 </div>
@@ -55,7 +55,7 @@ summary:
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#untar_imdb()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">untar_imdb</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -231,10 +231,29 @@ summary:
 
  
  
-<div id="1cb14034-68ad-4486-be48-e0f19de78a4e"></div>
+<div id="ac892efb-0380-46ec-bad9-492a15b8434a"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#1cb14034-68ad-4486-be48-e0f19de78a4e');
+var element = $('#ac892efb-0380-46ec-bad9-492a15b8434a');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+
+ 
+ 
+<div id="ef10661c-ab83-459a-89a5-70cd68f4141e"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#ef10661c-ab83-459a-89a5-70cd68f4141e');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -277,20 +296,6 @@ var element = $('#1cb14034-68ad-4486-be48-e0f19de78a4e');
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Numericalizing valid.
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -318,13 +323,54 @@ var element = $('#1cb14034-68ad-4486-be48-e0f19de78a4e');
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#model_path = Path(&#39;../data/imdb_sample/models/&#39;)</span>
-<span class="c1">#os.makedirs(model_path, exist_ok=True)</span>
-<span class="c1">#! wget -nd -np -P {model_path} http://files.fast.ai/models/wt103_v1/lstm_wt103.pth</span>
-<span class="c1">#! wget -nd -np -P {model_path} http://files.fast.ai/models/wt103_v1/itos_wt103.pkl</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">download_wt103_model</span><span class="p">()</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+
+ 
+ 
+<div id="d3e37f89-9557-4c4e-ad81-a75c43cad548"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#d3e37f89-9557-4c4e-ad81-a75c43cad548');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "91013e75fece403ba85e909dbd4af3e9", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+
+ 
+ 
+<div id="73c81816-b2eb-4047-ba76-6e396fd8e8aa"></div>
+<div class="output_subarea output_widget_view ">
+<script type="text/javascript">
+var element = $('#73c81816-b2eb-4047-ba76-6e396fd8e8aa');
+</script>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "79ff4fb4c51142459ca1e4297b116a28", "version_major": 2, "version_minor": 0}
+</script>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -380,10 +426,10 @@ var element = $('#1cb14034-68ad-4486-be48-e0f19de78a4e');
 
  
  
-<div id="71582cdc-eef2-4263-ae10-38e1ef402168"></div>
+<div id="4221a7cc-7321-44ba-b504-955daac32aa3"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#71582cdc-eef2-4263-ae10-38e1ef402168');
+var element = $('#4221a7cc-7321-44ba-b504-955daac32aa3');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -469,10 +515,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="1f99b4fb-1b69-4cb6-8330-8973b9d347ad"></div>
+<div id="4295644d-235e-41a8-871a-f56edac22abe"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#1f99b4fb-1b69-4cb6-8330-8973b9d347ad');
+var element = $('#4295644d-235e-41a8-871a-f56edac22abe');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -526,10 +572,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="f2d02f7f-0946-4b06-b435-872048fe2bc7"></div>
+<div id="17f8e0cd-d617-499e-a79b-7062e9623427"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#f2d02f7f-0946-4b06-b435-872048fe2bc7');
+var element = $('#17f8e0cd-d617-499e-a79b-7062e9623427');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -576,10 +622,10 @@ epoch  train loss  valid loss  accuracy
 
  
  
-<div id="9f7e7de2-bb1f-4abd-85aa-606bf2be0a45"></div>
+<div id="b4fa2d96-9075-419e-8d3f-cc610164b8b5"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#9f7e7de2-bb1f-4abd-85aa-606bf2be0a45');
+var element = $('#b4fa2d96-9075-419e-8d3f-cc610164b8b5');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
