@@ -23,18 +23,16 @@ First install the nightly `pytorch` build, e.g. for CUDA 9.2:
 
 If you have a different CUDA version find the right build [here](https://pytorch.org/get-started/locally/). Choose Preview/Linux/Pip/python3.6|python3.7 and Your CUDA version and it will give you the correct install instruction.
 
-Next you need to install `torchvision` from source without dependencies (or it will try to get `torch-0.4.1`, which is wrong - we need to wait for a new `torchvision` release post-`torch-1.0.0` release):
-
-    pip install --no-deps torchvision
-
 Now you can install `fastai`. Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/):
 
-     pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b5
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b6
 
  Sometimes, the last `pip` command still tries to get `torch-0.4.1`. If that happens to you, do:
 
-     pip uninstall torchvision fastai
-     pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b5
+    pip uninstall torchvision fastai
+    pip install --no-deps torchvision
+    pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b6
+
 
 
 ### Conda Install

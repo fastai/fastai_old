@@ -277,7 +277,7 @@ shows nothing.
 2. Build the fastai package (include the `pytorch` channel, for `torch/` dependencies, and fastai test channel for `torchvision/fastai`):
 
    ```
-   conda-build ./conda/ -c pytorch -c fastai/label/test
+   conda-build ./conda/ -c pytorch -c fastai/label/test -c fastai/label/main
    ```
 
    If `conda-build` fails with:
@@ -319,7 +319,7 @@ See `fastai_pytorch/builds/custom-conda-builds` for recipes we created already.
 
 Every package we release on conda needs to be either `noarch` or we need to build a whole slew of packages for each platform we choose to support, `linux-64`, `win-64`, etc.
 
-So far `fastai` is `noarch` (pure python), so we only need to make `python3.6` and `python3.7` releases.
+So far `fastai` is `noarch` (pure python), so we only need to make one `python3.6` and `python3.7` releases.
 
 But as shown in the previous section we also have to deal with several dependencies which are not on conda. If they are `noarch`, it should be easy to release conda packages for dependencies every so often. If they are platform-specific we will have to remove them from conda dependencies and ask users to install those via pip. An easy way to check whether a package for a specific platform is available is to:
 
