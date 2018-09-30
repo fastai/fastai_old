@@ -5,7 +5,7 @@ from ..basic_train import *
 from torch._utils import _unflatten_dense_tensors
 from torch.nn.utils import parameters_to_vector
 
-__all__ = ['get_master', 'master2model', 'MixedPrecision', 'model_g2master_g']
+__all__ = ['MixedPrecision']
 
 def get_master(layer_groups:ModuleList, flat_master:bool=False) -> Tuple[List[List[Tensor]], List[List[Tensor]]]:
     "Returns two lists, one for the model parameters in FP16 and one for the master parameters in FP32"

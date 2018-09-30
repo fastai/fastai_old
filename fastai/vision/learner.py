@@ -4,7 +4,7 @@ from ..basic_train import *
 from ..data import *
 from ..layers import *
 
-__all__ = ['ConvLearner', 'create_body', 'create_head', 'num_features']
+__all__ = ['ConvLearner', 'create_body', 'create_head', 'num_features', 'ClassificationInterpretation']
 
 def create_body(model:Model, cut:Optional[int]=None, body_fn:Callable[[Model],Model]=None):
     "Cut off the body of a typically pretrained `model` at `cut` or as specified by `body_fn`."
@@ -56,3 +56,55 @@ class ConvLearner(Learner):
         self.split(ifnone(split_on,meta['split']))
         if pretrained: self.freeze()
         apply_init(model[1], nn.init.kaiming_normal_)
+
+class ClassificationInterpretation():
+    "Interpretation methods for classification models"
+    def __init__(self, data:DataBunch, y_pred:Tensor, y_true:Tensor,
+                 loss_class:type=nn.CrossEntropyLoss, sigmoid:bool=True):
+        self.data,self.y_pred,self.y_true,self.loss_class = data,y_pred,y_true,loss_class
+        self.losses = calc_loss(y_pred, y_true, loss_class=loss_class)
+        self.probs = preds.sigmoid() if sigmoid else preds
+        self.pred_class = self.probs.argmax(dim=1)
+
+    def top_losses(self, k, largest=True):
+        "`k` largest(/smallest) losses"
+        return self.losses.topk(k, largest=largest)
+
+    def plot_top_losses(self, k, largest=True, figsize=(12,12)):
+        "Show images in `top_losses` along with their loss, label, and prediction"
+        tl = self.top_losses(k,largest)
+        classes = self.data.classes
+        rows = math.ceil(math.sqrt(k))
+        fig,axes = plt.subplots(rows,rows,figsize=figsize)
+        for i,idx in enumerate(self.top_losses(k, largest=largest)[1]):
+            t=data.valid_ds[idx]
+            t[0].show(ax=axes.flat[i], title=
+                f'{classes[self.pred_class[idx]]}/{classes[t[1]]} / {self.losses[idx]:.2f} / {self.probs[idx][0]:.2f}')
+
+    def confusion_matrix(self):
+        "Confusion matrix as an `np.ndarray`"
+        x=torch.arange(0,data.c)
+        cm = ((self.pred_class==x[:,None]) & (self.y_true==x[:,None,None])).sum(2)
+        return cm.cpu().numpy()
+
+    def plot_confusion_matrix(self, normalize:bool=False, title:str='Confusion matrix', cmap:Any="Blues", figsize:tuple=None):
+        "Plot the confusion matrix"
+        # This function is copied from the scikit docs
+        cm = self.confusion_matrix()
+        plt.figure(figsize=figsize)
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, self.data.classes, rotation=45)
+        plt.yticks(tick_marks, self.data.classes)
+
+        if normalize: cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        thresh = cm.max() / 2.
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            plt.text(j, i, cm[i, j], horizontalalignment="center", color="white" if cm[i, j] > thresh else "black")
+
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+

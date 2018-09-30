@@ -1257,3 +1257,13 @@ h4.panel-title {
         border: 0px;
         padding-left: 2em;
 }
+blockquote {
+        font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+}
+blockquote code {
+        background-color: white;
+}
+h4 code {
+        background-color: white;
+}
+

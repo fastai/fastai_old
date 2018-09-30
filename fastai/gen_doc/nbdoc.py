@@ -5,12 +5,14 @@ from IPython.core.display import display, Markdown, HTML
 from typing import Dict, Any, AnyStr, List, Sequence, TypeVar, Tuple, Optional, Union
 from .docstrings import *
 from .core import *
+from ..torch_core import *
 __all__ = ['get_fn_link', 'link_docstring', 'show_doc', 'get_ft_names',
            'get_exports', 'show_video', 'show_video_from_youtube', 'create_anchor', 'import_mod', 'get_source_link', 'is_enum']
 
 MODULE_NAME = 'fastai'
 SOURCE_URL = 'https://github.com/fastai/fastai_pytorch/blob/master/'
 PYTORCH_DOCS = 'https://pytorch.org/docs/stable/'
+_typing_names = {t:n for t,n in fastai_types.items() if t.__module__=='typing'}
 
 def is_enum(cls): return cls == enum.Enum or cls == enum.EnumMeta
 
@@ -32,6 +34,7 @@ def belongs_to_module(t, module_name):
 def code_esc(s): return f'`{s}`'
 
 def type_repr(t):
+    if t in _typing_names: return link_type(t, _typing_names[t])
     if hasattr(t, '__forward_arg__'): return link_type(t.__forward_arg__)
     elif getattr(t, '__args__', None):
         args = t.__args__
@@ -46,7 +49,10 @@ def anno_repr(a): return type_repr(a)
 def format_param(p):
     res = code_esc(p.name)
     if hasattr(p, 'annotation') and p.annotation != p.empty: res += f':{anno_repr(p.annotation)}'
-    if p.default != p.empty: res += f'=`{repr(p.default)}`'
+    if p.default != p.empty:
+        default = getattr(p.default, 'func', p.default)
+        default = getattr(default, '__name__', default)
+        res += f'=`{repr(default)}`'
     return res
 
 def format_ft_def(func, full_name:str=None)->str:
@@ -58,8 +64,8 @@ def format_ft_def(func, full_name:str=None)->str:
     arg_str = f"({', '.join(fmt_params)})"
     if sig.return_annotation and (sig.return_annotation != sig.empty): arg_str += f" -> {anno_repr(sig.return_annotation)}"
     if is_fastai_class(type(func)):        arg_str += f" :: {link_type(type(func))}"
-    f_name = f"class {name}" if inspect.isclass(func) else name
-    return f'{f_name}\n{name}{arg_str}'
+    f_name = f"`class` {name}" if inspect.isclass(func) else name
+    return f'{f_name}\n> {name}{arg_str}'
 
 def get_enum_doc(elt, full_name:str) -> str:
     "Formatted enum documentation"
@@ -112,14 +118,14 @@ def format_docstring(elt, arg_comments:dict={}, alt_doc_string:str='', ignore_wa
     return parsed
 
 # Finds all places with a backtick but only if it hasn't already been linked
-BT_REGEX = re.compile("\[?`([^`<]*)`\]?(?:\([^)]*\))?")
+BT_REGEX = re.compile("\[`([^`]*)`\](?:\([^)]*\))|`([^`]*)`") # matches [`key`](link) or `key`
 def link_docstring(modules, docstring:str, overwrite:bool=False) -> str:
     "searches `docstring` for backticks and attempts to link those functions to respective documentation"
     mods = listify(modules)
     modvars = {}
     for mod in mods: modvars.update(mod.__dict__) # concat all module definitions
     for m in BT_REGEX.finditer(docstring):
-        keyword = m.group(1)
+        keyword = m.group(1) or m.group(2)
         elt = find_elt(modvars, keyword)
         if elt is None: continue
         link = link_type(elt, arg_name=keyword)
@@ -135,8 +141,6 @@ def find_elt(modvars, keyword, match_last=True):
     comp_elt = modvars.get(comps[0])
     if hasattr(comp_elt, '__dict__'):
         return find_elt(comp_elt.__dict__, '.'.join(comps[1:]))
-
-
 
 def import_mod(mod_name:str):
     "returns module from `mod_name`"
@@ -171,7 +175,6 @@ def get_ft_names(mod, include_inner=False)->List[str]:
     for elt_name in get_exports(mod):
         elt = getattr(mod,elt_name)
         #This removes the files imported from elsewhere
-        #set_trace()
         try:    fname = inspect.getfile(elt)
         except: continue
         if mod.__file__.endswith('__init__.py'):
@@ -238,6 +241,7 @@ def show_video_from_youtube(code, start=0):
     return show_video(url)
 
 def fn_name(ft)->str:
+    if ft in _typing_names: return _typing_names[ft]
     if hasattr(ft, '__name__'):   return ft.__name__
     elif hasattr(ft,'_name') and ft._name: return ft._name
     #elif hasattr(ft,'__class__'): return ft.__class__.__name__
