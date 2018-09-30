@@ -14,21 +14,32 @@ summary: "Tools to help find the optimal learning rate for training"
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Learning rate finder plots lr vs loss relationship for a <a href="/basic_train.html#Learner"><code>Learner</code></a>.<br>
-The idea is to reduce the amount of guesswork on picking a good starting learning rate. First   <a href="&#39;https://arxiv.org/abs/1506.01186&#39;">described</a> by Leslie Smith</p>
-<p>Over an epoch begin your SGD with a very low learning rate (like 1e-05) but change it (by multiplying it by a certain factor for instance) at each mini-batch until it reaches a very high value (like 1 or 10). Record the loss each time at each iteration and once you're finished, plot those losses against the learning rate.</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Choosing-a-good-learning-rate">Choosing a good learning rate<a class="anchor-link" href="#Choosing-a-good-learning-rate">&#182;</a></h3>
+<p>Learning rate finder plots lr vs loss relationship for a <a href="/basic_train.html#Learner"><code>Learner</code></a>.<br>
+The idea is to reduce the amount of guesswork on picking a good starting learning rate.</p>
+<p><br></p>
+<p><strong>Overview:</strong></p>
+<ol>
+<li>First run lr_find <code>learn.lr_find()</code></li>
+<li>Plot the learning rate vs loss <code>learn.recorder.plot()</code></li>
+<li>Pick a learning rate before it diverges</li>
+</ol>
+<p><br></p>
+<p><strong>Technical Details:</strong> (first <a href="&#39;https://arxiv.org/abs/1506.01186&#39;">described</a> by Leslie Smith)</p>
+<blockquote><p>Train <a href="/text.learner.html#text.learner"><code>learner</code></a> over a epoch. Start with a very low <code>start_lr</code> and change it at each mini-batch until it reaches a very high <code>end_lr</code>. <a href="/basic_train.html#Recorder"><code>Recorder</code></a> will record the loss at each iteration. 
+Plot those losses against the learning rate to find the optimal value before it diverges.</p>
+</blockquote>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Choosing-a-good-learning-rate">Choosing a good learning rate<a class="anchor-link" href="#Choosing-a-good-learning-rate">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -76,10 +87,10 @@ The idea is to reduce the amount of guesswork on picking a good starting learnin
 
  
  
-<div id="0533ebd0-ffee-472b-a0e1-d17ce0b9cc6e"></div>
+<div id="4e20e80f-2d66-45d3-bea4-f64f07b4cf02"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#0533ebd0-ffee-472b-a0e1-d17ce0b9cc6e');
+var element = $('#4e20e80f-2d66-45d3-bea4-f64f07b4cf02');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "3d386fa275364df2bcbc8e929d04dce9", "version_major": 2, "version_minor": 0}
@@ -173,10 +184,10 @@ Ideally an order of magnitude before, a value that's still aggressive (for quick
 
  
  
-<div id="ac0f0b0e-145f-4056-84d2-9c7fd7d2dfc6"></div>
+<div id="a9d7500f-808e-49ea-ba2d-1efb9afef355"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#ac0f0b0e-145f-4056-84d2-9c7fd7d2dfc6');
+var element = $('#a9d7500f-808e-49ea-ba2d-1efb9afef355');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -230,10 +241,10 @@ epoch  train loss  valid loss
 
  
  
-<div id="8a97ac3d-33c9-4aec-b05a-9a4825e6a915"></div>
+<div id="5e15ac71-6271-49de-9d7a-dedc5ddc1702"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#8a97ac3d-33c9-4aec-b05a-9a4825e6a915');
+var element = $('#5e15ac71-6271-49de-9d7a-dedc5ddc1702');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
@@ -287,10 +298,10 @@ epoch  train loss  valid loss
 
  
  
-<div id="5c9e49a2-ab68-4f8f-b3ee-80d9764db784"></div>
+<div id="117c2c40-9b2f-4740-9704-ddbd0aa802fd"></div>
 <div class="output_subarea output_widget_view ">
 <script type="text/javascript">
-var element = $('#5c9e49a2-ab68-4f8f-b3ee-80d9764db784');
+var element = $('#117c2c40-9b2f-4740-9704-ddbd0aa802fd');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "", "version_major": 2, "version_minor": 0}
