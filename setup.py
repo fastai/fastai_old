@@ -14,7 +14,7 @@ def create_version_file(version):
         f.write("__version__ = '{}'\n".format(version))
 
 # version
-version = '1.0.0b4'
+version = '1.0.0b5'
 create_version_file(version)
 
 with open('README.md') as readme_file:
@@ -25,8 +25,7 @@ with open('HISTORY.md') as history_file:
 
 def to_list(buffer): return list(filter(None, buffer.splitlines()))
 
-# pip doesn't think that 0.5.0a0+1637729 >=0.5.0, must use >=0.4.9 instead
-# XXX: change to torch>=1.0.0 once it's released
+# XXX: require torch>=1.0.0 once it's released, for now get the user to install it explicitly
 requirements = to_list("""
 fastprogress
 ipython
@@ -36,7 +35,6 @@ pandas
 Pillow
 scipy
 spacy
-torch>=0.4.9
 torchvision>=0.2.1
 typing
 """)

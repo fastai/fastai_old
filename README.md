@@ -23,9 +23,13 @@ First install the nightly `pytorch` build, e.g. for CUDA 9.2:
 
 If you have a different CUDA version find the right build [here](https://pytorch.org/get-started/locally/). Choose Preview/Linux/Pip/python3.6 and Your CUDA version and it will give you the correct install instruction.
 
+Next you need to install `torchvision` from source without dependencies (or it will try to get `torch-0.4.1`, which is wrong - we need to wait for a new `torchvision` release post-`torch-1.0.0` release):
+
+    pip install --no-deps torchvision
+
 Now you can install `fastai`. Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/):
 
-     pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b3
+     pip install --index-url https://test.pypi.org/simple/ --extra-index-url  https://pypi.org/simple/ fastai==1.0.0b5
 
 
 ### Conda Install
@@ -34,7 +38,9 @@ To install fastai with CUDA 9.2 simply run (read the paragraph after this for ot
 
     conda install -c pytorch -c fastai/label/test fastai cuda92
 
-If your setup doesn't have CUDA support remove the `cuda92` above. For different versions of the CUDA toolkit, you'll need to install the appropriate CUDA conda package based on what you've got installed on your system (i.e. instead of `cuda92` in the above, pick the appropriate option for whichever toolkit version you have installed; to see a list of options type: `conda search "cuda*" -c pytorch`).
+If your setup doesn't have CUDA support remove the `cuda92` above.
+
+For different versions of the CUDA toolkit, you'll need to install the appropriate CUDA conda package based on what you've got installed on your system (i.e. instead of `cuda92` in the above, pick the appropriate option for whichever toolkit version you have installed; to see a list of options type: `conda search "cuda*" -c pytorch`).
 
 Note, that this is a beta test version at the moment, please [report any issues](https://github.com/fastai/fastai_pytorch/issues/). We are currently using a re-packaged torchvision in order to support pytorch-nightly, which is required for using fastai.
 

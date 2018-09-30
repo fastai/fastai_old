@@ -19,7 +19,7 @@ class TrainingPhase():
 
 @dataclass
 class GeneralScheduler(Callback):
-    "Schedule multiple `TrainingPhase` for a `learner`"
+    "Schedule multiple `TrainingPhase` for a `Learner`."
     learn:Learner
     phases:Collection[TrainingPhase]
 
