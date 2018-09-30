@@ -4,7 +4,7 @@ import math, matplotlib.pyplot as plt, numpy as np, pandas as pd, random
 import scipy.stats, scipy.special
 import abc, collections, hashlib, itertools, operator
 import mimetypes, inspect, typing, functools
-import html, re, spacy
+import html, re, spacy, requests
 
 from abc import abstractmethod, abstractproperty
 from collections import abc,  Counter, defaultdict, Iterable, namedtuple, OrderedDict
